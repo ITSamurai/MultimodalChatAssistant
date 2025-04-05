@@ -11,7 +11,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for in-memory storage
   const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit (increased from 10MB)
   });
 
   // Serve static files from uploads directory
