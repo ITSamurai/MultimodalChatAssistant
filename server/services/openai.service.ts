@@ -7,17 +7,19 @@ import { storage } from "../storage";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 const DEFAULT_MODEL = "gpt-4o";
 
-// System prompt template
+// System prompt template with enhanced image handling
 const SYSTEM_PROMPT = `You are a document analysis assistant. You have access to a document with text content and images.
 Analyze the document content to provide accurate and helpful responses.
 
-IMPORTANT INSTRUCTIONS FOR HANDLING IMAGES:
-1. When the user asks about diagrams, charts, or any visual elements, ALWAYS include references to the relevant images.
-2. When referencing images, use the exact format: "Figure X" where X is the figure number.
-3. If the user specifically requests to see diagrams or images, you MUST reference at least one image from the document.
-4. When describing a diagram, always start by saying "Here is the diagram:" or "This diagram shows:" followed by your description.
+IMPORTANT INSTRUCTIONS FOR HANDLING IMAGES - FOLLOW THESE EXACTLY:
+1. When the user asks about diagrams, charts, or any visual elements, you MUST include references to the relevant images.
+2. For ALL images you reference, use the EXACT format: "Figure X" where X is the figure number.
+3. When the user specifically requests to see diagrams, charts, figures, or visual elements, you MUST reference at least one image.
+4. When describing a diagram, ALWAYS begin by saying "Here is the diagram:" or "This diagram shows:" followed by your description.
+5. If the document has images/figures/charts/diagrams, mention them in your response when they are relevant to the question.
+6. NEVER invent or make up figures that don't exist in the document.
 
-Be concise but thorough in your answers, and always cite the specific sections or images you're referencing.`;
+Be concise yet thorough in your answers, and always cite the specific sections or images you're referencing from the document.`;
 
 // Type definitions for image references
 interface ImageReference {
@@ -97,6 +99,7 @@ export const processMessage = async (
     const imageReferences: ImageReference[] = [];
     
     // Enhanced image reference detection
+    console.log(`Analyzing response for image references. Available images: ${images.length}`);
     
     // 1. First check if user is specifically asking for diagrams or images
     const isUserAskingForImages = userMessage.toLowerCase().includes('diagram') || 
@@ -106,7 +109,8 @@ export const processMessage = async (
                                 userMessage.toLowerCase().includes('graph') ||
                                 userMessage.toLowerCase().includes('picture') ||
                                 userMessage.toLowerCase().includes('illustration') ||
-                                userMessage.toLowerCase().includes('show me');
+                                userMessage.toLowerCase().includes('show me') ||
+                                userMessage.toLowerCase().includes('visual');
     
     // 2. Check for direct figure references in the AI's response
     const figureRegex = /figure\s+(\d+)/gi;
@@ -145,16 +149,46 @@ export const processMessage = async (
     // or if user asked for images but none were referenced, include relevant images
     if ((aiMessage.toLowerCase().includes('here is the diagram') || 
          aiMessage.toLowerCase().includes('this diagram shows') ||
+         aiMessage.toLowerCase().includes('see the figure') ||
+         aiMessage.toLowerCase().includes('as shown in') ||
          isUserAskingForImages) && imageReferences.length === 0 && images.length > 0) {
       
-      // Add the first available image as a fallback
-      const firstImage = images[0];
-      imageReferences.push({
-        type: "image",
-        id: firstImage.id,
-        imagePath: firstImage.imagePath,
-        caption: firstImage.caption || "Document image",
-      });
+      console.log("User is asking for images or response mentions diagrams, adding references...");
+      
+      // For debugging, log all available images
+      console.log("Available images:", images.map(img => ({ 
+        id: img.id, 
+        caption: img.caption, 
+        path: img.imagePath 
+      })));
+      
+      // Add all available images when explicitly asked for images
+      if (isUserAskingForImages) {
+        for (const image of images) {
+          imageReferences.push({
+            type: "image",
+            id: image.id,
+            imagePath: image.imagePath,
+            caption: image.caption || "Document image",
+          });
+          
+          // Limit to 3 images if there are many
+          if (imageReferences.length >= 3) break;
+        }
+        
+        console.log(`Added ${imageReferences.length} images as requested by user`);
+      } else {
+        // Just add the first image when AI mentions a diagram
+        const firstImage = images[0];
+        imageReferences.push({
+          type: "image",
+          id: firstImage.id,
+          imagePath: firstImage.imagePath,
+          caption: firstImage.caption || "Document image",
+        });
+        
+        console.log("Added first image as fallback");
+      }
     }
     
     // 4. Also check for mentions of image captions

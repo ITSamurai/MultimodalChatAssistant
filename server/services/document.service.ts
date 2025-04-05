@@ -52,6 +52,15 @@ const extractImagesFromDocument = async (
     // Extract HTML content with images
     const result = await mammoth.convertToHtml({ buffer: docBuffer });
     const htmlContent = result.value;
+    
+    // Log any warnings for debugging
+    if (result.messages.length > 0) {
+      console.log("Mammoth conversion messages:", result.messages);
+    }
+    
+    // Log extracted HTML for debugging
+    console.log("Extracted HTML length:", htmlContent.length);
+    console.log("First 300 characters of HTML:", htmlContent.substring(0, 300));
 
     // Parse HTML to find images
     const root = parse(htmlContent);
@@ -73,20 +82,24 @@ const extractImagesFromDocument = async (
           const imageData = matches[2];
           const buffer = Buffer.from(imageData, 'base64');
           
-          // Generate unique filename
+          // Generate unique filename - we'll preserve format and optimize naming
           const timestamp = Date.now();
-          const filename = `doc_${documentId}_img_${i + 1}_${timestamp}.${imageType}`;
+          const imgNum = i + 1;
+          const filename = `doc_${documentId}_figure_${imgNum}_${timestamp}.${imageType}`;
           const imagePath = path.join(IMAGES_DIR, filename);
           
-          // Save image to disk
+          // Log image extraction for debugging
+          console.log(`Extracting image ${imgNum} from document ${documentId}: ${filename}`);
+          
+          // Save image to disk with high quality
           await writeFile(imagePath, buffer);
           
-          // Create image entry
+          // Create image entry with improved metadata
           const imageInfo: InsertDocumentImage = {
             documentId,
             imagePath: `/uploads/images/${filename}`,
-            altText: img.getAttribute('alt') || `Image ${i + 1} from document`,
-            caption: `Figure ${i + 1}`,
+            altText: img.getAttribute('alt') || `Image ${imgNum} from document`,
+            caption: `Figure ${imgNum}`,
             pageNumber: null, // DOCX doesn't easily provide page numbers
           };
           
