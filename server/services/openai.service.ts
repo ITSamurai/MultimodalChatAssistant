@@ -11,15 +11,20 @@ const DEFAULT_MODEL = "gpt-4o";
 const SYSTEM_PROMPT = `You are a document analysis assistant. You have access to a document with text content and images.
 Analyze the document content to provide accurate and helpful responses.
 
-IMPORTANT INSTRUCTIONS FOR HANDLING IMAGES - FOLLOW THESE EXACTLY:
-1. When the user asks about diagrams, charts, or any visual elements, you MUST include references to the relevant images.
-2. For ALL images you reference, use the EXACT format: "Figure X" where X is the figure number.
-3. When the user specifically requests to see diagrams, charts, figures, or visual elements, you MUST reference at least one image.
+IMPORTANT INSTRUCTIONS FOR HANDLING IMAGES - YOU MUST FOLLOW THESE EXACTLY:
+1. I will provide you with a list of available document images labeled as "Figure X". ONLY reference images from this list.
+2. When the user asks about diagrams or visual elements, you MUST include references to the relevant images.
+3. For ALL images you reference, use the EXACT format: "Figure X" where X is the ID number I provided in the list.
 4. When describing a diagram, ALWAYS begin by saying "Here is the diagram:" or "This diagram shows:" followed by your description.
-5. If the document has images/figures/charts/diagrams, mention them in your response when they are relevant to the question.
-6. NEVER invent or make up figures that don't exist in the document.
+5. You MUST NOT invent or reference figures that aren't in the provided list.
+6. If the user asks to see images/diagrams/charts and you don't see any specific ones to reference, show them the first few images from the list.
+7. When describing images, include their figure number exactly as provided in the list.
 
-Be concise yet thorough in your answers, and always cite the specific sections or images you're referencing from the document.`;
+EXAMPLES:
+- If asked "show me diagrams about X", respond with "Here are some relevant diagrams from the document: Figure 1 shows... Figure 7 illustrates..."
+- If the document discusses a flowchart, say "As shown in Figure 12, the workflow consists of..."
+
+Be concise yet thorough in your answers, and always cite the specific sections or images from the document.`;
 
 // Type definitions for image references
 interface ImageReference {
@@ -47,11 +52,28 @@ export const processMessage = async (
     // Get previous messages
     const previousMessages = await storage.getMessages(documentId);
 
-    // Format the context for OpenAI
+    // Format the context for OpenAI with enhanced image data
+    let imagesInfo = "";
+    if (images.length > 0) {
+      // Limit to a reasonable number of images to avoid overwhelming the context
+      const limitedImages = images.slice(0, Math.min(50, images.length));
+      imagesInfo = "\n\nAVAILABLE DOCUMENT IMAGES:\n";
+      limitedImages.forEach((img, idx) => {
+        imagesInfo += `Figure ${img.id}: ${img.caption || "No caption"}\n`;
+      });
+      
+      if (images.length > 50) {
+        imagesInfo += `\n[Note: Document contains ${images.length} total images. Only the first 50 are listed here.]\n`;
+      }
+    }
+    
     const contextMessages: Array<{role: "system" | "user" | "assistant", content: string}> = [
       {
         role: "system",
-        content: SYSTEM_PROMPT + `\n\nDocument Title: ${document.name}\n\nDocument Content:\n${document.contentText.substring(0, 8000)}...`,
+        content: SYSTEM_PROMPT + 
+                `\n\nDocument Title: ${document.name}` + 
+                imagesInfo + 
+                `\n\nDocument Content:\n${document.contentText.substring(0, 8000)}...`,
       },
     ];
 
@@ -121,29 +143,51 @@ export const processMessage = async (
       const figureNumber = parseInt(match[1]);
       mentionedFigures.add(figureNumber);
       
-      // Find image with matching figure number
-      const matchingImage = images.find(img => {
-        if (!img.caption) return false;
-        
-        // Check for exact figure number match in caption
-        const captionFigureMatch = img.caption.match(/figure\s+(\d+)/i);
-        if (captionFigureMatch && parseInt(captionFigureMatch[1]) === figureNumber) {
-          return true;
-        }
-        
-        // Try to extract figure number from caption if it's in format "Figure X: ..."
-        return img.caption.toLowerCase().includes(`figure ${figureNumber}`);
-      });
+      console.log(`Found reference to Figure ${figureNumber} in AI response`);
       
-      if (matchingImage && !imageReferences.some(ref => ref.id === matchingImage.id)) {
-        imageReferences.push({
-          type: "image",
-          id: matchingImage.id,
-          imagePath: matchingImage.imagePath,
-          caption: matchingImage.caption || `Figure ${figureNumber}`,
+      // First, look for exact ID match since we've provided image IDs directly
+      const exactIdMatch = images.find(img => img.id === figureNumber);
+      
+      if (exactIdMatch) {
+        console.log(`Found exact match for Figure ${figureNumber} with ID ${exactIdMatch.id}`);
+        
+        if (!imageReferences.some(ref => ref.id === exactIdMatch.id)) {
+          imageReferences.push({
+            type: "image",
+            id: exactIdMatch.id,
+            imagePath: exactIdMatch.imagePath,
+            caption: exactIdMatch.caption || `Figure ${figureNumber}`,
+          });
+        }
+      } else {
+        // Fall back to caption-based matching if there's no exact ID match
+        const matchingImage = images.find(img => {
+          if (!img.caption) return false;
+          
+          // Check for exact figure number match in caption
+          const captionFigureMatch = img.caption.match(/figure\s+(\d+)/i);
+          if (captionFigureMatch && parseInt(captionFigureMatch[1]) === figureNumber) {
+            return true;
+          }
+          
+          // Try to extract figure number from caption if it's in format "Figure X: ..."
+          return img.caption.toLowerCase().includes(`figure ${figureNumber}`);
         });
+        
+        if (matchingImage && !imageReferences.some(ref => ref.id === matchingImage.id)) {
+          console.log(`Found caption match for Figure ${figureNumber} with ID ${matchingImage.id}`);
+          
+          imageReferences.push({
+            type: "image",
+            id: matchingImage.id,
+            imagePath: matchingImage.imagePath,
+            caption: matchingImage.caption || `Figure ${figureNumber}`,
+          });
+        }
       }
     }
+    
+    console.log(`Found ${imageReferences.length} figure references in AI response`);
     
     // 3. If AI mentions showing a diagram or image but no specific figure was referenced,
     // or if user asked for images but none were referenced, include relevant images
@@ -162,21 +206,80 @@ export const processMessage = async (
         path: img.imagePath 
       })));
       
-      // Add all available images when explicitly asked for images
+      // Complex handling for image requests to find the most relevant images
       if (isUserAskingForImages) {
-        for (const image of images) {
-          imageReferences.push({
-            type: "image",
-            id: image.id,
-            imagePath: image.imagePath,
-            caption: image.caption || "Document image",
-          });
-          
-          // Limit to 3 images if there are many
-          if (imageReferences.length >= 3) break;
+        // Check if user is looking for a specific topic or type of diagram
+        const userQuery = userMessage.toLowerCase();
+        let specificTopics = [];
+        
+        // Extract keywords from user query to identify potential topics
+        const topics = [
+          "architecture", "diagram", "flowchart", "process", "chart", 
+          "graph", "table", "schema", "model", "flow", "structure",
+          "network", "map", "timeline", "hierarchy", "sequence",
+          "class", "component", "entity", "data", "relationship",
+          "database", "system", "user", "interface", "cloud",
+          "deployment", "implementation", "domain", "activity", "state"
+        ];
+        
+        // Find topics mentioned in user's query
+        for (const topic of topics) {
+          if (userQuery.includes(topic)) {
+            specificTopics.push(topic);
+          }
         }
         
-        console.log(`Added ${imageReferences.length} images as requested by user`);
+        console.log(`Identified specific topics in user query: ${specificTopics.join(', ')}`);
+        
+        let selectedImages = [];
+        
+        // If topics were found, try to find relevant images
+        if (specificTopics.length > 0) {
+          // Filter images that might be relevant to the topics
+          for (const topic of specificTopics) {
+            for (const image of images) {
+              // Check if image caption or alt text contains the topic
+              const captionText = (image.caption || '').toLowerCase();
+              const altText = (image.altText || '').toLowerCase();
+              
+              if ((captionText.includes(topic) || altText.includes(topic)) && 
+                  !selectedImages.includes(image.id)) {
+                selectedImages.push(image.id);
+                
+                imageReferences.push({
+                  type: "image",
+                  id: image.id,
+                  imagePath: image.imagePath,
+                  caption: image.caption || `Figure ${image.id}`,
+                });
+                
+                // Limit to 3 topic-specific images
+                if (imageReferences.length >= 3) break;
+              }
+            }
+            
+            // If we found enough images, stop looking through topics
+            if (imageReferences.length >= 3) break;
+          }
+        }
+        
+        // If no topic-specific images were found or not enough, add the first few images as fallback
+        if (imageReferences.length === 0) {
+          for (const image of images.slice(0, 3)) {
+            imageReferences.push({
+              type: "image",
+              id: image.id,
+              imagePath: image.imagePath,
+              caption: image.caption || `Figure ${image.id}`,
+            });
+            
+            if (imageReferences.length >= 3) break;
+          }
+          
+          console.log(`Added ${imageReferences.length} images as generic examples`);
+        } else {
+          console.log(`Added ${imageReferences.length} topic-specific images based on user query`);
+        }
       } else {
         // Just add the first image when AI mentions a diagram
         const firstImage = images[0];
@@ -184,7 +287,7 @@ export const processMessage = async (
           type: "image",
           id: firstImage.id,
           imagePath: firstImage.imagePath,
-          caption: firstImage.caption || "Document image",
+          caption: firstImage.caption || `Figure ${firstImage.id}`,
         });
         
         console.log("Added first image as fallback");
