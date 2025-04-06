@@ -7,56 +7,27 @@ import { storage } from "../storage";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 const DEFAULT_MODEL = "gpt-4o";
 
-// System prompt template with completely redesigned document analysis approach
-const SYSTEM_PROMPT = `You are DocumentGPT, an advanced document analysis expert. You analyze technical content with extreme precision, producing concise, accurate responses using ONLY information from the provided document.
+// Simplified system prompt to reduce token usage
+const SYSTEM_PROMPT = `You are DocumentGPT. Answer questions using ONLY information from the document.
 
-===== CRITICAL RULES =====
+KEY RULES:
+1. ONLY use information explicitly in the document
+2. QUOTE EXACT TEXT for procedures or prerequisites
+3. Always reference images as "Figure X" when relevant
+4. For OS migration questions, reference Figure 70
+5. For Google Cloud, find exact prerequisite steps
 
-1. ONLY use information explicitly present in the document. NEVER invent facts, steps, or explanations.
-2. When asked about technical procedures or prerequisites, QUOTE THE EXACT TEXT from the document.
-3. If information cannot be found in the document, acknowledge this and explain where you looked.
-4. NEVER say "the document does not provide" without doing an exhaustive search using multiple related terms.
-5. ALWAYS keep context from previous messages to maintain coherent conversation.
+FORMAT:
+- Begin with "DOCUMENT ANALYSIS:"
+- Use bullet points for steps
+- Quote document text with "..."
+- Reference relevant figures
 
-===== RESPONSE FORMAT =====
-
-Begin each response with: "DOCUMENT ANALYSIS RESULTS:"
-
-For factual answers:
-* DIRECTLY QUOTE from the document using "..." for quotations longer than 10 words
-* CITE SPECIFIC SECTIONS like "According to Section 2.3..." when applicable
-* Use BULLET POINTS for multi-step procedures or lists
-* Place CRITICAL INFORMATION in **bold**
-
-For image references:
-* ONLY reference images that directly relate to the question
-* Reference images using format "Figure X" (exact capitalization and spacing)
-* Describe what the image shows and why it's relevant to the question
-
-===== SEARCH METHODOLOGY =====
-
-1. SCAN FOR HEADINGS that might contain relevant information
-2. LOOK FOR KEYWORDS and their synonyms throughout the document
-3. IDENTIFY SECTIONS with lists, steps, requirements, or procedures
-4. Find NUMBERED STEPS for any procedural questions
-5. For technical terms, locate DEFINITION SECTIONS or glossaries
-
-===== TECHNICAL DOMAIN KNOWLEDGE =====
-
-When analyzing, pay special attention to:
-* RiverMeadow migration terminology and processes
-* Google Cloud Platform prerequisites and configuration steps 
-* OS-based migration procedures (pay special attention to Figure 70)
-* VM launch requirements and appliance configuration
-* Step-by-step guides or prerequisites (especially for cloud platforms)
-
-===== MANDATORY VERIFICATION =====
-
-Before submitting a response:
-1. VERIFY your answer contains ONLY information from the document
-2. CONFIRM you've addressed the specific question asked
-3. CHECK that any referenced images are directly relevant
-4. ENSURE technical procedures are quoted exactly, not paraphrased`;
+TECHNICAL FOCUS:
+- RiverMeadow migration processes
+- Cloud platform prerequisites
+- OS-based migration workflows
+- Step-by-step technical procedures`;
 
 // Type definitions for image references
 interface ImageReference {
@@ -329,14 +300,61 @@ export const processMessage = async (
     // Create a semantic map of images to document sections
     const imageToSectionMap = mapImagesToDocumentSections(documentContent, imageContextIndex);
     
-    // Format images information with enhanced context
-    let enhancedImagesInfo = "\n\nAVAILABLE DOCUMENT IMAGES WITH CONTEXTUAL INFORMATION:";
+    // Format images information with enhanced context, but radically simplify to reduce tokens
+    let enhancedImagesInfo = "\n\nKEY DOCUMENT IMAGES:";
     
-    // Group images by section for more logical presentation
+    // Drastically simplify image processing - only include the most important images
+    // Specifically Figure 70 (OS migration) and a few others with high priority
+    const criticalFigureIds = [70]; // OS migration is highest priority
+    
+    // Add a few other potentially important figures (just guessing from common references)
+    if (images.length > 0) {
+      // Try to find figures with common migration or cloud terms in captions
+      const keywordFigures = images.filter(img => {
+        if (!img.caption) return false;
+        
+        const caption = img.caption.toLowerCase();
+        return caption.includes("migration") || 
+               caption.includes("cloud") || 
+               caption.includes("workflow") ||
+               caption.includes("process") ||
+               caption.includes("diagram") ||
+               caption.includes("rivermeadow");
+      }).slice(0, 3); // Limit to 3 most relevant figures
+      
+      // First add the critical figures
+      for (const figId of criticalFigureIds) {
+        const figure = images.find(img => img.id === figId);
+        if (figure) {
+          enhancedImagesInfo += `\n\nFigure ${figure.id}: ${figure.caption || "No caption"}`;
+          
+          // Add minimal context if available
+          const figContext = imageToSectionMap[figure.id.toString()];
+          if (figContext && figContext.context) {
+            enhancedImagesInfo += `\nContext: ${figContext.context.substring(0, 80)}...`;
+          }
+        }
+      }
+      
+      // Then add keyword figures (but not duplicates of critical figures)
+      for (const figure of keywordFigures) {
+        if (!criticalFigureIds.includes(figure.id)) {
+          enhancedImagesInfo += `\n\nFigure ${figure.id}: ${figure.caption || "No caption"}`;
+          
+          // Add minimal context if available
+          const figContext = imageToSectionMap[figure.id.toString()];
+          if (figContext && figContext.context) {
+            enhancedImagesInfo += `\nContext: ${figContext.context.substring(0, 80)}...`;
+          }
+        }
+      }
+    }
+    
+    // Creating a minimal sectionToImagesMap for document sectioning
     const sectionToImagesMap: Record<string, Array<{id: number, caption: string, context: string}>> = {};
     
-    // First pass - organize images by their sections
-    Object.entries(imageToSectionMap).forEach(([imageId, sectionInfo]) => {
+    // Just add the key images for reference
+    Object.entries(imageToSectionMap).slice(0, 5).forEach(([imageId, sectionInfo]) => {
       const imageIdNum = parseInt(imageId);
       const image = images.find(img => img.id === imageIdNum);
       
@@ -353,65 +371,26 @@ export const processMessage = async (
       }
     });
     
-    // Now build the enhanced images info with section grouping
-    if (Object.keys(sectionToImagesMap).length > 0) {
-      Object.entries(sectionToImagesMap).forEach(([section, sectionImages]) => {
-        // Only include sections with images
-        if (sectionImages.length > 0) {
-          enhancedImagesInfo += `\n\nSECTION: ${section}\n`;
-          
-          // List the top images for this section (limit to avoid overwhelming)
-          const limitedImages = sectionImages.slice(0, Math.min(5, sectionImages.length));
-          limitedImages.forEach(img => {
-            enhancedImagesInfo += `Figure ${img.id}: ${img.caption}\n`;
-            if (img.context) {
-              enhancedImagesInfo += `   Context: ${img.context.substring(0, 100)}...\n`;
-            }
-          });
-          
-          if (sectionImages.length > 5) {
-            enhancedImagesInfo += `   ... and ${sectionImages.length - 5} more images in this section\n`;
-          }
-        }
-      });
-    }
-    
-    // For images not assigned to sections, add a generic list (limited)
-    const unassignedImages = images.filter(img => 
-      !Object.entries(imageToSectionMap).some(([imgId, sectionInfo]) => 
-        parseInt(imgId) === img.id && sectionInfo.section
-      )
-    );
-    
-    if (unassignedImages.length > 0) {
-      enhancedImagesInfo += "\n\nADDITIONAL IMAGES (without specific section):\n";
-      
-      // Limit to a reasonable number
-      const limitedUnassigned = unassignedImages.slice(0, Math.min(10, unassignedImages.length));
-      limitedUnassigned.forEach(img => {
-        enhancedImagesInfo += `Figure ${img.id}: ${img.caption || "No caption"}\n`;
-      });
-      
-      if (unassignedImages.length > 10) {
-        enhancedImagesInfo += `... and ${unassignedImages.length - 10} more unassigned images\n`;
-      }
-    }
-    
     // Create specialized document content with structured sections
     let structuredContent = "";
     
-    // Process the document sections for better organization
-    documentSections.forEach((section, index) => {
+    // Process the document sections for better organization, but limit how much we include
+    // Only include a subset of sections to stay within token limits
+    const limitedSections = documentSections.slice(0, 8); // Limit to first 8 sections 
+    
+    limitedSections.forEach((section, index) => {
       structuredContent += `\n\n####### SECTION ${index + 1}: ${section.title} #######\n\n`;
       
       // Include relevant images for this section if available
       const sectionImages = sectionToImagesMap[section.title];
       if (sectionImages && sectionImages.length > 0) {
-        structuredContent += `RELEVANT IMAGES: ${sectionImages.map(img => `Figure ${img.id}`).join(', ')}\n\n`;
+        const limitedImageList = sectionImages.slice(0, 2); // Limit to first 2 images per section
+        structuredContent += `RELEVANT IMAGES: ${limitedImageList.map(img => `Figure ${img.id}`).join(', ')}\n\n`;
       }
       
-      // Include the section content with preserved structure
-      structuredContent += section.content;
+      // Include the section content with preserved structure, but limit length
+      // Limit each section to ~500 characters
+      structuredContent += section.content.substring(0, 500) + (section.content.length > 500 ? "..." : "");
     });
     
     // High-priority document elements
@@ -428,8 +407,13 @@ export const processMessage = async (
     let importantSectionsContent = "";
     if (importantSections.length > 0) {
       importantSectionsContent = "\n\n####### HIGH PRIORITY DOCUMENT SECTIONS #######\n\n";
-      importantSections.forEach(section => {
-        importantSectionsContent += `SECTION: ${section.title}\n${section.content}\n\n`;
+      // Only include a limited number of important sections
+      const limitedImportantSections = importantSections.slice(0, 2);
+      limitedImportantSections.forEach(section => {
+        // Limit the content length for each section
+        const limitedContent = section.content.substring(0, 300) + 
+          (section.content.length > 300 ? "..." : "");
+        importantSectionsContent += `SECTION: ${section.title}\n${limitedContent}\n\n`;
       });
     }
     
@@ -439,23 +423,27 @@ export const processMessage = async (
         role: "system",
         content: SYSTEM_PROMPT + 
                 `\n\nDocument Title: ${document.name}` + 
-                enhancedImagesInfo + 
-                importantSectionsContent +
-                `\n\nDOCUMENT CONTENT (organized by sections with image relationships):\n${structuredContent.substring(0, 15000)}...`,
+                enhancedImagesInfo.substring(0, 2000) + 
+                importantSectionsContent.substring(0, 3000) +
+                `\n\nDOCUMENT CONTENT (organized by sections with image relationships):\n${structuredContent.substring(0, 5000)}...`,
       },
     ];
 
-    // Add previous messages (up to a reasonable amount)
-    const recentMessages = previousMessages.slice(-10);
+    // Add previous messages (only a few to save tokens)
+    const recentMessages = previousMessages.slice(-2); // Only use last 2 messages
     recentMessages.forEach((msg) => {
       const role: "system" | "user" | "assistant" = 
         (msg.role === "user" || msg.role === "assistant" || msg.role === "system") 
           ? msg.role as "system" | "user" | "assistant"
           : "assistant";
           
+      // Trim message content to save tokens
+      const trimmedContent = (msg.content || "").substring(0, 200) + 
+        ((msg.content || "").length > 200 ? "..." : "");
+      
       contextMessages.push({
         role,
-        content: msg.content || "",
+        content: trimmedContent,
       });
     });
 
