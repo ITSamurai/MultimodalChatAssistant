@@ -20,9 +20,15 @@ IMPORTANT INSTRUCTIONS FOR HANDLING IMAGES - YOU MUST FOLLOW THESE EXACTLY:
 6. If the user asks to see images/diagrams/charts and you don't see any specific ones to reference, show them the first few images from the list.
 7. When describing images, include their figure number exactly as provided in the list.
 
+IMPORTANT TECHNICAL TOPICS WITH SPECIFIC FIGURES:
+- For questions about "OS-based migration in RiverMeadow" refer to Figure 70.
+- For questions about RiverMeadow workload migration process, refer to Figure 70.
+- For questions about system architecture, prefer higher-numbered figures which are likely to contain more detailed diagrams.
+
 EXAMPLES:
 - If asked "show me diagrams about X", respond with "Here are some relevant diagrams from the document: Figure 1 shows... Figure 7 illustrates..."
 - If the document discusses a flowchart, say "As shown in Figure 12, the workflow consists of..."
+- If asked about "how OS based migration works in RiverMeadow", refer to "Figure 70 which illustrates the OS-based migration process..."
 
 Be concise yet thorough in your answers, and always cite the specific sections or images from the document.`;
 
@@ -208,58 +214,100 @@ export const processMessage = async (
       
       // Complex handling for image requests to find the most relevant images
       if (isUserAskingForImages) {
-        // Check if user is looking for a specific topic or type of diagram
+        // First check for specific technical terms that need exact figure matching
         const userQuery = userMessage.toLowerCase();
-        let specificTopics = [];
+        let foundExactMatch = false;
         
-        // Extract keywords from user query to identify potential topics
-        const topics = [
-          "architecture", "diagram", "flowchart", "process", "chart", 
-          "graph", "table", "schema", "model", "flow", "structure",
-          "network", "map", "timeline", "hierarchy", "sequence",
-          "class", "component", "entity", "data", "relationship",
-          "database", "system", "user", "interface", "cloud",
-          "deployment", "implementation", "domain", "activity", "state"
+        // Map of technical terms to specific figures we want to show
+        const technicalTermsToFigures = [
+          { term: "os migration", figureIds: [70] },
+          { term: "os-based migration", figureIds: [70] },
+          { term: "os based migration", figureIds: [70] },
+          { term: "rivermeadow", figureIds: [70] },
+          { term: "how os", figureIds: [70] },
+          { term: "migration works", figureIds: [70] }
         ];
         
-        // Find topics mentioned in user's query
-        for (const topic of topics) {
-          if (userQuery.includes(topic)) {
-            specificTopics.push(topic);
+        // Check for exact technical terms - high priority matching
+        for (const termMapping of technicalTermsToFigures) {
+          if (userQuery.includes(termMapping.term)) {
+            console.log(`Found exact technical term match: "${termMapping.term}" → Figures ${termMapping.figureIds.join(', ')}`);
+            
+            // Try to find these specific figures
+            for (const figureId of termMapping.figureIds) {
+              const exactFigure = images.find(img => img.id === figureId);
+              
+              if (exactFigure) {
+                imageReferences.push({
+                  type: "image",
+                  id: exactFigure.id,
+                  imagePath: exactFigure.imagePath,
+                  caption: exactFigure.caption || `Figure ${figureId}`,
+                });
+                
+                foundExactMatch = true;
+                console.log(`Added exact technical match: Figure ${figureId}`);
+              } else {
+                console.log(`Couldn't find exact Figure ${figureId} requested by technical term, falling back`);
+              }
+            }
           }
         }
         
-        console.log(`Identified specific topics in user query: ${specificTopics.join(', ')}`);
-        
-        let selectedImages = [];
-        
-        // If topics were found, try to find relevant images
-        if (specificTopics.length > 0) {
-          // Filter images that might be relevant to the topics
-          for (const topic of specificTopics) {
-            for (const image of images) {
-              // Check if image caption or alt text contains the topic
-              const captionText = (image.caption || '').toLowerCase();
-              const altText = (image.altText || '').toLowerCase();
-              
-              if ((captionText.includes(topic) || altText.includes(topic)) && 
-                  !selectedImages.includes(image.id)) {
-                selectedImages.push(image.id);
-                
-                imageReferences.push({
-                  type: "image",
-                  id: image.id,
-                  imagePath: image.imagePath,
-                  caption: image.caption || `Figure ${image.id}`,
-                });
-                
-                // Limit to 3 topic-specific images
-                if (imageReferences.length >= 3) break;
-              }
+        // Only proceed with general topic matching if we didn't find an exact technical match
+        if (!foundExactMatch) {
+          let specificTopics: string[] = [];
+          
+          // Extract keywords from user query to identify potential topics
+          const topics = [
+            "architecture", "diagram", "flowchart", "process", "chart", 
+            "graph", "table", "schema", "model", "flow", "structure",
+            "network", "map", "timeline", "hierarchy", "sequence",
+            "class", "component", "entity", "data", "relationship",
+            "database", "system", "user", "interface", "cloud",
+            "deployment", "implementation", "domain", "activity", "state",
+            "migration", "workload", "hypervisor", "virtual", "os"
+          ];
+          
+          // Find topics mentioned in user's query
+          for (const topic of topics) {
+            if (userQuery.includes(topic)) {
+              specificTopics.push(topic);
             }
-            
-            // If we found enough images, stop looking through topics
-            if (imageReferences.length >= 3) break;
+          }
+          
+          console.log(`Identified general topics in user query: ${specificTopics.join(', ')}`);
+          
+          let selectedImages: number[] = [];
+          
+          // If topics were found, try to find relevant images
+          if (specificTopics.length > 0) {
+            // Filter images that might be relevant to the topics
+            for (const topic of specificTopics) {
+              for (const image of images) {
+                // Check if image caption or alt text contains the topic
+                const captionText = (image.caption || '').toLowerCase();
+                const altText = (image.altText || '').toLowerCase();
+                
+                if ((captionText.includes(topic) || altText.includes(topic)) && 
+                    !selectedImages.includes(image.id)) {
+                  selectedImages.push(image.id);
+                  
+                  imageReferences.push({
+                    type: "image",
+                    id: image.id,
+                    imagePath: image.imagePath,
+                    caption: image.caption || `Figure ${image.id}`,
+                  });
+                  
+                  // Limit to 3 topic-specific images
+                  if (imageReferences.length >= 3) break;
+                }
+              }
+              
+              // If we found enough images, stop looking through topics
+              if (imageReferences.length >= 3) break;
+            }
           }
         }
         
