@@ -47,10 +47,10 @@ interface DocumentSection {
 // Enhanced image contextual mapping interface
 interface ImageContextInfo {
   section?: string;          // Main document section containing the image
-  subsection?: string;       // More specific heading or subsection near the image
   context?: string;          // Surrounding text context for the image
   figureNumber?: number;     // Figure number from the document (if available)
   importance?: number;       // Importance score (0.0-1.0) with higher being more important
+  surroundingText?: string;  // Text surrounding the image in the document
 }
 
 // Interface for image context records
@@ -269,10 +269,10 @@ function mapImagesToDocumentSections(
         
         mapping[matchingImageId] = {
           section: currentSectionObj ? currentSectionObj.name : "",
-          subsection: closestHeading,
           context: surroundingContext.substring(0, 300),
           figureNumber,
-          importance: calculateImageImportance(figureNumber, surroundingContext)
+          importance: calculateImageImportance(figureNumber, surroundingContext),
+          surroundingText: closestHeading
         };
         
         console.log(`Mapped Figure ${figureNumber} to section "${currentSectionObj?.name}" near heading "${closestHeading}"`);
@@ -362,9 +362,9 @@ function mapImagesToDocumentSections(
         if (importance > 0.3) {
           mapping[imageId] = {
             section: bestMatchingSection.name,
-            subsection: nearestHeading,
             context: bestContext.substring(0, 300),
-            importance: importance
+            importance: importance,
+            surroundingText: nearestHeading
           };
           
           console.log(`Mapped image ${imageIdNum} (Figure ${image.figureNumber || 'unknown'}) to section "${bestMatchingSection.name}" with match score ${bestMatchScore.toFixed(2)}`);
@@ -546,8 +546,8 @@ export const processMessage = async (
           enhancedImagesInfo += `\nSection: ${entry.contextInfo.section}`;
         }
         
-        if (entry.contextInfo.subsection) {
-          enhancedImagesInfo += `\nSubsection: ${entry.contextInfo.subsection}`;
+        if (entry.contextInfo.surroundingText) {
+          enhancedImagesInfo += `\nRelated Content: ${entry.contextInfo.surroundingText}`;
         }
         
         if (entry.contextInfo.context) {
