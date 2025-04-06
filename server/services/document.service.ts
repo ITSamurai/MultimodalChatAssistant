@@ -78,14 +78,14 @@ const extractImagesFromDocument = async (
         const matches = base64Data.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
         
         if (matches && matches.length === 3) {
-          const imageType = matches[1];
+          const imageFormat = matches[1];
           const imageData = matches[2];
           const buffer = Buffer.from(imageData, 'base64');
           
           // Generate unique filename - we'll preserve format and optimize naming
           const timestamp = Date.now();
           const imgNum = i + 1;
-          const filename = `doc_${documentId}_figure_${imgNum}_${timestamp}.${imageType}`;
+          const filename = `doc_${documentId}_figure_${imgNum}_${timestamp}.${imageFormat}`;
           const imagePath = path.join(IMAGES_DIR, filename);
           
           // Log image extraction for debugging
@@ -94,12 +94,42 @@ const extractImagesFromDocument = async (
           // Save image to disk with high quality
           await writeFile(imagePath, buffer);
           
-          // Create image entry with improved metadata
+          // Analyze image for better classification
+          const imageWidth = img.getAttribute('width') || 0;
+          const imageHeight = img.getAttribute('height') || 0;
+          const imgAlt = img.getAttribute('alt') || '';
+          const imgTitle = img.getAttribute('title') || '';
+          
+          // Try to determine image classification based on attributes and surrounding context
+          let imageClassification = 'unknown';
+          let imageContext = '';
+          
+          // Look for parent elements that might provide context (like figure captions)
+          let parentElement = img.parentNode;
+          if (parentElement && parentElement.tagName && parentElement.tagName.toLowerCase() === 'figure') {
+            const figCaption = parentElement.querySelector('figcaption');
+            if (figCaption) {
+              imageContext = figCaption.textContent || '';
+            }
+          }
+          
+          // Check for common diagram indicators in alt text or context
+          const diagramKeywords = ['diagram', 'flow', 'chart', 'architecture', 'process', 'structure'];
+          for (const keyword of diagramKeywords) {
+            if ((imgAlt && imgAlt.toLowerCase().includes(keyword)) || 
+                (imgTitle && imgTitle.toLowerCase().includes(keyword)) ||
+                (imageContext && imageContext.toLowerCase().includes(keyword))) {
+              imageClassification = 'diagram';
+              break;
+            }
+          }
+          
+          // Create image entry with enhanced metadata
           const imageInfo: InsertDocumentImage = {
             documentId,
             imagePath: `/uploads/images/${filename}`,
-            altText: img.getAttribute('alt') || `Image ${imgNum} from document`,
-            caption: `Figure ${imgNum}`,
+            altText: imgAlt || imageContext || `Image ${imgNum} from document`,
+            caption: imageContext || imgTitle || `Figure ${imgNum}`,
             pageNumber: null, // DOCX doesn't easily provide page numbers
           };
           
