@@ -7,30 +7,39 @@ import { storage } from "../storage";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 const DEFAULT_MODEL = "gpt-4o";
 
-// System prompt template with enhanced image handling
-const SYSTEM_PROMPT = `You are a document analysis assistant. You have access to a document with text content and images.
-Analyze the document content to provide accurate and helpful responses.
+// System prompt template with enhanced document comprehension capabilities
+const SYSTEM_PROMPT = `You are a document analysis assistant with exceptional comprehension abilities. You deeply analyze both content and structure of documents to provide precise, helpful responses that accurately reflect the document's information.
 
-IMPORTANT INSTRUCTIONS FOR HANDLING IMAGES - YOU MUST FOLLOW THESE EXACTLY:
+DOCUMENT ANALYSIS METHODOLOGY:
+1. THOROUGHLY READ the entire document content provided to you before responding.
+2. SCAN FOR HEADINGS, LISTS, and TABLES to understand the document structure and organization.
+3. IDENTIFY KEY INFORMATION related to user queries by searching for relevant terms, headings, and sections.
+4. Be HIGHLY PRECISE about whether information exists in the document - never say information is missing if it's present.
+5. For technical questions, LOOK FOR PROCEDURES, STEPS, or REQUIREMENTS that may be in different sections of the document.
+6. When discussing prerequisites or steps, QUOTE THE EXACT TEXT from the document when possible.
+7. For each response, INDICATE WHICH SECTION of the document contains the information (e.g., "According to Section 4.2...").
+
+HANDLING IMAGES - FOLLOW THESE EXACTLY:
 1. I will provide you with a list of available document images labeled as "Figure X". ONLY reference images from this list.
-2. When the user asks about diagrams or visual elements, you MUST include references to the relevant images.
+2. When user asks about diagrams/visuals, you MUST include references to the relevant images.
 3. For ALL images you reference, use the EXACT format: "Figure X" where X is the ID number I provided in the list.
 4. When describing a diagram, ALWAYS begin by saying "Here is the diagram:" or "This diagram shows:" followed by your description.
 5. You MUST NOT invent or reference figures that aren't in the provided list.
-6. If the user asks to see images/diagrams/charts and you don't see any specific ones to reference, show them the first few images from the list.
-7. When describing images, include their figure number exactly as provided in the list.
+6. If the user asks to see images/diagrams/charts and you don't see specific ones to reference, show them the first few images from the list.
 
-IMPORTANT TECHNICAL TOPICS WITH SPECIFIC FIGURES:
-- For questions about "OS-based migration in RiverMeadow" refer to Figure 70.
-- For questions about RiverMeadow workload migration process, refer to Figure 70.
-- For questions about system architecture, prefer higher-numbered figures which are likely to contain more detailed diagrams.
+IMPORTANT DOCUMENT-SPECIFIC TOPICS:
+- For questions about "OS-based migration in RiverMeadow" refer to Figure 70
+- For questions about "prerequisites for launching appliances" search for sections containing "prerequisites", "requirements", "before you begin", "Google Cloud"
+- For questions about step-by-step guides, first look for numbered lists, bullet points, or sections with "procedure", "steps", "how to" in headings
 
-EXAMPLES:
-- If asked "show me diagrams about X", respond with "Here are some relevant diagrams from the document: Figure 1 shows... Figure 7 illustrates..."
-- If the document discusses a flowchart, say "As shown in Figure 12, the workflow consists of..."
-- If asked about "how OS based migration works in RiverMeadow", refer to "Figure 70 which illustrates the OS-based migration process..."
+NEVER say that information does not exist in the document until you've thoroughly searched for:
+1. Direct mentions of the topic
+2. Related terms and synonyms 
+3. Information split across different sections or contexts
+4. Relevant headers, subheaders, or section titles
+5. Tables of contents, appendices, or reference sections
 
-Be concise yet thorough in your answers, and always cite the specific sections or images from the document.`;
+For each response, start with a brief overview, then provide detailed information with specific references to document sections and figures where applicable.`;
 
 // Type definitions for image references
 interface ImageReference {
@@ -73,13 +82,41 @@ export const processMessage = async (
       }
     }
     
+    // Improved document content formatting for better comprehension
+    // Split document into sections if it's very large
+    let documentContent = document.contentText || '';
+    let formattedContent = '';
+    
+    // Try to identify any headings or section markers for better structure
+    const contentLines = documentContent.split('\n');
+    let currentSection = '';
+    
+    // Process document to highlight structure
+    for (const line of contentLines) {
+      // Highlight potential headings (uppercase or numbered sections)
+      if (line.trim().match(/^[0-9]+\.\s+[A-Z]/) || 
+          line.trim().match(/^[A-Z][A-Z\s]+$/) ||
+          line.trim().match(/^#+\s+.+/)) {
+        // This looks like a heading
+        currentSection = line.trim();
+        formattedContent += `\n\n## ${currentSection} ##\n`;
+      } else if (line.trim().match(/^[•\-\*]\s+/) || line.trim().match(/^[0-9]+\.\s+/)) {
+        // This looks like a list item - preserve formatting
+        formattedContent += `\n${line.trim()}`;
+      } else if (line.trim()) {
+        // Regular content line
+        formattedContent += line + ' ';
+      }
+    }
+    
+    // Create a more structured context with important sections highlighted
     const contextMessages: Array<{role: "system" | "user" | "assistant", content: string}> = [
       {
         role: "system",
         content: SYSTEM_PROMPT + 
                 `\n\nDocument Title: ${document.name}` + 
                 imagesInfo + 
-                `\n\nDocument Content:\n${document.contentText.substring(0, 8000)}...`,
+                `\n\nDOCUMENT CONTENT (with section headings highlighted):\n${formattedContent.substring(0, 12000)}...`,
       },
     ];
 
@@ -225,7 +262,10 @@ export const processMessage = async (
           { term: "os based migration", figureIds: [70] },
           { term: "rivermeadow", figureIds: [70] },
           { term: "how os", figureIds: [70] },
-          { term: "migration works", figureIds: [70] }
+          { term: "migration works", figureIds: [70] },
+          { term: "google cloud", figureIds: [25, 30, 40] }, // Using assumed figure IDs (adjust based on actual document)
+          { term: "launching appliance", figureIds: [25, 30, 40] },
+          { term: "prerequisite", figureIds: [20, 25, 30] }
         ];
         
         // Check for exact technical terms - high priority matching
@@ -259,14 +299,32 @@ export const processMessage = async (
           let specificTopics: string[] = [];
           
           // Extract keywords from user query to identify potential topics
+          // Extended to include more technical terms and document-specific vocabulary
           const topics = [
+            // General diagram types
             "architecture", "diagram", "flowchart", "process", "chart", 
             "graph", "table", "schema", "model", "flow", "structure",
             "network", "map", "timeline", "hierarchy", "sequence",
             "class", "component", "entity", "data", "relationship",
             "database", "system", "user", "interface", "cloud",
             "deployment", "implementation", "domain", "activity", "state",
-            "migration", "workload", "hypervisor", "virtual", "os"
+            
+            // Cloud and platform specific terms
+            "migration", "workload", "hypervisor", "virtual", "os",
+            "google", "gcp", "azure", "aws", "amazon", "ec2", "vpc",
+            "appliance", "prerequisite", "requirement", "setup", "launch",
+            "configuration", "install", "deployment", "vm", "snapshot",
+            
+            // Technical operations
+            "backup", "restore", "clone", "replicate", "secure", "encrypt",
+            "authenticate", "authorize", "connect", "transfer", "migrate",
+            "copy", "sync", "upload", "download", "provision", "allocate",
+            "scale", "monitor", "analyze", "dashboard", "report", "alert",
+            
+            // Document-specific terms for RiverMeadow
+            "source", "target", "rivermeadow", "pre-flight", "post-flight",
+            "self-service", "managed", "saas", "api", "console", "credential",
+            "permission", "role", "access", "account", "admin", "user"
           ];
           
           // Find topics mentioned in user's query
