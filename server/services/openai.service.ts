@@ -238,9 +238,10 @@ function mapImagesToDocumentSections(
     
     if (figureNumber) {
       // Find the image with this figure number
-      const matchingImageId = Object.keys(imageIndex).find(id => 
-        imageIndex[id].figureNumber === figureNumber
-      );
+      const matchingImageId = Object.keys(imageIndex).find(id => {
+        const img = imageIndex[id];
+        return img && img.figureNumber === figureNumber;
+      });
       
       if (matchingImageId) {
         // Find the current section
@@ -284,6 +285,8 @@ function mapImagesToDocumentSections(
   Object.keys(imageIndex).forEach(imageId => {
     if (!mapping[imageId]) {
       const image = imageIndex[imageId];
+      if (!image) return; // Skip if image is undefined
+      
       const imageIdNum = parseInt(imageId);
       const caption = (image.caption || '').toLowerCase();
       
