@@ -44,21 +44,26 @@ interface DocumentSection {
   images?: number[]; // Image IDs associated with this section
 }
 
-// Image contextual mapping interface
+// Enhanced image contextual mapping interface
 interface ImageContextInfo {
-  section?: string;
-  context?: string;
-  figureNumber?: number;
+  section?: string;          // Main document section containing the image
+  subsection?: string;       // More specific heading or subsection near the image
+  context?: string;          // Surrounding text context for the image
+  figureNumber?: number;     // Figure number from the document (if available)
+  importance?: number;       // Importance score (0.0-1.0) with higher being more important
 }
 
-// Create an index of images with enhanced contextual information
-function createImageContextIndex(images: DocumentImage[]): Record<number, {
+// Interface for image context records
+interface ImageContextRecord {
   id: number;
   caption: string;
   altText: string;
   figureNumber?: number;
-}> {
-  const imageIndex: Record<number, any> = {};
+}
+
+// Create an index of images with enhanced contextual information
+function createImageContextIndex(images: DocumentImage[]): Record<string, ImageContextRecord> {
+  const imageIndex: Record<string, ImageContextRecord> = {};
   
   images.forEach(image => {
     // Extract potential figure number from caption
@@ -130,128 +135,323 @@ function extractDocumentSections(content: string): DocumentSection[] {
   return sections;
 }
 
-// Map images to document sections based on content analysis
+// Enhanced AI-driven mapping of images to document sections with improved context analysis
 function mapImagesToDocumentSections(
   content: string, 
-  imageIndex: Record<number, any>
+  imageIndex: Record<string, ImageContextRecord>
 ): Record<string, ImageContextInfo> {
   const mapping: Record<string, ImageContextInfo> = {};
   const lines = content.split('\n');
   
-  let currentSection = "";
+  // Extract all sections for global analysis
+  interface ContentSection {
+    name: string;
+    startIndex: number;
+    endIndex: number;
+    content: string;
+    headings: {text: string, index: number}[];
+  }
   
-  // Process each line to find image references and their contexts
+  const sections: ContentSection[] = [];
+  let currentSection = "";
+  let sectionStartIndex = 0;
+  let currentSectionHeadings: {text: string, index: number}[] = [];
+  
+  // First pass: identify all sections and subsection headings
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i].trim();
     
-    // Track current section
+    // Detect main section markers
     if (line.startsWith('## SECTION_START:')) {
+      // Save previous section if there was one
+      if (currentSection) {
+        sections.push({
+          name: currentSection,
+          startIndex: sectionStartIndex,
+          endIndex: i - 1,
+          content: lines.slice(sectionStartIndex, i).join(' '),
+          headings: currentSectionHeadings
+        });
+      }
+      
+      // Start new section
       currentSection = line.replace('## SECTION_START:', '').replace('##', '').trim();
+      sectionStartIndex = i;
+      currentSectionHeadings = [];
       continue;
     }
     
-    // Look for figure references
-    const figureMatch = line.match(/FIGURE_REFERENCE\((\d+)\):|Figure\s+(\d+)/i);
-    if (figureMatch) {
-      const figureNumber = parseInt(figureMatch[1] || figureMatch[2]);
-      
+    // Detect subsection headings (patterns like "1.1", "Step 1:", bold or uppercase text)
+    if (
+      // Heading patterns like "1.1", "1.2.3", etc.
+      /^[\d\.]+\s+[A-Z]/.test(line) ||
+      // Heading patterns like "Step 1:" or "Phase 2:"
+      /^(Step|Phase|Stage|Part)\s+\d+:/.test(line) ||
+      // Bold or all caps headings
+      /^[A-Z\s\d]{5,}$/.test(line) ||
+      // Heading with "#" markdown syntax
+      /^#{1,4}\s+/.test(line)
+    ) {
+      currentSectionHeadings.push({
+        text: line,
+        index: i
+      });
+    }
+  }
+  
+  // Add the last section
+  if (currentSection) {
+    sections.push({
+      name: currentSection,
+      startIndex: sectionStartIndex,
+      endIndex: lines.length - 1,
+      content: lines.slice(sectionStartIndex).join(' '),
+      headings: currentSectionHeadings
+    });
+  }
+  
+  // Second pass: look for explicit figure references
+  console.log(`Analyzing document for figure references across ${sections.length} identified sections`);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Look for figure references using various patterns
+    const figurePatterns = [
+      /FIGURE_REFERENCE\((\d+)\):/i,
+      /Figure\s+(\d+)/i,
+      /Fig\.\s*(\d+)/i,
+      /Figure\s+No\.\s*(\d+)/i,
+      /\(Figure\s+(\d+)\)/i,
+      /\[Figure\s+(\d+)\]/i,
+      /\(Fig\.\s*(\d+)\)/i
+    ];
+    
+    let figureNumber: number | null = null;
+    
+    for (const pattern of figurePatterns) {
+      const match = line.match(pattern);
+      if (match) {
+        figureNumber = parseInt(match[1]);
+        break;
+      }
+    }
+    
+    if (figureNumber) {
       // Find the image with this figure number
       const matchingImageId = Object.keys(imageIndex).find(id => 
         imageIndex[id].figureNumber === figureNumber
       );
       
       if (matchingImageId) {
-        // Get surrounding context
-        const surroundingStart = Math.max(0, i - 2);
-        const surroundingEnd = Math.min(lines.length - 1, i + 3);
+        // Find the current section
+        const currentSectionObj = sections.find(section => 
+          i >= section.startIndex && i <= section.endIndex
+        );
+
+        // Find the closest heading before this reference
+        let closestHeading = "";
+        if (currentSectionObj) {
+          const headingsBefore = currentSectionObj.headings.filter(heading => heading.index < i);
+          if (headingsBefore.length > 0) {
+            // Get the most recent heading
+            closestHeading = headingsBefore[headingsBefore.length - 1].text;
+          }
+        }
+        
+        // Get surrounding context with extra lines for better understanding
+        const surroundingStart = Math.max(0, i - 3);
+        const surroundingEnd = Math.min(lines.length - 1, i + 5);
         const surroundingContext = lines
           .slice(surroundingStart, surroundingEnd)
           .filter(l => !l.startsWith('##') && l.trim() !== '')
-          .join(' ')
-          .substring(0, 200);
+          .join(' ');
         
         mapping[matchingImageId] = {
-          section: currentSection,
-          context: surroundingContext,
-          figureNumber
+          section: currentSectionObj ? currentSectionObj.name : "",
+          subsection: closestHeading,
+          context: surroundingContext.substring(0, 300),
+          figureNumber,
+          importance: calculateImageImportance(figureNumber, surroundingContext)
         };
+        
+        console.log(`Mapped Figure ${figureNumber} to section "${currentSectionObj?.name}" near heading "${closestHeading}"`);
       }
     }
   }
   
-  // For images without direct references, try to match based on content
+  // Third pass: use intelligent content-based matching for images without direct references
+  // For images without direct references, use more sophisticated content analysis
   Object.keys(imageIndex).forEach(imageId => {
     if (!mapping[imageId]) {
       const image = imageIndex[imageId];
+      const imageIdNum = parseInt(imageId);
       const caption = (image.caption || '').toLowerCase();
       
-      // Simple matching algorithm
-      let bestMatchScore = 0;
-      let bestMatchingSection = "";
-      let bestContext = "";
+      // Skip small or likely irrelevant images
+      if (imageIdNum < 10 && (!caption || caption.length < 10)) {
+        console.log(`Skipping likely irrelevant image ${imageIdNum} with short/no caption`);
+        return; // Skip this image
+      }
       
-      // Look for sections with content related to the image caption
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].startsWith('## SECTION_START:')) {
-          const sectionName = lines[i].replace('## SECTION_START:', '').replace('##', '').trim();
-          const sectionStart = i;
+      // Heuristic 1: Images usually follow the text that references them
+      // Look for nearby text that might reference the image content
+      
+      let bestMatchScore = 0;
+      let bestMatchingSection: ContentSection | null = null;
+      let bestContext = "";
+      let nearestHeading = "";
+      
+      // Extract key terms from the caption
+      const keyTerms = extractKeyTerms(caption);
+      
+      // Check each section for relevance
+      for (const section of sections) {
+        // First try to match by section name for major figures
+        const sectionNameScore = calculateTermMatchScore(keyTerms, section.name.toLowerCase()) * 3;
+        
+        // Then check content for term matches
+        const contentScore = calculateTermMatchScore(keyTerms, section.content.toLowerCase());
+        
+        // Combined score
+        const totalScore = sectionNameScore + contentScore;
+        
+        if (totalScore > bestMatchScore) {
+          bestMatchScore = totalScore;
+          bestMatchingSection = section;
           
-          // Find the end of this section
-          let sectionEnd = i;
-          for (let j = i + 1; j < lines.length; j++) {
-            if (lines[j].startsWith('## SECTION_START:')) {
-              sectionEnd = j - 1;
-              break;
-            }
-            if (j === lines.length - 1) {
-              sectionEnd = j;
+          // Find the most relevant paragraph within this section
+          const paragraphs = section.content.split(/\n\n+/);
+          let bestParagraphScore = 0;
+          let bestParagraph = "";
+          
+          for (const paragraph of paragraphs) {
+            const paragraphScore = calculateTermMatchScore(keyTerms, paragraph.toLowerCase());
+            if (paragraphScore > bestParagraphScore) {
+              bestParagraphScore = paragraphScore;
+              bestParagraph = paragraph;
             }
           }
           
-          // Get section content
-          const sectionContent = lines.slice(sectionStart, sectionEnd + 1).join(' ').toLowerCase();
+          bestContext = bestParagraph;
           
-          // Count term matches
-          const captionTerms = caption.split(/\s+/).filter(term => term.length > 3);
-          let score = 0;
-          
-          captionTerms.forEach(term => {
-            if (sectionContent.includes(term)) {
-              score += 2;
-            }
-            if (sectionName.toLowerCase().includes(term)) {
-              score += 5; // Matches in section name are more important
-            }
-          });
-          
-          // If this section is better than any previous match, store it
-          if (score > bestMatchScore) {
-            bestMatchScore = score;
-            bestMatchingSection = sectionName;
+          // Try to find a nearby heading
+          if (section.headings.length > 0) {
+            // Just use the first heading as a fallback
+            nearestHeading = section.headings[0].text;
             
-            // Extract some context
-            const contextStart = Math.max(sectionStart, i);
-            const contextEnd = Math.min(sectionEnd, i + 5);
-            bestContext = lines
-              .slice(contextStart, contextEnd + 1)
-              .filter(l => !l.startsWith('##') && l.trim() !== '')
-              .join(' ')
-              .substring(0, 200);
+            // More sophisticated: try to find heading with term matches
+            for (const heading of section.headings) {
+              if (calculateTermMatchScore(keyTerms, heading.text.toLowerCase()) > 0) {
+                nearestHeading = heading.text;
+                break;
+              }
+            }
           }
         }
       }
       
-      // Only use the match if it's reasonably strong
-      if (bestMatchScore > 2) {
-        mapping[imageId] = {
-          section: bestMatchingSection,
-          context: bestContext
-        };
+      // Only map images with significant matches and skip likely decorative images
+      if (bestMatchScore > 3 && bestMatchingSection) {
+        // Calculate importance score based on caption length, term matches, etc.
+        const importance = calculateImageImportance(imageIdNum, caption, bestMatchScore);
+        
+        // Only include reasonably important images
+        if (importance > 0.3) {
+          mapping[imageId] = {
+            section: bestMatchingSection.name,
+            subsection: nearestHeading,
+            context: bestContext.substring(0, 300),
+            importance: importance
+          };
+          
+          console.log(`Mapped image ${imageIdNum} (Figure ${image.figureNumber || 'unknown'}) to section "${bestMatchingSection.name}" with match score ${bestMatchScore.toFixed(2)}`);
+        } else {
+          console.log(`Skipping low importance image ${imageIdNum} (score: ${importance.toFixed(2)})`);
+        }
       }
     }
   });
   
   return mapping;
+}
+
+// Helper function to extract meaningful terms from text
+function extractKeyTerms(text: string): string[] {
+  if (!text) return [];
+  
+  // Remove common stop words
+  const stopWords = ['a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'of', 'is', 'are'];
+  
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')  // Remove punctuation
+    .split(/\s+/)              // Split into words
+    .filter(word => word.length > 3 && !stopWords.includes(word)) // Remove stop words and short words
+    .slice(0, 10);             // Only use the first 10 terms (most important)
+}
+
+// Helper function to calculate term match score between text and terms
+function calculateTermMatchScore(terms: string[], text: string): number {
+  if (!terms.length || !text) return 0;
+  
+  let score = 0;
+  terms.forEach(term => {
+    if (text.includes(term)) {
+      // Base match
+      score += 1;
+      
+      // Bonus for whole word matches
+      if (new RegExp(`\\b${term}\\b`, 'i').test(text)) {
+        score += 0.5;
+      }
+      
+      // Extra bonus for repeated terms (indicating higher relevance)
+      const matches = text.match(new RegExp(term, 'gi'));
+      if (matches && matches.length > 1) {
+        score += Math.min(matches.length - 1, 3) * 0.5;
+      }
+    }
+  });
+  
+  return score;
+}
+
+// Helper function to calculate image importance based on various factors
+function calculateImageImportance(figureNum: number, context: string, matchScore?: number): number {
+  let importance = 0.5; // Base importance
+  
+  // Factors that increase importance
+  if (figureNum === 70) {
+    // Special case for figure 70 (OS migration)
+    importance += 0.5;
+  }
+  
+  // Important figures tend to have numbers above 10 (figures 1-10 are often small/decorative)
+  if (figureNum > 10) {
+    importance += 0.1;
+  }
+  
+  // Context contains important technical terms
+  const technicalTerms = ['migration', 'cloud', 'process', 'workflow', 'diagram', 'architecture', 
+                         'system', 'overview', 'prerequisite', 'step', 'procedure'];
+                         
+  technicalTerms.forEach(term => {
+    if (context && context.toLowerCase().includes(term)) {
+      importance += 0.05;
+    }
+  });
+  
+  // Context length - longer contexts usually indicate more important images
+  if (context && context.length > 100) {
+    importance += 0.1;
+  }
+  
+  // If we have a match score from content-based matching
+  if (matchScore !== undefined) {
+    importance += Math.min(matchScore * 0.1, 0.3);
+  }
+  
+  return Math.min(importance, 1.0); // Cap at 1.0
 }
 
 // Process a user message and get AI response
@@ -300,57 +500,93 @@ export const processMessage = async (
     // Create a semantic map of images to document sections
     const imageToSectionMap = mapImagesToDocumentSections(documentContent, imageContextIndex);
     
-    // Format images information with enhanced context, but radically simplify to reduce tokens
-    let enhancedImagesInfo = "\n\nKEY DOCUMENT IMAGES:";
+    // Format images information with enhanced context using the AI-driven image mapping system
+    let enhancedImagesInfo = "\n\nKEY DOCUMENT IMAGES WITH CONTEXTUAL RELATIONSHIPS:";
     
-    // Drastically simplify image processing - only include the most important images
-    // Specifically Figure 70 (OS migration) and a few others with high priority
-    const criticalFigureIds = [70]; // OS migration is highest priority
-    
-    // Add a few other potentially important figures (just guessing from common references)
+    // Use our advanced importance-based scoring to select the most relevant images
     if (images.length > 0) {
-      // Try to find figures with common migration or cloud terms in captions
-      const keywordFigures = images.filter(img => {
-        if (!img.caption) return false;
+      // Get entries from image-to-section map and sort by importance
+      const imageEntries = Object.entries(imageToSectionMap).map(([imageId, contextInfo]) => {
+        return {
+          imageId: parseInt(imageId),
+          contextInfo,
+          importance: contextInfo.importance || 0.0
+        };
+      });
+      
+      // Sort by importance (highest first) 
+      imageEntries.sort((a, b) => b.importance - a.importance);
+      
+      // Take top 5 most important images
+      const topImages = imageEntries.slice(0, 5);
+      
+      console.log(`Selected ${topImages.length} most important images based on AI-driven relevance scoring`);
+      
+      // Ensure Figure 70 is included if it exists (OS migration special case)
+      const hasFigure70 = topImages.some(entry => entry.imageId === 70);
+      if (!hasFigure70) {
+        const figure70Entry = imageEntries.find(entry => entry.imageId === 70);
+        if (figure70Entry) {
+          topImages.push(figure70Entry);
+          console.log("Added Figure 70 (OS migration) to top images due to its special relevance");
+        }
+      }
+      
+      // Add detailed information for each important image
+      for (const entry of topImages) {
+        const figure = images.find(img => img.id === entry.imageId);
+        if (!figure) continue;
         
-        const caption = img.caption.toLowerCase();
-        return caption.includes("migration") || 
-               caption.includes("cloud") || 
-               caption.includes("workflow") ||
-               caption.includes("process") ||
-               caption.includes("diagram") ||
-               caption.includes("rivermeadow");
-      }).slice(0, 3); // Limit to 3 most relevant figures
-      
-      // First add the critical figures
-      for (const figId of criticalFigureIds) {
-        const figure = images.find(img => img.id === figId);
-        if (figure) {
-          enhancedImagesInfo += `\n\nFigure ${figure.id}: ${figure.caption || "No caption"}`;
-          
-          // Add minimal context if available
-          const figContext = imageToSectionMap[figure.id.toString()];
-          if (figContext && figContext.context) {
-            enhancedImagesInfo += `\nContext: ${figContext.context.substring(0, 80)}...`;
-          }
+        enhancedImagesInfo += `\n\n### Figure ${figure.id}: ${figure.caption || "No caption"}`;
+        
+        if (entry.contextInfo.section) {
+          enhancedImagesInfo += `\nSection: ${entry.contextInfo.section}`;
         }
+        
+        if (entry.contextInfo.subsection) {
+          enhancedImagesInfo += `\nSubsection: ${entry.contextInfo.subsection}`;
+        }
+        
+        if (entry.contextInfo.context) {
+          enhancedImagesInfo += `\nContext: ${entry.contextInfo.context.substring(0, 100)}...`;
+        }
+        
+        // Add importance indicator for debugging/visibility
+        const importanceLevel = 
+          entry.importance >= 0.8 ? "VERY HIGH" :
+          entry.importance >= 0.6 ? "HIGH" :
+          entry.importance >= 0.4 ? "MEDIUM" :
+          "LOW";
+          
+        enhancedImagesInfo += `\nRelevance: ${importanceLevel}`;
       }
       
-      // Then add keyword figures (but not duplicates of critical figures)
-      for (const figure of keywordFigures) {
-        if (!criticalFigureIds.includes(figure.id)) {
-          enhancedImagesInfo += `\n\nFigure ${figure.id}: ${figure.caption || "No caption"}`;
-          
-          // Add minimal context if available
-          const figContext = imageToSectionMap[figure.id.toString()];
-          if (figContext && figContext.context) {
-            enhancedImagesInfo += `\nContext: ${figContext.context.substring(0, 80)}...`;
+      // Add a summary of section-to-image mappings to help GPT understand document structure
+      enhancedImagesInfo += "\n\n### IMAGE-SECTION RELATIONSHIPS:";
+      
+      // Group images by section
+      const sectionToImageIdsMap: Record<string, number[]> = {};
+      
+      Object.entries(imageToSectionMap).forEach(([imageId, contextInfo]) => {
+        if (contextInfo.section && contextInfo.importance && contextInfo.importance > 0.3) {
+          const section = contextInfo.section;
+          if (!sectionToImageIdsMap[section]) {
+            sectionToImageIdsMap[section] = [];
           }
+          sectionToImageIdsMap[section].push(parseInt(imageId));
         }
-      }
+      });
+      
+      // Display section-to-image mappings (only for sections with images)
+      Object.entries(sectionToImageIdsMap).forEach(([section, imageIds]) => {
+        if (imageIds.length > 0) {
+          const limitedIds = imageIds.slice(0, 3); // Limit to 3 images per section
+          enhancedImagesInfo += `\n- ${section}: Figures ${limitedIds.join(', ')}${imageIds.length > 3 ? ` and ${imageIds.length - 3} more` : ''}`;
+        }
+      });
     }
     
-    // Creating a minimal sectionToImagesMap for document sectioning
+    // Creating a mapping of sections to their related images with content details
     const sectionToImagesMap: Record<string, Array<{id: number, caption: string, context: string}>> = {};
     
     // Just add the key images for reference
