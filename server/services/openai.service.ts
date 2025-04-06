@@ -66,6 +66,223 @@ interface ImageReference {
   caption: string;
 }
 
+// Document section structure interface
+interface DocumentSection {
+  title: string;
+  content: string;
+  images?: number[]; // Image IDs associated with this section
+}
+
+// Image contextual mapping interface
+interface ImageContextInfo {
+  section?: string;
+  context?: string;
+  figureNumber?: number;
+}
+
+// Create an index of images with enhanced contextual information
+function createImageContextIndex(images: DocumentImage[]): Record<number, {
+  id: number;
+  caption: string;
+  altText: string;
+  figureNumber?: number;
+}> {
+  const imageIndex: Record<number, any> = {};
+  
+  images.forEach(image => {
+    // Extract potential figure number from caption
+    let figureNumber: number | undefined = undefined;
+    const caption = image.caption || '';
+    const figureMatch = caption.match(/figure\s+(\d+)/i);
+    
+    if (figureMatch) {
+      figureNumber = parseInt(figureMatch[1]);
+    }
+    
+    imageIndex[image.id] = {
+      id: image.id,
+      caption: image.caption || '',
+      altText: image.altText || '',
+      figureNumber
+    };
+  });
+  
+  return imageIndex;
+}
+
+// Extract document sections from structured content
+function extractDocumentSections(content: string): DocumentSection[] {
+  const sections: DocumentSection[] = [];
+  const lines = content.split('\n');
+  
+  let currentTitle = "Introduction";
+  let currentContent = "";
+  let inSection = false;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Detect section markers
+    if (line.startsWith('## SECTION_START:')) {
+      // Save previous section if there was one
+      if (inSection) {
+        sections.push({
+          title: currentTitle,
+          content: currentContent.trim()
+        });
+      }
+      
+      // Start new section
+      currentTitle = line.replace('## SECTION_START:', '').replace('##', '').trim();
+      currentContent = "";
+      inSection = true;
+      continue;
+    }
+    
+    // Add content to current section
+    if (inSection) {
+      currentContent += line + '\n';
+    } else {
+      // If not in a section yet, accumulate content in the default introduction section
+      currentContent += line + '\n';
+    }
+  }
+  
+  // Add the last section
+  if (currentContent.trim()) {
+    sections.push({
+      title: currentTitle,
+      content: currentContent.trim()
+    });
+  }
+  
+  return sections;
+}
+
+// Map images to document sections based on content analysis
+function mapImagesToDocumentSections(
+  content: string, 
+  imageIndex: Record<number, any>
+): Record<string, ImageContextInfo> {
+  const mapping: Record<string, ImageContextInfo> = {};
+  const lines = content.split('\n');
+  
+  let currentSection = "";
+  
+  // Process each line to find image references and their contexts
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Track current section
+    if (line.startsWith('## SECTION_START:')) {
+      currentSection = line.replace('## SECTION_START:', '').replace('##', '').trim();
+      continue;
+    }
+    
+    // Look for figure references
+    const figureMatch = line.match(/FIGURE_REFERENCE\((\d+)\):|Figure\s+(\d+)/i);
+    if (figureMatch) {
+      const figureNumber = parseInt(figureMatch[1] || figureMatch[2]);
+      
+      // Find the image with this figure number
+      const matchingImageId = Object.keys(imageIndex).find(id => 
+        imageIndex[id].figureNumber === figureNumber
+      );
+      
+      if (matchingImageId) {
+        // Get surrounding context
+        const surroundingStart = Math.max(0, i - 2);
+        const surroundingEnd = Math.min(lines.length - 1, i + 3);
+        const surroundingContext = lines
+          .slice(surroundingStart, surroundingEnd)
+          .filter(l => !l.startsWith('##') && l.trim() !== '')
+          .join(' ')
+          .substring(0, 200);
+        
+        mapping[matchingImageId] = {
+          section: currentSection,
+          context: surroundingContext,
+          figureNumber
+        };
+      }
+    }
+  }
+  
+  // For images without direct references, try to match based on content
+  Object.keys(imageIndex).forEach(imageId => {
+    if (!mapping[imageId]) {
+      const image = imageIndex[imageId];
+      const caption = (image.caption || '').toLowerCase();
+      
+      // Simple matching algorithm
+      let bestMatchScore = 0;
+      let bestMatchingSection = "";
+      let bestContext = "";
+      
+      // Look for sections with content related to the image caption
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('## SECTION_START:')) {
+          const sectionName = lines[i].replace('## SECTION_START:', '').replace('##', '').trim();
+          const sectionStart = i;
+          
+          // Find the end of this section
+          let sectionEnd = i;
+          for (let j = i + 1; j < lines.length; j++) {
+            if (lines[j].startsWith('## SECTION_START:')) {
+              sectionEnd = j - 1;
+              break;
+            }
+            if (j === lines.length - 1) {
+              sectionEnd = j;
+            }
+          }
+          
+          // Get section content
+          const sectionContent = lines.slice(sectionStart, sectionEnd + 1).join(' ').toLowerCase();
+          
+          // Count term matches
+          const captionTerms = caption.split(/\s+/).filter(term => term.length > 3);
+          let score = 0;
+          
+          captionTerms.forEach(term => {
+            if (sectionContent.includes(term)) {
+              score += 2;
+            }
+            if (sectionName.toLowerCase().includes(term)) {
+              score += 5; // Matches in section name are more important
+            }
+          });
+          
+          // If this section is better than any previous match, store it
+          if (score > bestMatchScore) {
+            bestMatchScore = score;
+            bestMatchingSection = sectionName;
+            
+            // Extract some context
+            const contextStart = Math.max(sectionStart, i);
+            const contextEnd = Math.min(sectionEnd, i + 5);
+            bestContext = lines
+              .slice(contextStart, contextEnd + 1)
+              .filter(l => !l.startsWith('##') && l.trim() !== '')
+              .join(' ')
+              .substring(0, 200);
+          }
+        }
+      }
+      
+      // Only use the match if it's reasonably strong
+      if (bestMatchScore > 2) {
+        mapping[imageId] = {
+          section: bestMatchingSection,
+          context: bestContext
+        };
+      }
+    }
+  });
+  
+  return mapping;
+}
+
 // Process a user message and get AI response
 export const processMessage = async (
   documentId: number,
@@ -99,41 +316,132 @@ export const processMessage = async (
       }
     }
     
-    // Improved document content formatting for better comprehension
-    // Split document into sections if it's very large
+    // Process the enhanced structured document content
     let documentContent = document.contentText || '';
-    let formattedContent = '';
     
-    // Try to identify any headings or section markers for better structure
-    const contentLines = documentContent.split('\n');
-    let currentSection = '';
+    // Create an index of all images with their contextual information
+    console.log("Creating enhanced image context index...");
+    const imageContextIndex = createImageContextIndex(images);
     
-    // Process document to highlight structure
-    for (const line of contentLines) {
-      // Highlight potential headings (uppercase or numbered sections)
-      if (line.trim().match(/^[0-9]+\.\s+[A-Z]/) || 
-          line.trim().match(/^[A-Z][A-Z\s]+$/) ||
-          line.trim().match(/^#+\s+.+/)) {
-        // This looks like a heading
-        currentSection = line.trim();
-        formattedContent += `\n\n## ${currentSection} ##\n`;
-      } else if (line.trim().match(/^[•\-\*]\s+/) || line.trim().match(/^[0-9]+\.\s+/)) {
-        // This looks like a list item - preserve formatting
-        formattedContent += `\n${line.trim()}`;
-      } else if (line.trim()) {
-        // Regular content line
-        formattedContent += line + ' ';
+    // Extract document sections and structure
+    const documentSections = extractDocumentSections(documentContent);
+    
+    // Create a semantic map of images to document sections
+    const imageToSectionMap = mapImagesToDocumentSections(documentContent, imageContextIndex);
+    
+    // Format images information with enhanced context
+    let enhancedImagesInfo = "\n\nAVAILABLE DOCUMENT IMAGES WITH CONTEXTUAL INFORMATION:";
+    
+    // Group images by section for more logical presentation
+    const sectionToImagesMap: Record<string, Array<{id: number, caption: string, context: string}>> = {};
+    
+    // First pass - organize images by their sections
+    Object.entries(imageToSectionMap).forEach(([imageId, sectionInfo]) => {
+      const imageIdNum = parseInt(imageId);
+      const image = images.find(img => img.id === imageIdNum);
+      
+      if (image && sectionInfo.section) {
+        if (!sectionToImagesMap[sectionInfo.section]) {
+          sectionToImagesMap[sectionInfo.section] = [];
+        }
+        
+        sectionToImagesMap[sectionInfo.section].push({
+          id: image.id,
+          caption: image.caption || `Figure ${image.id}`,
+          context: sectionInfo.context || ""
+        });
+      }
+    });
+    
+    // Now build the enhanced images info with section grouping
+    if (Object.keys(sectionToImagesMap).length > 0) {
+      Object.entries(sectionToImagesMap).forEach(([section, sectionImages]) => {
+        // Only include sections with images
+        if (sectionImages.length > 0) {
+          enhancedImagesInfo += `\n\nSECTION: ${section}\n`;
+          
+          // List the top images for this section (limit to avoid overwhelming)
+          const limitedImages = sectionImages.slice(0, Math.min(5, sectionImages.length));
+          limitedImages.forEach(img => {
+            enhancedImagesInfo += `Figure ${img.id}: ${img.caption}\n`;
+            if (img.context) {
+              enhancedImagesInfo += `   Context: ${img.context.substring(0, 100)}...\n`;
+            }
+          });
+          
+          if (sectionImages.length > 5) {
+            enhancedImagesInfo += `   ... and ${sectionImages.length - 5} more images in this section\n`;
+          }
+        }
+      });
+    }
+    
+    // For images not assigned to sections, add a generic list (limited)
+    const unassignedImages = images.filter(img => 
+      !Object.entries(imageToSectionMap).some(([imgId, sectionInfo]) => 
+        parseInt(imgId) === img.id && sectionInfo.section
+      )
+    );
+    
+    if (unassignedImages.length > 0) {
+      enhancedImagesInfo += "\n\nADDITIONAL IMAGES (without specific section):\n";
+      
+      // Limit to a reasonable number
+      const limitedUnassigned = unassignedImages.slice(0, Math.min(10, unassignedImages.length));
+      limitedUnassigned.forEach(img => {
+        enhancedImagesInfo += `Figure ${img.id}: ${img.caption || "No caption"}\n`;
+      });
+      
+      if (unassignedImages.length > 10) {
+        enhancedImagesInfo += `... and ${unassignedImages.length - 10} more unassigned images\n`;
       }
     }
     
-    // Create a more structured context with important sections highlighted
+    // Create specialized document content with structured sections
+    let structuredContent = "";
+    
+    // Process the document sections for better organization
+    documentSections.forEach((section, index) => {
+      structuredContent += `\n\n####### SECTION ${index + 1}: ${section.title} #######\n\n`;
+      
+      // Include relevant images for this section if available
+      const sectionImages = sectionToImagesMap[section.title];
+      if (sectionImages && sectionImages.length > 0) {
+        structuredContent += `RELEVANT IMAGES: ${sectionImages.map(img => `Figure ${img.id}`).join(', ')}\n\n`;
+      }
+      
+      // Include the section content with preserved structure
+      structuredContent += section.content;
+    });
+    
+    // High-priority document elements
+    const importantSections = documentSections
+      .filter(section => 
+        section.title.toLowerCase().includes('prerequisite') || 
+        section.title.toLowerCase().includes('requirement') ||
+        section.title.toLowerCase().includes('introduction') ||
+        section.title.toLowerCase().includes('overview') ||
+        section.title.toLowerCase().includes('migration') ||
+        section.title.toLowerCase().includes('google cloud')
+      );
+    
+    let importantSectionsContent = "";
+    if (importantSections.length > 0) {
+      importantSectionsContent = "\n\n####### HIGH PRIORITY DOCUMENT SECTIONS #######\n\n";
+      importantSections.forEach(section => {
+        importantSectionsContent += `SECTION: ${section.title}\n${section.content}\n\n`;
+      });
+    }
+    
+    // Create a more structured context with enhanced document organization
     const contextMessages: Array<{role: "system" | "user" | "assistant", content: string}> = [
       {
         role: "system",
         content: SYSTEM_PROMPT + 
                 `\n\nDocument Title: ${document.name}` + 
-                imagesInfo + 
-                `\n\nDOCUMENT CONTENT (with section headings highlighted):\n${formattedContent.substring(0, 12000)}...`,
+                enhancedImagesInfo + 
+                importantSectionsContent +
+                `\n\nDOCUMENT CONTENT (organized by sections with image relationships):\n${structuredContent.substring(0, 15000)}...`,
       },
     ];
 

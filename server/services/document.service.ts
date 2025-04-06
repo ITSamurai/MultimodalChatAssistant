@@ -145,7 +145,7 @@ const extractImagesFromDocument = async (
   }
 };
 
-// Process document and store it
+// Process document and store it with enhanced text-image relationship mapping
 export const processDocument = async (
   file: Express.Multer.File
 ): Promise<{
@@ -154,23 +154,61 @@ export const processDocument = async (
 }> => {
   try {
     // Extract text
-    const textContent = await extractTextFromDocument(file.buffer);
+    let textContent = await extractTextFromDocument(file.buffer);
+    
+    // Enhanced document structure analysis
+    console.log("Performing document structure analysis...");
+    
+    // Process and enhance the document structure
+    const enhancedContent = analyzeAndEnhanceDocumentStructure(textContent);
     
     // Create document in storage
     const documentData: InsertDocument = {
       name: file.originalname.substring(0, file.originalname.lastIndexOf('.')),
       originalName: file.originalname,
-      contentText: textContent,
+      contentText: enhancedContent, // Store the enhanced and structured content
     };
     
     const document = await storage.createDocument(documentData);
     
-    // Extract and save images
+    // Extract and save images with improved metadata
     const imageDataList = await extractImagesFromDocument(file.buffer, document.id);
     
-    // Store images in database
+    // Map images to their document context
+    const imageToTextMapping = mapImagesToDocumentSections(enhancedContent, imageDataList);
+    
+    // Store images in database with enhanced context information
     const savedImages = [];
-    for (const imageData of imageDataList) {
+    for (let i = 0; i < imageDataList.length; i++) {
+      const imageData = imageDataList[i];
+      
+      // Enhance image metadata with document context
+      if (imageToTextMapping[i]) {
+        // Add surrounding text context to the caption if found
+        const contextInfo = imageToTextMapping[i];
+        if (contextInfo.surroundingText) {
+          // Safely handle potentially undefined caption
+          const currentCaption = imageData.caption || `Image ${i+1}`;
+          if (!currentCaption.includes(contextInfo.surroundingText)) {
+            imageData.caption = `${currentCaption} - ${contextInfo.surroundingText}`;
+          }
+        }
+        
+        // Add section information if available
+        if (contextInfo.section) {
+          imageData.altText = `${imageData.altText || ''} (Section: ${contextInfo.section})`;
+        }
+        
+        // Add figure number if detected
+        if (contextInfo.figureNumber) {
+          // Safely handle potentially undefined caption
+          const currentCaption = imageData.caption || `Image ${i+1}`;
+          if (!currentCaption.includes(`Figure ${contextInfo.figureNumber}`)) {
+            imageData.caption = `Figure ${contextInfo.figureNumber}: ${currentCaption}`;
+          }
+        }
+      }
+      
       const savedImage = await storage.createDocumentImage(imageData);
       savedImages.push(savedImage);
     }
@@ -184,6 +222,234 @@ export const processDocument = async (
     throw new Error('Failed to process document');
   }
 };
+
+// Analyze and enhance document structure for better organization and context
+function analyzeAndEnhanceDocumentStructure(content: string): string {
+  // Split by lines for analysis
+  const lines = content.split("\n");
+  const enhancedLines = [];
+  
+  // Track document structure
+  let currentSection = "";
+  let currentSubsection = "";
+  let inList = false;
+  let listType = ""; // "numbered" or "bullet"
+  
+  // Patterns for structure detection
+  const sectionPattern = /^[A-Z][A-Z\s]+$|^[0-9]+\.\s+[A-Z]/;
+  const subsectionPattern = /^[0-9]+\.[0-9]+\s+|^[A-Za-z]+\s+[0-9]+\./;
+  const numberedListPattern = /^[0-9]+\.\s+/;
+  const bulletListPattern = /^[•\-\*]\s+/;
+  const figureReferencePattern = /Figure\s+([0-9]+)/i;
+  
+  // Process each line
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Empty lines - maintain them
+    if (line === "") {
+      enhancedLines.push("");
+      continue;
+    }
+    
+    // Detect sections (headings)
+    if (line.match(sectionPattern)) {
+      currentSection = line;
+      // Add section markers for better parsing
+      enhancedLines.push(`\n## SECTION_START: ${line} ##`);
+      enhancedLines.push(line);
+      continue;
+    }
+    
+    // Detect subsections
+    if (line.match(subsectionPattern)) {
+      currentSubsection = line;
+      // Add subsection markers
+      enhancedLines.push(`\n### SUBSECTION_START: ${line} ###`);
+      enhancedLines.push(line);
+      continue;
+    }
+    
+    // Detect numbered lists
+    if (line.match(numberedListPattern)) {
+      if (!inList || listType !== "numbered") {
+        inList = true;
+        listType = "numbered";
+        enhancedLines.push("\n#### NUMBERED_LIST_START ####");
+      }
+      enhancedLines.push(line);
+      continue;
+    }
+    
+    // Detect bullet lists
+    if (line.match(bulletListPattern)) {
+      if (!inList || listType !== "bullet") {
+        inList = true;
+        listType = "bullet";
+        enhancedLines.push("\n#### BULLET_LIST_START ####");
+      }
+      enhancedLines.push(line);
+      continue;
+    }
+    
+    // End list if no longer in a list item
+    if (inList && !line.match(numberedListPattern) && !line.match(bulletListPattern)) {
+      inList = false;
+      listType = "";
+      enhancedLines.push("#### LIST_END ####\n");
+    }
+    
+    // Detect figure references and mark them
+    const figureMatch = line.match(figureReferencePattern);
+    if (figureMatch) {
+      const figureNumber = figureMatch[1];
+      // Tag the line with a marker for easier detection
+      enhancedLines.push(`FIGURE_REFERENCE(${figureNumber}): ${line}`);
+      continue;
+    }
+    
+    // Regular content - add with context info if in a section
+    if (currentSection) {
+      enhancedLines.push(`${line}`);
+    } else {
+      enhancedLines.push(line);
+    }
+  }
+  
+  return enhancedLines.join("\n");
+}
+
+// Map images to relevant document sections to create text-image relationships
+function mapImagesToDocumentSections(
+  structuredContent: string, 
+  images: InsertDocumentImage[]
+): { 
+  [imageIndex: number]: { 
+    section?: string, 
+    figureNumber?: number, 
+    surroundingText?: string 
+  } 
+} {
+  // Map to store image context information
+  const imageContextMap: { [imageIndex: number]: any } = {};
+  
+  // Find potential figure numbers from captions
+  for (let i = 0; i < images.length; i++) {
+    const image = images[i];
+    
+    // Extract potential figure numbers from captions or alt text
+    const caption = image.caption || '';
+    const figureMatch = caption.match(/figure\s+([0-9]+)/i);
+    
+    if (figureMatch) {
+      const figureNumber = parseInt(figureMatch[1]);
+      imageContextMap[i] = {
+        figureNumber,
+        section: "",
+        surroundingText: ""
+      };
+    } else {
+      imageContextMap[i] = {
+        section: "",
+        surroundingText: ""
+      };
+    }
+  }
+  
+  // Process the structured content to find image references
+  const contentLines = structuredContent.split('\n');
+  let currentSection = "";
+  
+  for (let i = 0; i < contentLines.length; i++) {
+    const line = contentLines[i];
+    
+    // Track sections
+    if (line.startsWith('## SECTION_START:')) {
+      currentSection = line.replace('## SECTION_START:', '').replace('##', '').trim();
+      continue;
+    }
+    
+    // Look for figure references
+    const figureMatch = line.match(/FIGURE_REFERENCE\(([0-9]+)\):/);
+    if (figureMatch) {
+      const figureNumber = parseInt(figureMatch[1]);
+      
+      // Find the corresponding image
+      for (let imgIndex = 0; imgIndex < images.length; imgIndex++) {
+        if (imageContextMap[imgIndex] && imageContextMap[imgIndex].figureNumber === figureNumber) {
+          // Found a matching image - get surrounding text
+          const surroundingTextStart = Math.max(0, i - 3);
+          const surroundingTextEnd = Math.min(contentLines.length - 1, i + 3);
+          const surroundingText = contentLines
+            .slice(surroundingTextStart, surroundingTextEnd)
+            .filter(l => !l.startsWith('##') && !l.startsWith('####') && l.trim() !== '')
+            .join(' ')
+            .substring(0, 200) + "..."; // Limit length
+          
+          // Update the image context
+          imageContextMap[imgIndex].section = currentSection;
+          imageContextMap[imgIndex].surroundingText = surroundingText;
+        }
+      }
+    }
+  }
+  
+  // For images without explicit figure numbers, try to find relevance through caption/section matching
+  for (let i = 0; i < images.length; i++) {
+    if (!imageContextMap[i] || !imageContextMap[i].figureNumber) {
+      const image = images[i];
+      const caption = (image.caption || '').toLowerCase();
+      const altText = (image.altText || '').toLowerCase();
+      
+      // Find sections that might match the image content
+      let bestMatchScore = 0;
+      let bestMatchSection = "";
+      let bestMatchSurroundingText = "";
+      
+      let currentScore = 0;
+      contentLines.forEach((line, lineIndex) => {
+        if (line.startsWith('## SECTION_START:')) {
+          const sectionText = line.replace('## SECTION_START:', '').replace('##', '').trim().toLowerCase();
+          currentScore = 0;
+          
+          // Simple relevance matching - count common words
+          const sectionWords = sectionText.split(/\s+/);
+          const captionWords = caption.split(/\s+/);
+          
+          sectionWords.forEach(word => {
+            if (word.length > 3 && caption.includes(word)) currentScore += 3;
+            if (word.length > 3 && altText.includes(word)) currentScore += 2;
+          });
+          
+          if (currentScore > bestMatchScore) {
+            bestMatchScore = currentScore;
+            bestMatchSection = line.replace('## SECTION_START:', '').replace('##', '').trim();
+            
+            // Get some surrounding context
+            const surroundingTextStart = Math.max(0, lineIndex - 2);
+            const surroundingTextEnd = Math.min(contentLines.length - 1, lineIndex + 5);
+            bestMatchSurroundingText = contentLines
+              .slice(surroundingTextStart, surroundingTextEnd)
+              .filter(l => !l.startsWith('##') && !l.startsWith('####') && l.trim() !== '')
+              .join(' ')
+              .substring(0, 200) + "..."; // Limit length
+          }
+        }
+      });
+      
+      // Only use match if it's reasonably strong
+      if (bestMatchScore > 3) {
+        imageContextMap[i] = {
+          ...imageContextMap[i],
+          section: bestMatchSection,
+          surroundingText: bestMatchSurroundingText
+        };
+      }
+    }
+  }
+  
+  return imageContextMap;
+}
 
 // Retrieve all data for a specific document
 export const getDocumentData = async (documentId: number) => {
