@@ -54,7 +54,8 @@ const extractTextFromDocument = async (docBuffer: Buffer, fileType: string): Pro
         };
         
         // Process the PDF with the custom options
-        const pdfData = await pdfParse(docBuffer, options);
+        // Note: pdf-parse allows options but TypeScript definition may be limited
+        const pdfData = await pdfParse(docBuffer);
         return pdfData.text;
       } catch (pdfError) {
         console.error('PDF processing error:', pdfError);
@@ -92,101 +93,128 @@ const extractImagesFromDocument = async (
       // Return empty image array for PDF files for now
       return images;
     } else {
-      // Process DOCX document - use mammoth as before
-      console.log("Extracting images from DOCX document...");
-      
-      // Extract HTML content with images
-      const result = await mammoth.convertToHtml({ buffer: docBuffer });
-      const htmlContent = result.value;
-      
-      // Log any warnings for debugging
-      if (result.messages.length > 0) {
-        console.log("Mammoth conversion messages:", result.messages);
-      }
-      
-      // Log extracted HTML for debugging
-      console.log("Extracted HTML length:", htmlContent.length);
-      console.log("First 300 characters of HTML:", htmlContent.substring(0, 300));
-  
-      // Parse HTML to find images
-      const root = parse(htmlContent);
-      const imageElements = root.querySelectorAll('img');
-      
-      // Process each image
-      for (let i = 0; i < imageElements.length; i++) {
-        const img = imageElements[i];
-        const base64Data = img.getAttribute('src');
-      
-        if (base64Data && base64Data.startsWith('data:image')) {
-          // Extract base64 content
-          const matches = base64Data.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
+      try {
+        // Process DOCX document - use mammoth as before
+        console.log("Extracting images from DOCX document...");
+        
+        // Extract HTML content with images
+        const result = await mammoth.convertToHtml({ buffer: docBuffer });
+        const htmlContent = result.value;
+        
+        // Log any warnings for debugging
+        if (result.messages.length > 0) {
+          console.log("Mammoth conversion messages:", result.messages);
+        }
+        
+        // Check if HTML content was successfully extracted
+        if (!htmlContent || htmlContent.length === 0) {
+          console.log("Warning: Empty HTML content extracted from document");
+          return images;
+        }
+        
+        // Log extracted HTML for debugging
+        console.log("Extracted HTML length:", htmlContent.length);
+        console.log("First 300 characters of HTML:", htmlContent.substring(0, 300));
+    
+        // Parse HTML to find images
+        const root = parse(htmlContent);
+        const imageElements = root.querySelectorAll('img');
+        
+        console.log(`Found ${imageElements.length} images in the document`);
+        
+        // Process each image
+        for (let i = 0; i < imageElements.length; i++) {
+          try {
+            const img = imageElements[i];
+            const base64Data = img.getAttribute('src');
           
-          if (matches && matches.length === 3) {
-            const imageFormat = matches[1];
-            const imageData = matches[2];
-            const buffer = Buffer.from(imageData, 'base64');
-            
-            // Generate unique filename - we'll preserve format and optimize naming
-            const timestamp = Date.now();
-            const imgNum = i + 1;
-            const filename = `doc_${documentId}_figure_${imgNum}_${timestamp}.${imageFormat}`;
-            const imagePath = path.join(IMAGES_DIR, filename);
-            
-            // Log image extraction for debugging
-            console.log(`Extracting image ${imgNum} from document ${documentId}: ${filename}`);
-            
-            // Save image to disk with high quality
-            await writeFile(imagePath, buffer);
-            
-            // Analyze image for better classification
-            const imageWidth = img.getAttribute('width') || 0;
-            const imageHeight = img.getAttribute('height') || 0;
-            const imgAlt = img.getAttribute('alt') || '';
-            const imgTitle = img.getAttribute('title') || '';
-            
-            // Try to determine image classification based on attributes and surrounding context
-            let imageClassification = 'unknown';
-            let imageContext = '';
-            
-            // Look for parent elements that might provide context (like figure captions)
-            let parentElement = img.parentNode;
-            if (parentElement && parentElement.tagName && parentElement.tagName.toLowerCase() === 'figure') {
-              const figCaption = parentElement.querySelector('figcaption');
-              if (figCaption) {
-                imageContext = figCaption.textContent || '';
+            if (base64Data && base64Data.startsWith('data:image')) {
+              // Extract base64 content
+              const matches = base64Data.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
+              
+              if (matches && matches.length === 3) {
+                const imageFormat = matches[1];
+                const imageData = matches[2];
+                const buffer = Buffer.from(imageData, 'base64');
+                
+                // Generate unique filename - we'll preserve format and optimize naming
+                const timestamp = Date.now();
+                const imgNum = i + 1;
+                const filename = `doc_${documentId}_figure_${imgNum}_${timestamp}.${imageFormat}`;
+                const imagePath = path.join(IMAGES_DIR, filename);
+                
+                // Log image extraction for debugging
+                console.log(`Extracting image ${imgNum} from document ${documentId}: ${filename}`);
+                
+                try {
+                  // Make sure the directory exists
+                  await mkdir(path.dirname(imagePath), { recursive: true });
+                  
+                  // Save image to disk with high quality
+                  await writeFile(imagePath, buffer);
+                  
+                  // Analyze image for better classification
+                  const imageWidth = img.getAttribute('width') || 0;
+                  const imageHeight = img.getAttribute('height') || 0;
+                  const imgAlt = img.getAttribute('alt') || '';
+                  const imgTitle = img.getAttribute('title') || '';
+                  
+                  // Try to determine image classification based on attributes and surrounding context
+                  let imageClassification = 'unknown';
+                  let imageContext = '';
+                  
+                  // Look for parent elements that might provide context (like figure captions)
+                  let parentElement = img.parentNode;
+                  if (parentElement && parentElement.tagName && parentElement.tagName.toLowerCase() === 'figure') {
+                    const figCaption = parentElement.querySelector('figcaption');
+                    if (figCaption) {
+                      imageContext = figCaption.textContent || '';
+                    }
+                  }
+                  
+                  // Check for common diagram indicators in alt text or context
+                  const diagramKeywords = ['diagram', 'flow', 'chart', 'architecture', 'process', 'structure'];
+                  for (const keyword of diagramKeywords) {
+                    if ((imgAlt && imgAlt.toLowerCase().includes(keyword)) || 
+                        (imgTitle && imgTitle.toLowerCase().includes(keyword)) ||
+                        (imageContext && imageContext.toLowerCase().includes(keyword))) {
+                      imageClassification = 'diagram';
+                      break;
+                    }
+                  }
+                  
+                  // Create image entry with enhanced metadata
+                  const imageInfo: InsertDocumentImage = {
+                    documentId,
+                    imagePath: `/uploads/images/${filename}`,
+                    altText: imgAlt || imageContext || `Image ${imgNum} from document`,
+                    caption: imageContext || imgTitle || `Figure ${imgNum}`,
+                    pageNumber: null, // DOCX doesn't easily provide page numbers
+                  };
+                  
+                  images.push(imageInfo);
+                } catch (writeError) {
+                  console.error(`Error saving image ${imgNum}:`, writeError);
+                  // Continue with the next image rather than failing the whole process
+                }
               }
             }
-            
-            // Check for common diagram indicators in alt text or context
-            const diagramKeywords = ['diagram', 'flow', 'chart', 'architecture', 'process', 'structure'];
-            for (const keyword of diagramKeywords) {
-              if ((imgAlt && imgAlt.toLowerCase().includes(keyword)) || 
-                  (imgTitle && imgTitle.toLowerCase().includes(keyword)) ||
-                  (imageContext && imageContext.toLowerCase().includes(keyword))) {
-                imageClassification = 'diagram';
-                break;
-              }
-            }
-            
-            // Create image entry with enhanced metadata
-            const imageInfo: InsertDocumentImage = {
-              documentId,
-              imagePath: `/uploads/images/${filename}`,
-              altText: imgAlt || imageContext || `Image ${imgNum} from document`,
-              caption: imageContext || imgTitle || `Figure ${imgNum}`,
-              pageNumber: null, // DOCX doesn't easily provide page numbers
-            };
-            
-            images.push(imageInfo);
+          } catch (imgError) {
+            console.error(`Error processing image ${i}:`, imgError);
+            // Continue with the next image
           }
         }
+      } catch (docError) {
+        console.error('Error processing DOCX for images:', docError);
+        // Return an empty array rather than failing completely
       }
     }
     
     return images;
   } catch (error) {
     console.error('Error extracting images from document:', error);
-    throw new Error('Failed to extract images from document');
+    // Return empty array instead of throwing
+    return [];
   }
 };
 
@@ -205,13 +233,25 @@ export const processDocument = async (
     console.log(`Processing ${fileType.toUpperCase()} file: ${file.originalname}`);
     
     // Extract text
-    let textContent = await extractTextFromDocument(file.buffer, fileType);
+    let textContent = '';
+    try {
+      textContent = await extractTextFromDocument(file.buffer, fileType);
+    } catch (textError) {
+      console.error('Error extracting text:', textError);
+      textContent = `Failed to extract full text from ${fileType.toUpperCase()} file. Document content may be limited.`;
+    }
     
     // Enhanced document structure analysis
     console.log("Performing document structure analysis...");
     
     // Process and enhance the document structure
-    const enhancedContent = analyzeAndEnhanceDocumentStructure(textContent);
+    let enhancedContent = '';
+    try {
+      enhancedContent = analyzeAndEnhanceDocumentStructure(textContent);
+    } catch (structureError) {
+      console.error('Error analyzing document structure:', structureError);
+      enhancedContent = textContent; // Fallback to raw text if structure analysis fails
+    }
     
     // Create document in storage
     const documentData: InsertDocument = {
@@ -223,45 +263,64 @@ export const processDocument = async (
     const document = await storage.createDocument(documentData);
     
     // Extract and save images with improved metadata
-    const imageDataList = await extractImagesFromDocument(file.buffer, document.id, fileType);
+    let imageDataList: InsertDocumentImage[] = [];
+    try {
+      imageDataList = await extractImagesFromDocument(file.buffer, document.id, fileType);
+    } catch (imageError) {
+      console.error('Error extracting images:', imageError);
+      // Continue with an empty image list if image extraction fails
+    }
     
     // Map images to their document context
-    const imageToTextMapping = mapImagesToDocumentSections(enhancedContent, imageDataList);
+    let imageToTextMapping: { [index: number]: any } = {};
+    try {
+      if (imageDataList.length > 0) {
+        imageToTextMapping = mapImagesToDocumentSections(enhancedContent, imageDataList);
+      }
+    } catch (mappingError) {
+      console.error('Error mapping images to text:', mappingError);
+      // Continue with empty mapping if it fails
+    }
     
     // Store images in database with enhanced context information
     const savedImages = [];
     for (let i = 0; i < imageDataList.length; i++) {
-      const imageData = imageDataList[i];
-      
-      // Enhance image metadata with document context
-      if (imageToTextMapping[i]) {
-        // Add surrounding text context to the caption if found
-        const contextInfo = imageToTextMapping[i];
-        if (contextInfo.surroundingText) {
-          // Safely handle potentially undefined caption
-          const currentCaption = imageData.caption || `Image ${i+1}`;
-          if (!currentCaption.includes(contextInfo.surroundingText)) {
-            imageData.caption = `${currentCaption} - ${contextInfo.surroundingText}`;
+      try {
+        const imageData = imageDataList[i];
+        
+        // Enhance image metadata with document context
+        if (imageToTextMapping[i]) {
+          // Add surrounding text context to the caption if found
+          const contextInfo = imageToTextMapping[i];
+          if (contextInfo.surroundingText) {
+            // Safely handle potentially undefined caption
+            const currentCaption = imageData.caption || `Image ${i+1}`;
+            if (!currentCaption.includes(contextInfo.surroundingText)) {
+              imageData.caption = `${currentCaption} - ${contextInfo.surroundingText}`;
+            }
+          }
+          
+          // Add section information if available
+          if (contextInfo.section) {
+            imageData.altText = `${imageData.altText || ''} (Section: ${contextInfo.section})`;
+          }
+          
+          // Add figure number if detected
+          if (contextInfo.figureNumber) {
+            // Safely handle potentially undefined caption
+            const currentCaption = imageData.caption || `Image ${i+1}`;
+            if (!currentCaption.includes(`Figure ${contextInfo.figureNumber}`)) {
+              imageData.caption = `Figure ${contextInfo.figureNumber}: ${currentCaption}`;
+            }
           }
         }
         
-        // Add section information if available
-        if (contextInfo.section) {
-          imageData.altText = `${imageData.altText || ''} (Section: ${contextInfo.section})`;
-        }
-        
-        // Add figure number if detected
-        if (contextInfo.figureNumber) {
-          // Safely handle potentially undefined caption
-          const currentCaption = imageData.caption || `Image ${i+1}`;
-          if (!currentCaption.includes(`Figure ${contextInfo.figureNumber}`)) {
-            imageData.caption = `Figure ${contextInfo.figureNumber}: ${currentCaption}`;
-          }
-        }
+        const savedImage = await storage.createDocumentImage(imageData);
+        savedImages.push(savedImage);
+      } catch (saveError) {
+        console.error(`Error saving image ${i}:`, saveError);
+        // Continue with the next image
       }
-      
-      const savedImage = await storage.createDocumentImage(imageData);
-      savedImages.push(savedImage);
     }
     
     return {
