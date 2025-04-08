@@ -670,6 +670,24 @@ export const processMessage = async (
                 `\n\nDOCUMENT CONTENT (organized by sections with image relationships):\n${structuredContent.substring(0, 5000)}...`,
       },
     ];
+    
+    // Check if the document has proper content or if extraction failed
+    const hasValidContent = documentContent.length > 100 && 
+                           !documentContent.includes("extraction encountered technical difficulties") &&
+                           !documentContent.includes("extraction encountered an error");
+                           
+    if (!hasValidContent) {
+      console.log("Document appears to have invalid or incomplete content");
+      
+      // Add a special system message
+      const extractionErrorMessage = {
+        role: "system" as const,
+        content: "IMPORTANT: The document text could not be properly extracted. Please inform the user that document processing encountered difficulties, and suggest uploading the document in a different format or trying a different document."
+      };
+      
+      // Add this as the first system message for prominence
+      contextMessages.unshift(extractionErrorMessage);
+    }
 
     // Add previous messages (only a few to save tokens)
     const recentMessages = previousMessages.slice(-2); // Only use last 2 messages

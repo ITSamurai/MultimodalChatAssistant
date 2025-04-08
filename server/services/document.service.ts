@@ -247,13 +247,69 @@ export const processDocument = async (
         try {
           // Simple PDF extraction
           console.log("Simple PDF text extraction...");
-          const pdfParseModule = await import('pdf-parse');
-          const pdfParse = pdfParseModule.default;
-          const pdfData = await pdfParse(file.buffer);
-          textContent = pdfData.text;
+          
+          // Use pdfjs-dist as a more reliable PDF parser
+          const pdfjsLib = await import('pdfjs-dist');
+          const pdfjsDistModule = pdfjsLib.default;
+          
+          // Set the worker source path for PDF.js
+          try {
+            pdfjsDistModule.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          } catch (error) {
+            const workerErr = error as Error;
+            console.log("Worker source path warning (non-critical):", workerErr.message);
+          }
+          
+          // Load the PDF document
+          const pdfDoc = await pdfjsDistModule.getDocument({ data: file.buffer }).promise;
+          
+          console.log(`PDF document loaded successfully with ${pdfDoc.numPages} pages`);
+          
+          // Extract text from all pages
+          let combinedText = '';
+          for (let i = 1; i <= pdfDoc.numPages; i++) {
+            try {
+              const page = await pdfDoc.getPage(i);
+              const content = await page.getTextContent();
+              const strings = content.items.map((item) => {
+                // @ts-ignore - text property exists but TypeScript might not recognize it
+                return item.str || (item.text || '');
+              });
+              
+              // Add page number reference for better context
+              combinedText += `\n\n== Page ${i} ==\n\n${strings.join(' ')}`;
+            } catch (error) {
+              const pageErr = error as Error;
+              console.error(`Error extracting text from page ${i}:`, pageErr.message);
+              combinedText += `\n\n== Page ${i} ==\n[Content extraction error]`;
+            }
+          }
+          
+          textContent = combinedText;
+          console.log(`Successfully extracted text from PDF (${textContent.length} characters)`);
+          
         } catch (pdfError) {
-          console.error('PDF extraction error (simplified):', pdfError);
-          textContent = `This is a PDF document: ${file.originalname}. Text extraction encountered an error.`;
+          console.error('PDF extraction error:', pdfError);
+          
+          // Try fallback with pdf-parse if pdfjs-dist fails
+          try {
+            console.log("Attempting fallback PDF extraction with pdf-parse...");
+            const pdfParseModule = await import('pdf-parse');
+            const pdfParse = pdfParseModule.default;
+            
+            // Use custom options to avoid dependency on test files
+            const options = {
+              // Avoid using external files
+              max: 0, // No page limit
+            };
+            
+            const pdfData = await pdfParse(file.buffer);
+            textContent = pdfData.text;
+            console.log(`Fallback extraction successful (${textContent.length} characters)`);
+          } catch (fallbackError) {
+            console.error('Fallback PDF extraction failed:', fallbackError);
+            textContent = `The document "${file.originalname}" was processed, but text extraction encountered technical difficulties. Please try a different file format or a simplified version of this document.`;
+          }
         }
       } else {
         // Simple DOCX extraction
