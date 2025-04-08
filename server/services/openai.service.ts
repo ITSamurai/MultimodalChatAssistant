@@ -8,29 +8,29 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 const DEFAULT_MODEL = "gpt-4o";
 
 // Simplified system prompt to reduce token usage
-const SYSTEM_PROMPT = `You are an intelligent assistant trained to work with technical documentation and diagrams from the RiverMeadow "Migrating to VMware" guide (PDF). You have access to both:
+const SYSTEM_PROMPT = `You are an expert assistant embedded in a document analysis system working with the "RiverMeadow Migrating to VMware" technical guide. You have direct access to the full document content. Your task is to provide PRECISE and ACCURATE answers about this specific documentation.
 
-1. 🧾 Cleanly extracted paragraph content from the guide (including section titles and diagram captions)
-2. 🖼️ Cropped diagrams, numbered and linked to specific pages and positions in the document
+DOCUMENT CONTEXT:
+- This is a technical migration guide covering OS-based migration workflows
+- The document contains diagrams, step-by-step procedures, and detailed technical explanations
+- Content is organized in sections with figures and diagrams throughout
+- The guide covers multiple cloud platforms including Google Cloud, AWS, and Azure
 
-Your task is to **answer user questions** by combining:
+IMPORTANT RESPONSE GUIDELINES:
+1. Answer with the EXACT INFORMATION found in the document - be as specific and precise as possible 
+2. Reference SECTION NUMBERS AND PAGE NUMBERS when providing information
+3. Quote STEP-BY-STEP PROCEDURES exactly as they appear in the document
+4. NEVER make up fictional sections, figure numbers, or page numbers
+5. When discussing figures or diagrams:
+   - Include the exact figure number and page number from the document
+   - Describe what the diagram shows with technical precision
+   - Explain the relationship between diagram components
+6. If exact information is not found, state clearly: "This specific information is not directly addressed in the available document sections."
+7. Use concise, technical language appropriate for IT professionals
+8. Format responses with markdown for readability (headings, bullet points, numbered lists)
+9. If referencing multiple sections, organize your response by section
 
-- The visual content of relevant diagrams
-- The paragraph explanations that accompany them
-- Your understanding of migration flows, components, and orchestration
-
-🔍 When answering, do the following:
-- Use the section titles and diagram numbers (e.g., "Diagram 2 on Page 11") to organize your answer
-- For each diagram, include:
-  - An inline image (if supported) or a markdown-style image link
-  - A short explanation of what it shows
-- Use labeled lists for steps (e.g., 1, 2, 3) when describing flows
-- Use the metadata (titles, visible text, flow, components) to enrich your explanation
-- Reference diagrams in the correct visual order (based on "1.", "2.", "3." style visual numbering)
-- IMPORTANT: Only reference figure numbers that actually exist in the document
-- NEVER claim there are extraction errors. If you cannot find specific information, state that the information might be in another section of the document.
-
-Begin with "DOCUMENT ANALYSIS:" for your responses.`;
+Begin each response with "DOCUMENT ANALYSIS:" followed by a concise summary of what you found, then provide the detailed information.`;
 
 // Type definitions for image references
 interface ImageReference {
@@ -714,12 +714,16 @@ export const processMessage = async (
          userQueryLower.includes("appliance") || 
          userQueryLower.includes("launch"))) {
          
-      specializedPrompt = `\n\nIMPORTANT: The user is asking about Google Cloud prerequisites or launching appliances.
-        1. Look for sections titled "Prerequisites" or "Before You Begin" in the document
-        2. Find numbered steps or requirements specific to Google Cloud Platform
-        3. Quote ALL prerequisites and steps EXACTLY as they appear
-        4. If the document contains prerequisites or a step-by-step guide for Google Cloud, include ALL STEPS
-        5. Quote any sections mentioning "Google Cloud", "GCP", or "prerequisites for launching"`;
+      specializedPrompt = `\n\nIMPORTANT: I need the EXACT, DETAILED information about Google Cloud prerequisites and appliance launching from the RiverMeadow guide.
+
+Please examine the document thoroughly and:
+1. Extract ALL steps, prerequisites, and requirements for Google Cloud Platform setup 
+2. Include section numbers, page numbers, and figure numbers EXACTLY as they appear
+3. Format the response with precise quotations of procedures, checklists and command-line instructions
+4. Present the information in the SAME ORDER as shown in the document
+5. If there are multiple sections covering Google Cloud setup, organize by section heading
+
+DO NOT summarize or paraphrase the technical instructions. Present the EXACT content from the document.`;
       
       // Add specialized prompt to the most recent user message
       contextMessages[contextMessages.length - 1].content += specializedPrompt;
@@ -729,22 +733,30 @@ export const processMessage = async (
     if (userQueryLower.includes("os") && 
         (userQueryLower.includes("migration") || userQueryLower.includes("rivermeadow"))) {
       
-      specializedPrompt = `\n\nIMPORTANT: The user is asking about OS-based migration in RiverMeadow.
-        1. Look specifically for sections describing OS-based migration workflows
-        2. Reference only figures that are actually mentioned in the document related to OS-based migration
-        3. Include any detailed steps or requirements for OS-based migration
-        4. Quote ALL technical procedures EXACTLY as they appear in the document`;
+      specializedPrompt = `\n\nIMPORTANT: I need the PRECISE technical information about OS-based migration workflows in the RiverMeadow documentation.
+
+Please examine the document thoroughly and:
+1. Extract EXACTLY how OS-based migration works, including all technical steps and components
+2. Identify any diagrams that specifically illustrate OS-based migration (with exact figure and page numbers)
+3. Quote technical specifications, requirements, and procedures VERBATIM
+4. Include section numbers and page references EXACTLY as they appear in the document
+5. If the document contains multiple OS migration methods, compare them PRECISELY as described
+
+DO NOT generalize or summarize. Present the information EXACTLY as it appears in the document, preserving all technical details, parameters, and procedural steps.`;
       
       // Add specialized prompt to the most recent user message
       contextMessages[contextMessages.length - 1].content += specializedPrompt;
     }
     
-    // Send the request to OpenAI with improved parameters
+    // Send the request to OpenAI with optimal parameters for precise technical documentation analysis
     const response = await openai.chat.completions.create({
       model: DEFAULT_MODEL,
       messages: contextMessages,
-      max_tokens: 1500, // Increased token limit for more detailed responses
-      temperature: 0.3,  // Lower temperature for more deterministic/factual responses
+      max_tokens: 2500, // Increased token limit for comprehensive responses with technical details
+      temperature: 0.2,  // Very low temperature for more deterministic/precise responses
+      top_p: 0.8, // More focused sampling for higher factual accuracy
+      frequency_penalty: 0.0, // No penalty for term repetition, important for technical terms
+      presence_penalty: 0.0, // No penalty for topic focus
     });
 
     // Process the response
