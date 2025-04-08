@@ -28,12 +28,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check file type
       const allowedTypes = [
         'application/msword', 
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/pdf'
       ];
       
       if (!allowedTypes.includes(req.file.mimetype)) {
         return res.status(400).json({ 
-          message: 'Invalid file type. Only .doc and .docx files are supported' 
+          message: 'Invalid file type. Only .doc, .docx, and .pdf files are supported' 
         });
       }
 

@@ -51,7 +51,7 @@ const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
         <h2 className="text-sm font-medium text-gray-700 mb-2">Documents</h2>
         <FileUpload
           onFileSelected={onFileUpload}
-          acceptedFileTypes=".doc,.docx"
+          acceptedFileTypes=".doc,.docx,.pdf"
           isLoading={isUploading}
         />
       </div>

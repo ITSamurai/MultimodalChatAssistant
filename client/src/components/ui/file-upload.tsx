@@ -123,7 +123,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             accept={acceptedFileTypes}
             onChange={handleFileInput}
           />
-          <p className="text-xs text-gray-400 mt-2">Supports .doc and .docx</p>
+          <p className="text-xs text-gray-400 mt-2">Supports .doc, .docx, and .pdf</p>
         </>
       )}
     </div>
