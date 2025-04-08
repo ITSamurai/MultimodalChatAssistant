@@ -27,7 +27,8 @@ Your task is to **answer user questions** by combining:
 - Use labeled lists for steps (e.g., 1, 2, 3) when describing flows
 - Use the metadata (titles, visible text, flow, components) to enrich your explanation
 - Reference diagrams in the correct visual order (based on "1.", "2.", "3." style visual numbering)
-- For OS migration questions, reference Figure 70
+- IMPORTANT: Only reference figure numbers that actually exist in the document
+- NEVER claim there are extraction errors. If you cannot find specific information, state that the information might be in another section of the document.
 
 Begin with "DOCUMENT ANALYSIS:" for your responses.`;
 
@@ -730,7 +731,7 @@ export const processMessage = async (
       
       specializedPrompt = `\n\nIMPORTANT: The user is asking about OS-based migration in RiverMeadow.
         1. Look specifically for sections describing OS-based migration workflows
-        2. ALWAYS reference Figure 70 which shows the OS-based migration process
+        2. Reference only figures that are actually mentioned in the document related to OS-based migration
         3. Include any detailed steps or requirements for OS-based migration
         4. Quote ALL technical procedures EXACTLY as they appear in the document`;
       
@@ -821,21 +822,33 @@ export const processMessage = async (
     
     console.log(`Found ${imageReferences.length} figure references in AI response`);
     
-    // Special handling for Figure 70 (OS migration) - force include if not already referenced
+    // Special handling for OS migration questions - find any relevant figures
     if (userQueryLower.includes("os migration") || 
         userQueryLower.includes("os-based migration") || 
         (userQueryLower.includes("rivermeadow") && userQueryLower.includes("migration"))) {
       
-      // Always try to add Figure 70 for OS migration questions
-      const osBasedMigrationFigure = images.find(img => img.id === 70);
-      if (osBasedMigrationFigure && !imageReferences.some(ref => ref.id === 70)) {
-        console.log("Adding Figure 70 for OS-based migration question");
-        imageReferences.push({
-          type: "image",
-          id: osBasedMigrationFigure.id,
-          imagePath: osBasedMigrationFigure.imagePath,
-          caption: osBasedMigrationFigure.caption || "Figure 70: OS-based migration workflow",
-        });
+      // Find figures related to OS migration by caption
+      const osMigrationFigures = images.filter(img => {
+        if (!img.caption) return false;
+        
+        const caption = img.caption.toLowerCase();
+        return caption.includes("os migration") || 
+              caption.includes("os-based") || 
+              caption.includes("migration workflow") ||
+              caption.includes("migration process");
+      });
+      
+      // Add relevant OS migration figures
+      for (const figure of osMigrationFigures.slice(0, 2)) {
+        if (!imageReferences.some(ref => ref.id === figure.id)) {
+          console.log(`Adding OS migration related figure: ${figure.id}`);
+          imageReferences.push({
+            type: "image",
+            id: figure.id,
+            imagePath: figure.imagePath,
+            caption: figure.caption || `OS Migration Figure ${figure.id}`,
+          });
+        }
       }
     }
     
@@ -917,40 +930,44 @@ export const processMessage = async (
         const userQuery = userMessage.toLowerCase();
         let foundExactMatch = false;
         
-        // Map of technical terms to specific figures we want to show
-        const technicalTermsToFigures = [
-          { term: "os migration", figureIds: [70] },
-          { term: "os-based migration", figureIds: [70] },
-          { term: "os based migration", figureIds: [70] },
-          { term: "rivermeadow", figureIds: [70] },
-          { term: "how os", figureIds: [70] },
-          { term: "migration works", figureIds: [70] },
-          { term: "google cloud", figureIds: [25, 30, 40] }, // Using assumed figure IDs (adjust based on actual document)
-          { term: "launching appliance", figureIds: [25, 30, 40] },
-          { term: "prerequisite", figureIds: [20, 25, 30] }
+        // Map of technical terms to general categories for finding relevant figures
+        const technicalTermsToTopics = [
+          { term: "os migration", topics: ["os migration", "os-based", "migration workflow"] },
+          { term: "os-based migration", topics: ["os migration", "os-based", "migration workflow"] },
+          { term: "os based migration", topics: ["os migration", "os-based", "migration workflow"] },
+          { term: "rivermeadow", topics: ["rivermeadow", "migration", "saas"] },
+          { term: "how os", topics: ["os migration", "os-based", "procedure"] },
+          { term: "migration works", topics: ["migration", "procedure", "process"] },
+          { term: "google cloud", topics: ["google cloud", "gcp", "appliance"] },
+          { term: "launching appliance", topics: ["appliance", "launch", "setup"] },
+          { term: "prerequisite", topics: ["prerequisite", "requirement", "setup"] }
         ];
         
         // Check for exact technical terms - high priority matching
-        for (const termMapping of technicalTermsToFigures) {
+        for (const termMapping of technicalTermsToTopics) {
           if (userQuery.includes(termMapping.term)) {
-            console.log(`Found exact technical term match: "${termMapping.term}" → Figures ${termMapping.figureIds.join(', ')}`);
+            console.log(`Found exact technical term match: "${termMapping.term}" → Topics: ${termMapping.topics.join(', ')}`);
             
-            // Try to find these specific figures
-            for (const figureId of termMapping.figureIds) {
-              const exactFigure = images.find(img => img.id === figureId);
+            // Find images related to these topics
+            const relevantImages = images.filter(img => {
+              if (!img.caption) return false;
               
-              if (exactFigure) {
+              const caption = img.caption.toLowerCase();
+              return termMapping.topics.some(topic => caption.includes(topic));
+            });
+            
+            // Add up to 2 matching images
+            for (const image of relevantImages.slice(0, 2)) {
+              if (!imageReferences.some(ref => ref.id === image.id)) {
                 imageReferences.push({
                   type: "image",
-                  id: exactFigure.id,
-                  imagePath: exactFigure.imagePath,
-                  caption: exactFigure.caption || `Figure ${figureId}`,
+                  id: image.id,
+                  imagePath: image.imagePath,
+                  caption: image.caption || `Figure ${image.id}`,
                 });
                 
                 foundExactMatch = true;
-                console.log(`Added exact technical match: Figure ${figureId}`);
-              } else {
-                console.log(`Couldn't find exact Figure ${figureId} requested by technical term, falling back`);
+                console.log(`Added topic match for "${termMapping.term}": Figure ${image.id}`);
               }
             }
           }
