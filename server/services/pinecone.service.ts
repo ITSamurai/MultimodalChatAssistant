@@ -15,8 +15,8 @@ const openai = new OpenAI({
 // Default index configuration
 const INDEX_NAME = 'rivermeadow-doc-index';
 const NAMESPACE = 'default';
-const EMBEDDING_MODEL = 'text-embedding-ada-002'; // Using model with 1536 dimensions to match existing index
-const VECTOR_DIMENSION = 1536; // Dimension size for text-embedding-ada-002
+const EMBEDDING_MODEL = 'text-embedding-3-small'; // Using text-embedding-3-small as requested
+const VECTOR_DIMENSION = 1536; // Dimension size for text-embedding-3-small
 
 // Interface for vector records
 interface VectorRecord {
