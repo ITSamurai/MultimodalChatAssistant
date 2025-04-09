@@ -3,11 +3,20 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from 'path';
 import fs from 'fs';
+import cors from 'cors';
 
 const app = express();
 // Increase JSON and URL-encoded payload size limits to 50MB
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+// Set up CORS - during development, allow all origins
+app.use(cors({
+  origin: true, // Allow all origins for now
+  credentials: true, // Allow cookies to be sent with requests
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Add X-Robots-Tag header to all responses to prevent indexing
 app.use((req, res, next) => {

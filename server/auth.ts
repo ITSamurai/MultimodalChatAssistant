@@ -99,7 +99,8 @@ export function setupAuth(app: Express) {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "lax"
+      sameSite: "none", // Allow cross-site cookies (for vertical-assistant.com)
+      domain: process.env.COOKIE_DOMAIN || undefined // Use explicit domain if provided
     }
   };
 
