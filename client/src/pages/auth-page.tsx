@@ -67,9 +67,7 @@ export default function AuthPage() {
                     autoComplete="current-password"
                   />
                 </div>
-                <div className="text-sm text-muted-foreground mt-2">
-                  <p>Default credentials: scott / tiger</p>
-                </div>
+
               </CardContent>
               <CardFooter>
                 <Button 
