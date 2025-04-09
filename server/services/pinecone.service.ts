@@ -308,7 +308,7 @@ export async function createChatWithKnowledgeBase(messages: Array<{
     
     // Query Pinecone for relevant knowledge
     console.log('Querying Pinecone for knowledge...');
-    const similarVectors = await querySimilarVectors(latestUserMessage, 15); // Increased topK to 15 as requested
+    const similarVectors = await querySimilarVectors(latestUserMessage, 50); // Increased topK to 50 as requested
     console.log(`Found ${similarVectors.length} relevant vectors from knowledge base`);
     
     // Extract and format the knowledge
