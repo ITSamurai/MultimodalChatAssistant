@@ -12,6 +12,7 @@ import {
   addKnowledgeToPinecone,
   createChatWithKnowledgeBase
 } from './services/pinecone.service';
+import { setupAuth } from './auth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for in-memory storage
@@ -22,6 +23,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Serve static files from uploads directory
   app.use('/uploads', express.static('uploads'));
+  
+  // Setup authentication
+  setupAuth(app);
+  
+  // Authentication middleware for protected routes
+  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    next();
+  };
 
   // API routes
   // Upload document
@@ -169,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Chat with knowledge base (without requiring a document)
-  app.post('/api/chat', async (req: Request, res: Response) => {
+  app.post('/api/chat', requireAuth, async (req: Request, res: Response) => {
     try {
       console.log('Received chat request:', JSON.stringify(req.body));
       
