@@ -30,10 +30,7 @@ export default function AuthPage() {
         {/* Left side - Auth form */}
         <div className="flex-1">
           <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <h2 className="text-2xl font-bold text-primary">RiverMeadow</h2>
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">RiverMeadow AI Chat</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-primary">RiverMeadow AI Chat</h1>
             <p className="text-muted-foreground mt-2">Sign in to access the intelligent assistant</p>
           </div>
           
