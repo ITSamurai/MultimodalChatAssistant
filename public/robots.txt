@@ -1,0 +1,34 @@
+User-agent: *
+Disallow: /
+
+# Disallow all bots from indexing any part of the site
+User-agent: Googlebot
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /
+
+User-agent: Slurp
+Disallow: /
+
+User-agent: DuckDuckBot
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+
+User-agent: Sogou
+Disallow: /
+
+User-agent: Exabot
+Disallow: /
+
+# Block all archive.org bots too
+User-agent: archive.org_bot
+Disallow: /
+
+# Add noindex meta tag directive
+Noindex: /

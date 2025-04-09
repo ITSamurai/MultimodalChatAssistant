@@ -24,6 +24,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from uploads directory
   app.use('/uploads', express.static('uploads'));
   
+  // Serve robots.txt explicitly to prevent indexing
+  app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send(`User-agent: *
+Disallow: /
+
+# Disallow all bots from indexing any part of the site
+User-agent: Googlebot
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /
+
+User-agent: Slurp
+Disallow: /
+
+User-agent: DuckDuckBot
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+
+User-agent: Sogou
+Disallow: /
+
+User-agent: Exabot
+Disallow: /
+
+# Block all archive.org bots too
+User-agent: archive.org_bot
+Disallow: /
+
+# Add noindex meta tag directive
+Noindex: /`);
+  });
+  
+  // Serve empty sitemap.xml - another layer of protection
+  app.get('/sitemap.xml', (req, res) => {
+    res.type('application/xml');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<!-- Intentionally empty to prevent search engines from indexing the site -->
+</urlset>`);
+  });
+  
   // Setup authentication
   setupAuth(app);
   
