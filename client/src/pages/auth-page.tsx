@@ -102,10 +102,6 @@ export default function AuthPage() {
                 <div className="mr-2 h-4 w-4 rounded-full bg-primary"></div>
                 <span>Smart context understanding</span>
               </li>
-              <li className="flex items-center">
-                <div className="mr-2 h-4 w-4 rounded-full bg-primary"></div>
-                <span>Powered by OpenAI GPT-4o</span>
-              </li>
             </ul>
           </div>
         </div>
