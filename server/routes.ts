@@ -12,7 +12,7 @@ import {
   addKnowledgeToPinecone,
   createChatWithKnowledgeBase
 } from './services/pinecone.service';
-import { setupAuth } from './auth';
+import { setupAuth, requireTokenAuth } from './auth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for in-memory storage
@@ -181,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Chat with knowledge base (without requiring a document)
-  app.post('/api/chat', requireAuth, async (req: Request, res: Response) => {
+  app.post('/api/chat', requireTokenAuth, async (req: Request, res: Response) => {
     try {
       console.log('Received chat request:', JSON.stringify(req.body));
       

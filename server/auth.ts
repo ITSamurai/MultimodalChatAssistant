@@ -1,12 +1,46 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import MemoryStore from "memorystore";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+
+// Add a simple token-based auth mechanism
+const authTokens = new Map<string, number>(); // token -> userId
+
+// Generate a new auth token for a user
+function generateAuthToken(userId: number): string {
+  const token = randomBytes(32).toString('hex');
+  authTokens.set(token, userId);
+  return token;
+}
+
+// Verify an auth token
+async function verifyAuthToken(token: string): Promise<SelectUser | null> {
+  const userId = authTokens.get(token);
+  if (!userId) return null;
+  
+  return await storage.getUser(userId) || null;
+}
+
+// Token authentication middleware
+function tokenAuth(req: Request, res: Response, next: NextFunction) {
+  // Check for token in Authorization header
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next(); // No token, proceed to next auth method
+  }
+
+  const token = authHeader.split(' ')[1];
+  
+  // Store token in request for later use
+  (req as any).authToken = token;
+  
+  next();
+}
 
 declare global {
   namespace Express {
@@ -27,6 +61,28 @@ async function comparePasswords(supplied: string, stored: string) {
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+// Create a middleware for token-based authentication
+export async function requireTokenAuth(req: Request, res: Response, next: NextFunction) {
+  // Check for auth token in request headers
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  
+  // Verify token and get user
+  const user = await verifyAuthToken(token);
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
+  
+  // Set user in request
+  req.user = user;
+  
+  next();
 }
 
 export function setupAuth(app: Express) {
@@ -125,7 +181,15 @@ export function setupAuth(app: Express) {
         if (err) {
           return next(err);
         }
-        return res.status(200).json(user);
+        
+        // Generate token for API access
+        const token = generateAuthToken(user.id);
+        
+        // Return user data with token
+        return res.status(200).json({
+          ...user,
+          token: token
+        });
       });
     })(req, res, next);
   });

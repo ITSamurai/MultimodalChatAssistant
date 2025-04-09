@@ -55,6 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (userData) => {
+      // Save auth token to localStorage if it exists in the response
+      if (userData && userData.token) {
+        localStorage.setItem('auth_token', userData.token);
+      }
+      
       // Update the user data directly in the cache
       queryClient.setQueryData(["/api/user"], userData);
       
@@ -82,6 +87,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (userData) => {
+      // Save auth token to localStorage if it exists in the response
+      if (userData && userData.token) {
+        localStorage.setItem('auth_token', userData.token);
+      }
+      
       // Update the user data directly in the cache
       queryClient.setQueryData(["/api/user"], userData);
       
@@ -108,7 +118,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     onSuccess: () => {
+      // Clear auth token from localStorage
+      localStorage.removeItem('auth_token');
+      
+      // Clear user data from cache
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.setQueryData(["/api/user"], null);
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",
