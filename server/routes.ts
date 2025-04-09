@@ -6,6 +6,12 @@ import { processDocument, getDocumentData } from "./services/document.service";
 import { processMessage } from "./services/openai.service";
 import { chatMessageSchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
+import { 
+  initializePineconeIndex, 
+  indexDocumentInPinecone,
+  addKnowledgeToPinecone,
+  createChatWithKnowledgeBase
+} from './services/pinecone.service';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for in-memory storage
@@ -147,6 +153,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found' });
       }
       return res.status(500).json({ message: error.message || 'Failed to process message' });
+    }
+  });
+
+  // Initialize Pinecone on server startup
+  try {
+    console.log('Connecting to Pinecone index...');
+    initializePineconeIndex().then(() => {
+      console.log('Pinecone connection established successfully');
+    }).catch(error => {
+      console.error('Error connecting to Pinecone:', error);
+    });
+  } catch (error) {
+    console.error('Failed to connect to Pinecone:', error);
+  }
+
+  // Chat with knowledge base (without requiring a document)
+  app.post('/api/chat', async (req: Request, res: Response) => {
+    try {
+      // Validate the chat messages
+      const chatSchema = z.object({
+        messages: z.array(z.object({
+          role: z.enum(["system", "user", "assistant"]),
+          content: z.string().min(1),
+        })),
+        model: z.string().optional(),
+        temperature: z.number().min(0).max(2).optional(),
+        maxTokens: z.number().min(1).max(4000).optional(),
+      });
+
+      const validationResult = chatSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid chat data',
+          errors: validationResult.error.format()
+        });
+      }
+
+      const { messages, model, temperature, maxTokens } = validationResult.data;
+      
+      // Make sure there's at least one user message
+      if (!messages.some(m => m.role === "user")) {
+        return res.status(400).json({ 
+          message: 'Chat must include at least one user message' 
+        });
+      }
+
+      // Generate the AI response
+      const aiResponse = await createChatWithKnowledgeBase(messages, {
+        model,
+        temperature,
+        maxTokens,
+      });
+      
+      return res.status(200).json(aiResponse);
+    } catch (error: any) {
+      console.error('Error generating chat response with knowledge base:', error);
+      return res.status(500).json({ 
+        message: error.message || 'Failed to generate chat response with knowledge base' 
+      });
     }
   });
 

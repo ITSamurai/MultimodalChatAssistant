@@ -1,6 +1,24 @@
 import { apiRequest } from "./queryClient";
 import { Document, DocumentImage, Message, ChatMessage } from "@shared/schema";
 
+// Interface for chat with knowledge base
+export interface KnowledgeBaseChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+export interface KnowledgeBaseChatOptions {
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface KnowledgeItem {
+  id: string;
+  text: string;
+  metadata?: Record<string, any>;
+}
+
 // Upload document
 export async function uploadDocument(file: File): Promise<{ document: Document, imageCount: number }> {
   const formData = new FormData();
@@ -47,5 +65,21 @@ export async function getDocumentMessages(documentId: number): Promise<Message[]
 // Send a chat message and get AI response
 export async function sendChatMessage(documentId: number, content: string): Promise<ChatMessage> {
   const response = await apiRequest("POST", `/api/documents/${documentId}/chat`, { content });
+  return response.json();
+}
+
+// Note: Removed indexDocumentInPinecone and addKnowledgeToPinecone functions
+// as we're only using the existing Pinecone index
+
+// Chat with knowledge base (without document)
+export async function chatWithKnowledgeBase(
+  messages: KnowledgeBaseChatMessage[],
+  options?: KnowledgeBaseChatOptions
+): Promise<KnowledgeBaseChatMessage> {
+  const payload = {
+    messages,
+    ...options
+  };
+  const response = await apiRequest("POST", "/api/chat", payload);
   return response.json();
 }
