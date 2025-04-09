@@ -12,8 +12,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={() => <Home />} />
-      <ProtectedRoute path="/knowledge-chat" component={() => <KnowledgeChatPage />} />
+      <ProtectedRoute path="/" component={() => <KnowledgeChatPage />} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
