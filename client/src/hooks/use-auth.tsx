@@ -54,8 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return await res.json();
     },
-    onSuccess: () => {
-      refetch();
+    onSuccess: (userData) => {
+      // Update the user data directly in the cache
+      queryClient.setQueryData(["/api/user"], userData);
+      
       toast({
         title: "Login successful",
         description: "Welcome back!",
@@ -79,8 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return await res.json();
     },
-    onSuccess: () => {
-      refetch();
+    onSuccess: (userData) => {
+      // Update the user data directly in the cache
+      queryClient.setQueryData(["/api/user"], userData);
+      
       toast({
         title: "Registration successful",
         description: "Your account has been created",
