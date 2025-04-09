@@ -25,18 +25,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static('uploads'));
   app.use(express.static('public'));
   
-  // Very simple robots.txt - guaranteed to work
+  // Very simple robots.txt with explicit headers - guaranteed to work
   app.get('/robots.txt', (req, res) => {
     console.log('Serving robots.txt from explicit handler');
-    res.type('text/plain');
-    res.send(`User-agent: *
+    // Ensure proper content type is set
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
+    res.status(200).send(`User-agent: *
 Disallow: /`);
+  });
+  
+  // Very simple sitemap.xml - guaranteed to work
+  app.get('/sitemap.xml', (req, res) => {
+    console.log('Serving sitemap.xml from explicit handler');
+    // Ensure proper content type is set
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
+    res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<!-- Intentionally empty to prevent search engines from indexing the site -->
+</urlset>`);
   });
   
   // Original robots.txt route as backup - should never reach here
   app.get('/robots-full.txt', (req, res) => {
-    res.type('text/plain');
-    res.send(`User-agent: *
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
+    res.status(200).send(`User-agent: *
 Disallow: /
 
 # Disallow all bots from indexing any part of the site
@@ -72,14 +87,7 @@ Disallow: /
 Noindex: /`);
   });
   
-  // Serve empty sitemap.xml - another layer of protection
-  app.get('/sitemap.xml', (req, res) => {
-    res.type('application/xml');
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<!-- Intentionally empty to prevent search engines from indexing the site -->
-</urlset>`);
-  });
+  // We already have a sitemap.xml route defined above
   
   // Setup authentication
   setupAuth(app);

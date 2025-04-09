@@ -1,0 +1,14 @@
+# Ensure robots.txt is served as plain text
+<Files "robots.txt">
+  Header set Content-Type "text/plain"
+  Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"
+</Files>
+
+# Ensure sitemap.xml is served as XML
+<Files "sitemap.xml">
+  Header set Content-Type "application/xml"
+  Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"
+</Files>
+
+# Add X-Robots-Tag header to all responses
+Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"
