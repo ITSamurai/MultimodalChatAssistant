@@ -41,7 +41,9 @@ export function setupAuth(app: Express) {
     }),
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "lax"
     }
   };
 
@@ -112,7 +114,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: Error | null, user: any, info: any) => {
       if (err) {
         return next(err);
       }
