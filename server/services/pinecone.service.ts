@@ -289,12 +289,27 @@ export async function createChatWithKnowledgeBase(messages: Array<{
   maxTokens?: number;
 }) {
   try {
+    console.log('Starting chat with knowledge base. Messages received:', JSON.stringify(messages));
+    
+    // Validate input
+    if (!Array.isArray(messages) || messages.length === 0) {
+      throw new Error('No valid messages provided');
+    }
+    
     // Get the user's latest message
     const userMessages = messages.filter(m => m.role === "user");
+    
+    if (userMessages.length === 0) {
+      throw new Error('No user messages found in the conversation');
+    }
+    
     const latestUserMessage = userMessages[userMessages.length - 1].content;
+    console.log('Latest user message:', latestUserMessage);
     
     // Query Pinecone for relevant knowledge
-    const similarVectors = await querySimilarVectors(latestUserMessage, 5);
+    console.log('Querying Pinecone for knowledge...');
+    const similarVectors = await querySimilarVectors(latestUserMessage, 15); // Increased topK to 15 as requested
+    console.log(`Found ${similarVectors.length} relevant vectors from knowledge base`);
     
     // Extract and format the knowledge
     let knowledgeContext = "";
@@ -307,6 +322,7 @@ export async function createChatWithKnowledgeBase(messages: Array<{
       console.log("Retrieved context from knowledge base:", knowledgeContext.substring(0, 200) + "...");
     } else {
       knowledgeContext = "No specific information found in knowledge base for this query.";
+      console.log("No relevant information found in knowledge base.");
     }
     
     // Create a new system message that includes the knowledge context
@@ -317,16 +333,15 @@ export async function createChatWithKnowledgeBase(messages: Array<{
     
     const systemMessage = {
       role: "system" as const,
-      content: `You are a helpful assistant with access to a knowledge base. Answer the user's questions based on the information provided.
-      
+      content: `You are a helpful assistant. Use the context below to answer the question.
+
+If the answer is unclear or not directly provided, give your best interpretation based on the information.
+
+Context:
 ${knowledgeContext}
 
-When answering:
-1. Prioritize information from the knowledge base
-2. If the knowledge base doesn't contain relevant information, provide a general but helpful response
-3. If you quote or reference specific information, mention that it comes from the knowledge base
-4. Do not hallucinate or make up information not present in the knowledge base
-5. Keep your answers concise, accurate, and directly related to the user's query`,
+Question:
+${latestUserMessage}`,
     };
     
     // Either replace the existing system message or add a new one at the beginning
@@ -336,17 +351,33 @@ When answering:
       enhancedMessages.unshift(systemMessage);
     }
     
-    // Call OpenAI with the enhanced messages
-    const response = await openai.chat.completions.create({
-      model: options?.model || "gpt-4o",
-      messages: enhancedMessages,
-      max_tokens: options?.maxTokens || 1000,
-      temperature: options?.temperature || 0.3,
-    });
+    console.log('Calling OpenAI with enhanced messages...');
     
-    return response.choices[0].message;
-  } catch (error) {
+    // Call OpenAI with the enhanced messages
+    try {
+      const response = await openai.chat.completions.create({
+        model: options?.model || "gpt-4o",
+        messages: enhancedMessages,
+        max_tokens: options?.maxTokens || 1000,
+        temperature: options?.temperature || 0.3,
+      });
+      
+      if (!response || !response.choices || response.choices.length === 0) {
+        throw new Error('Empty response received from OpenAI');
+      }
+      
+      console.log('Received response from OpenAI');
+      return response.choices[0].message;
+    } catch (e) {
+      const openAiError = e as Error;
+      console.error('OpenAI API error:', openAiError);
+      const errorMessage = openAiError?.message || 'Unknown error';
+      throw new Error(`OpenAI API error: ${errorMessage}`);
+    }
+  } catch (e) {
+    const error = e as Error;
     console.error('Error creating chat with knowledge base:', error);
-    throw new Error('Failed to create chat with knowledge base');
+    const errorMessage = error?.message || 'Unknown error';
+    throw new Error(`Failed to create chat with knowledge base: ${errorMessage}`);
   }
 }

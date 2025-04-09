@@ -44,10 +44,20 @@ export function KnowledgeBaseChat() {
         userMessage
       ];
       
+      console.log('Sending chat request with messages:', JSON.stringify(apiMessages));
+      
       // Get AI response
       const response = await chatWithKnowledgeBase(apiMessages, {
         temperature: 0.5,
       });
+      
+      console.log('Received response:', response);
+      
+      // Check if response has the expected structure
+      if (!response || typeof response.content !== 'string') {
+        console.error('Invalid response format:', response);
+        throw new Error('Invalid response format from server');
+      }
       
       // Add AI response to messages
       setMessages((prev) => [...prev, {
@@ -56,9 +66,15 @@ export function KnowledgeBaseChat() {
       }]);
     } catch (error) {
       console.error('Error sending message:', error);
+      let errorMessage = "Failed to get a response. Please try again.";
+      
+      if (error instanceof Error) {
+        errorMessage += ` Details: ${error.message}`;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to get a response. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

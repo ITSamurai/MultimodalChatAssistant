@@ -171,6 +171,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Chat with knowledge base (without requiring a document)
   app.post('/api/chat', async (req: Request, res: Response) => {
     try {
+      console.log('Received chat request:', JSON.stringify(req.body));
+      
       // Validate the chat messages
       const chatSchema = z.object({
         messages: z.array(z.object({
@@ -184,6 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validationResult = chatSchema.safeParse(req.body);
       if (!validationResult.success) {
+        console.error('Validation error:', validationResult.error.format());
         return res.status(400).json({ 
           message: 'Invalid chat data',
           errors: validationResult.error.format()
@@ -191,6 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { messages, model, temperature, maxTokens } = validationResult.data;
+      console.log(`Validated ${messages.length} messages, proceeding with chat...`);
       
       // Make sure there's at least one user message
       if (!messages.some(m => m.role === "user")) {
@@ -200,17 +204,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate the AI response
-      const aiResponse = await createChatWithKnowledgeBase(messages, {
-        model,
-        temperature,
-        maxTokens,
-      });
-      
-      return res.status(200).json(aiResponse);
+      console.log('Calling createChatWithKnowledgeBase...');
+      try {
+        const aiResponse = await createChatWithKnowledgeBase(messages, {
+          model,
+          temperature,
+          maxTokens,
+        });
+        
+        console.log('Successfully generated response from knowledge base');
+        return res.status(200).json(aiResponse);
+      } catch (knowledgeBaseError: any) {
+        console.error('Knowledge base chat error:', knowledgeBaseError);
+        return res.status(500).json({ 
+          message: `Knowledge base chat error: ${knowledgeBaseError.message}`,
+          error: knowledgeBaseError.toString()
+        });
+      }
     } catch (error: any) {
-      console.error('Error generating chat response with knowledge base:', error);
+      console.error('Unexpected error in chat endpoint:', error);
       return res.status(500).json({ 
-        message: error.message || 'Failed to generate chat response with knowledge base' 
+        message: `Failed to generate chat response: ${error.message}`,
+        error: error.toString() 
       });
     }
   });
