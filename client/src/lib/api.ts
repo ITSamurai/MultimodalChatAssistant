@@ -1,5 +1,6 @@
 import { apiRequest } from "./queryClient";
 import { Document, DocumentImage, Message, ChatMessage } from "@shared/schema";
+import { getFullUrl } from "./config";
 
 // Interface for chat with knowledge base
 export interface KnowledgeBaseChatMessage {
@@ -24,7 +25,9 @@ export async function uploadDocument(file: File): Promise<{ document: Document, 
   const formData = new FormData();
   formData.append("document", file);
 
-  const response = await fetch("/api/documents/upload", {
+  const uploadUrl = getFullUrl("/api/documents/upload");
+  
+  const response = await fetch(uploadUrl, {
     method: "POST",
     body: formData,
     credentials: "include",
