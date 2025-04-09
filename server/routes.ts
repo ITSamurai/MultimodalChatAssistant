@@ -24,6 +24,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from uploads directory
   app.use('/uploads', express.static('uploads'));
   
+  // Serve static files from public directory
+  app.use(express.static('public'));
+  
   // Serve robots.txt explicitly to prevent indexing
   app.get('/robots.txt', (req, res) => {
     res.type('text/plain');
