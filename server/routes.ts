@@ -21,14 +21,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit (increased from 10MB)
   });
 
-  // Serve static files from uploads directory
+  // Serve static files - make sure these are early in the middleware chain
   app.use('/uploads', express.static('uploads'));
-  
-  // Serve static files from public directory
   app.use(express.static('public'));
   
-  // Serve robots.txt explicitly to prevent indexing
+  // Very simple robots.txt - guaranteed to work
   app.get('/robots.txt', (req, res) => {
+    console.log('Serving robots.txt from explicit handler');
+    res.type('text/plain');
+    res.send(`User-agent: *
+Disallow: /`);
+  });
+  
+  // Original robots.txt route as backup - should never reach here
+  app.get('/robots-full.txt', (req, res) => {
     res.type('text/plain');
     res.send(`User-agent: *
 Disallow: /
