@@ -161,18 +161,45 @@ export function KnowledgeBaseChat() {
                 <div className="mt-3 space-y-3">
                   {message.references
                     .filter(ref => ref.type === 'image' && ref.imagePath)
-                    .map((ref, index) => (
-                      <div key={index} className="rounded-lg overflow-hidden border border-gray-200">
-                        <img 
-                          src={ref.imagePath} 
-                          alt={ref.content || 'Generated diagram'} 
-                          className="w-full object-cover max-h-[300px] object-center" 
-                        />
-                        <div className="bg-gray-50 p-2 text-xs text-gray-600">
-                          {ref.caption || 'Generated diagram based on your request'}
+                    .map((ref, index) => {
+                      // Check if it's an HTML diagram (ends with .html)
+                      const isHtmlDiagram = ref.imagePath?.endsWith('.html');
+                      
+                      return (
+                        <div key={index} className="rounded-lg overflow-hidden border border-gray-200">
+                          {isHtmlDiagram ? (
+                            // Render iframe for HTML-based Mermaid diagram
+                            <div className="relative w-full">
+                              <iframe 
+                                src={ref.imagePath}
+                                title="RiverMeadow Diagram" 
+                                className="w-full min-h-[300px] border-none"
+                                loading="lazy"
+                                sandbox="allow-scripts"
+                              />
+                              <a 
+                                href={ref.imagePath} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="absolute top-2 right-2 bg-white rounded-full p-1 shadow text-xs"
+                              >
+                                Open
+                              </a>
+                            </div>
+                          ) : (
+                            // Render standard image
+                            <img 
+                              src={ref.imagePath} 
+                              alt={ref.content || 'Generated diagram'} 
+                              className="w-full object-cover max-h-[300px] object-center" 
+                            />
+                          )}
+                          <div className="bg-gray-50 p-2 text-xs text-gray-600">
+                            {ref.caption || 'Generated diagram based on your request'}
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   }
                 </div>
               )}
@@ -184,7 +211,7 @@ export function KnowledgeBaseChat() {
           <div className="mx-auto max-w-md w-full bg-white p-4 rounded-lg shadow-sm border">
             <div className="flex items-center space-x-2 mb-2">
               <ImageIcon className="h-5 w-5 text-primary animate-pulse" />
-              <p className="text-sm font-medium">Generating diagram with DALL-E...</p>
+              <p className="text-sm font-medium">Generating diagram...</p>
             </div>
             <Progress value={loadingProgress} className="h-2 mb-1" />
             <p className="text-xs text-gray-500 text-right">{loadingProgress}%</p>
