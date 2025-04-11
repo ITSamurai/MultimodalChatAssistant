@@ -41,11 +41,14 @@ export const generateDiagram = async (
   context?: string
 ): Promise<{ imagePath: string, altText: string }> => {
   try {
+    console.log('Starting diagram generation process');
     await ensureDirectoriesExist();
+    console.log('Directories for image storage confirmed');
     
     // Enhance the prompt with context if provided, but limit the context length
     let enhancedPrompt = prompt;
     if (context) {
+      console.log('Context provided for diagram generation, length:', context.length);
       // Limit context to about 1000 characters to avoid exceeding DALL-E's limit
       const limitedContext = context.length > 1000 
         ? context.substring(0, 1000) + "..." 
@@ -53,15 +56,19 @@ export const generateDiagram = async (
       
       enhancedPrompt = `Create a clear technical diagram based on this information: ${limitedContext}\n\nSpecifically showing: ${prompt}\n\nMake it a simple, clean, professional diagram with clear labels.`;
     } else {
+      console.log('No context provided for diagram generation');
       enhancedPrompt = `Create a clear technical diagram showing: ${prompt}\n\nMake it a simple, clean, professional diagram with clear labels.`;
     }
     
     // Ensure the prompt doesn't exceed DALL-E's 4000 character limit
+    const originalLength = enhancedPrompt.length;
     if (enhancedPrompt.length > 3800) {
       enhancedPrompt = enhancedPrompt.substring(0, 3800) + "...";
+      console.log(`Prompt truncated from ${originalLength} to ${enhancedPrompt.length} characters`);
     }
     
     console.log(`Generating diagram with prompt: ${enhancedPrompt.substring(0, 100)}...`);
+    console.log('Final prompt length:', enhancedPrompt.length);
     
     // Call DALL-E API to generate the image
     const response = await openai.images.generate({
@@ -108,17 +115,37 @@ export const generateDiagram = async (
  * Check if a prompt is asking for an image or diagram
  */
 export const isImageGenerationRequest = (prompt: string): boolean => {
+  // Convert to lowercase for case-insensitive matching
+  const lowercasePrompt = prompt.toLowerCase();
+  
+  // Simple detection for common phrases for broad matching
+  if (
+    lowercasePrompt.includes('diagram') || 
+    lowercasePrompt.includes('create diagram') || 
+    lowercasePrompt.includes('draw') || 
+    lowercasePrompt.includes('chart') || 
+    lowercasePrompt.includes('graph') || 
+    lowercasePrompt.includes('visual') || 
+    lowercasePrompt.includes('illustration') ||
+    lowercasePrompt.includes('picture') ||
+    lowercasePrompt.includes('image')
+  ) {
+    console.log('Image generation request detected via simple keyword matching');
+    return true;
+  }
+  
+  // More specific regex patterns as fallback
   const imageRequestPatterns = [
     // Direct requests for diagrams
-    /create\s+(?:a|an)\s+(?:diagram|chart|graph|visualization|figure|illustration)/i,
-    /generate\s+(?:a|an)\s+(?:diagram|chart|graph|visualization|figure|illustration)/i,
-    /draw\s+(?:a|an)\s+(?:diagram|chart|graph|visualization|figure|illustration)/i,
-    /show\s+(?:a|an|me|us)\s+(?:diagram|chart|graph|visualization|figure|illustration)/i,
+    /create\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization|figure|illustration)/i,
+    /generate\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization|figure|illustration)/i,
+    /draw\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization|figure|illustration)/i,
+    /show\s+(?:a|an|me|us)?\s*(?:diagram|chart|graph|visualization|figure|illustration)/i,
     /visualize/i,
     /illustrate/i,
     
     // More generic visual requests with diagram-related context
-    /(?:diagram|chart|graph) showing/i,
+    /(?:diagram|chart|graph)(?:\s+showing|\s+of|\s+for)?/i,
     /visual representation/i,
     /(?:flow|process|architecture|system|component)\s+diagram/i,
     /(?:workflow|process|sequence|data)\s+(?:chart|flow)/i,
@@ -127,5 +154,10 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
     /(?:system|network|component|architectural)\s+(?:diagram|layout|topology)/i
   ];
 
-  return imageRequestPatterns.some(pattern => pattern.test(prompt));
+  const regexMatch = imageRequestPatterns.some(pattern => pattern.test(prompt));
+  if (regexMatch) {
+    console.log('Image generation request detected via regex pattern matching');
+  }
+  
+  return regexMatch;
 };

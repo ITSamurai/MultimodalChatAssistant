@@ -310,6 +310,7 @@ export async function createChatWithKnowledgeBase(messages: Array<{
     
     // Check if the user is requesting an image generation
     const shouldGenerateImage = isImageGenerationRequest(latestUserMessage);
+    console.log(`Image generation requested? ${shouldGenerateImage ? 'YES' : 'NO'} for prompt: "${latestUserMessage}"`);
     
     // Query Pinecone for relevant knowledge
     console.log('Querying Pinecone for knowledge...');
