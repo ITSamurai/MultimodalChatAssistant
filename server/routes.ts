@@ -12,6 +12,7 @@ import {
   addKnowledgeToPinecone,
   createChatWithKnowledgeBase
 } from './services/pinecone.service';
+import { generateDiagram } from './services/image-generation.service';
 import { setupAuth, requireTokenAuth } from './auth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -312,6 +313,40 @@ Noindex: /`);
       return res.status(500).json({ 
         message: `Failed to generate chat response: ${error.message}`,
         error: error.toString() 
+      });
+    }
+  });
+  
+  // Dedicated endpoint for generating diagrams
+  app.post('/api/generate-diagram', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      console.log('Received diagram generation request');
+      
+      // Validate request
+      if (!req.body.prompt) {
+        return res.status(400).json({ error: 'Prompt is required' });
+      }
+      
+      const prompt = req.body.prompt;
+      const context = req.body.context || '';
+      
+      console.log(`Generating diagram with prompt: ${prompt}`);
+      console.log(`Context length: ${context.length} characters`);
+      
+      // Generate the diagram
+      const result = await generateDiagram(prompt, context);
+      
+      console.log(`Successfully generated diagram: ${result.imagePath}`);
+      
+      return res.status(200).json({
+        imagePath: result.imagePath,
+        altText: result.altText
+      });
+    } catch (error: any) {
+      console.error('Error generating diagram:', error);
+      return res.status(500).json({ 
+        error: 'Failed to generate diagram', 
+        message: error instanceof Error ? error.message : String(error)
       });
     }
   });

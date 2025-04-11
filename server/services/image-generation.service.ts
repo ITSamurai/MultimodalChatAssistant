@@ -124,6 +124,16 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
   // Convert to lowercase for case-insensitive matching
   const lowercasePrompt = prompt.toLowerCase();
   
+  // Check for commands that explicitly ask for OS migration diagrams/visuals
+  if (
+    lowercasePrompt.includes('os migration') ||
+    lowercasePrompt.includes('rivermeadow') ||
+    (lowercasePrompt.includes('migration') && lowercasePrompt.includes('diagram'))
+  ) {
+    console.log('OS Migration or RiverMeadow diagram request detected');
+    return true;
+  }
+  
   // Simple detection for common phrases for broad matching
   if (
     lowercasePrompt.includes('diagram') || 
@@ -132,9 +142,15 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
     lowercasePrompt.includes('chart') || 
     lowercasePrompt.includes('graph') || 
     lowercasePrompt.includes('visual') || 
+    lowercasePrompt.includes('visualization') || 
     lowercasePrompt.includes('illustration') ||
     lowercasePrompt.includes('picture') ||
-    lowercasePrompt.includes('image')
+    lowercasePrompt.includes('image') ||
+    lowercasePrompt.includes('generate') && (
+      lowercasePrompt.includes('diagram') || 
+      lowercasePrompt.includes('visual') || 
+      lowercasePrompt.includes('illustration')
+    )
   ) {
     console.log('Image generation request detected via simple keyword matching');
     return true;
@@ -157,7 +173,11 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
     /(?:workflow|process|sequence|data)\s+(?:chart|flow)/i,
     
     // Visual requests with architecture terminology
-    /(?:system|network|component|architectural)\s+(?:diagram|layout|topology)/i
+    /(?:system|network|component|architectural)\s+(?:diagram|layout|topology)/i,
+    
+    // OS Migration specific patterns
+    /generate\s+(?:.*?)\s*(?:based on|using|for|about)\s+(?:.*?)\s*(?:rivermeadow|migration)/i,
+    /(?:OS|operating system)\s+migration/i
   ];
 
   const regexMatch = imageRequestPatterns.some(pattern => pattern.test(prompt));
