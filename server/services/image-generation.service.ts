@@ -71,17 +71,18 @@ export const generateDiagram = async (
     console.log('Calling OpenAI image generation API...');
     let response;
     try {
-      // Try DALL-E 2 which has broader access
+      // Use DALL-E 3 for higher quality images
       response = await openai.images.generate({
-        // DALL-E 2 is the default model, no need to specify
+        model: "dall-e-3",
         prompt: enhancedPrompt,
         n: 1,
         size: "1024x1024",
+        quality: "standard",
         response_format: "b64_json"
       });
-      console.log('Successfully called DALL-E image generation');
+      console.log('Successfully called DALL-E 3 image generation');
     } catch (error) {
-      console.error('Error with DALL-E image generation:', error);
+      console.error('Error with DALL-E 3 image generation:', error);
       throw error; // Re-throw to be caught by the outer catch
     }
     
