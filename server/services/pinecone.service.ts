@@ -1,6 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import OpenAI from 'openai';
 import { storage } from '../storage';
+import { generateDiagram, isImageGenerationRequest } from './image-generation.service';
 
 // Initialize Pinecone client
 const pinecone = new Pinecone({
@@ -279,6 +280,7 @@ export async function addKnowledgeToPinecone(knowledge: {
 
 /**
  * Create a chat completion that incorporates relevant knowledge from Pinecone
+ * and optionally generates images if requested
  */
 export async function createChatWithKnowledgeBase(messages: Array<{
   role: "system" | "user" | "assistant";
@@ -306,6 +308,9 @@ export async function createChatWithKnowledgeBase(messages: Array<{
     const latestUserMessage = userMessages[userMessages.length - 1].content;
     console.log('Latest user message:', latestUserMessage);
     
+    // Check if the user is requesting an image generation
+    const shouldGenerateImage = isImageGenerationRequest(latestUserMessage);
+    
     // Query Pinecone for relevant knowledge
     console.log('Querying Pinecone for knowledge...');
     const similarVectors = await querySimilarVectors(latestUserMessage, 50); // Increased topK to 50 as requested
@@ -314,15 +319,27 @@ export async function createChatWithKnowledgeBase(messages: Array<{
     // Extract and format the knowledge
     let knowledgeContext = "";
     if (similarVectors.length > 0) {
-      knowledgeContext = "Relevant information from knowledge base:\n\n" + 
-        similarVectors.map((vector, index) => 
-          `[${index + 1}] ${vector.text}`
-        ).join("\n\n");
+      knowledgeContext = similarVectors.map((vector, index) => 
+        `[${index + 1}] ${vector.text}`
+      ).join("\n\n");
       
       console.log("Retrieved context from knowledge base:", knowledgeContext.substring(0, 200) + "...");
     } else {
       knowledgeContext = "No specific information found in knowledge base for this query.";
       console.log("No relevant information found in knowledge base.");
+    }
+    
+    // Generate image if requested
+    let generatedImage = null;
+    if (shouldGenerateImage) {
+      try {
+        console.log("Image generation requested, attempting to create diagram...");
+        generatedImage = await generateDiagram(latestUserMessage, knowledgeContext);
+        console.log(`Successfully generated image: ${generatedImage.imagePath}`);
+      } catch (error) {
+        console.error("Error generating image:", error);
+        // Continue without image if generation fails
+      }
     }
     
     // Create a new system message that includes the knowledge context
@@ -331,9 +348,7 @@ export async function createChatWithKnowledgeBase(messages: Array<{
     // Find if there's already a system message
     const systemMessageIndex = enhancedMessages.findIndex(m => m.role === "system");
     
-    const systemMessage = {
-      role: "system" as const,
-      content: `You are a helpful assistant. Use the context below to answer the question.
+    let systemContent = `You are a helpful assistant. Use the context below to answer the question.
 
 If the answer is unclear or not directly provided, give your best interpretation based on the information.
 
@@ -341,7 +356,16 @@ Context:
 ${knowledgeContext}
 
 Question:
-${latestUserMessage}`,
+${latestUserMessage}`;
+
+    // Add information about generated image if available
+    if (generatedImage) {
+      systemContent += `\n\nNote: I've generated a diagram to help illustrate this information. Please refer to it in your response and explain what it shows.`;
+    }
+    
+    const systemMessage = {
+      role: "system" as const,
+      content: systemContent,
     };
     
     // Either replace the existing system message or add a new one at the beginning
@@ -367,6 +391,23 @@ ${latestUserMessage}`,
       }
       
       console.log('Received response from OpenAI');
+      
+      // Add image reference to the response if an image was generated
+      if (generatedImage) {
+        return {
+          role: "assistant",
+          content: response.choices[0].message.content,
+          // Add image reference for the frontend to display
+          references: [{
+            type: "image",
+            imagePath: generatedImage.imagePath,
+            caption: "Generated diagram based on knowledge base information",
+            content: generatedImage.altText,
+          }]
+        };
+      }
+      
+      // Return standard response if no image was generated
       return response.choices[0].message;
     } catch (e) {
       const openAiError = e as Error;
