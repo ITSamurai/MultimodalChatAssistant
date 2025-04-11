@@ -43,12 +43,22 @@ export const generateDiagram = async (
   try {
     await ensureDirectoriesExist();
     
-    // Enhance the prompt with context if provided
+    // Enhance the prompt with context if provided, but limit the context length
     let enhancedPrompt = prompt;
     if (context) {
-      enhancedPrompt = `Create a clear technical diagram based on this information: ${context}\n\nSpecifically showing: ${prompt}\n\nMake it a simple, clean, professional diagram with clear labels.`;
+      // Limit context to about 1000 characters to avoid exceeding DALL-E's limit
+      const limitedContext = context.length > 1000 
+        ? context.substring(0, 1000) + "..." 
+        : context;
+      
+      enhancedPrompt = `Create a clear technical diagram based on this information: ${limitedContext}\n\nSpecifically showing: ${prompt}\n\nMake it a simple, clean, professional diagram with clear labels.`;
     } else {
       enhancedPrompt = `Create a clear technical diagram showing: ${prompt}\n\nMake it a simple, clean, professional diagram with clear labels.`;
+    }
+    
+    // Ensure the prompt doesn't exceed DALL-E's 4000 character limit
+    if (enhancedPrompt.length > 3800) {
+      enhancedPrompt = enhancedPrompt.substring(0, 3800) + "...";
     }
     
     console.log(`Generating diagram with prompt: ${enhancedPrompt.substring(0, 100)}...`);
