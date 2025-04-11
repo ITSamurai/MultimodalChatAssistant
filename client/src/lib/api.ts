@@ -6,6 +6,13 @@ import { getFullUrl } from "./config";
 export interface KnowledgeBaseChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
+  references?: Array<{
+    type: "image" | "text";
+    imagePath?: string;
+    caption?: string;
+    content?: string;
+    id?: number;
+  }>;
 }
 
 export interface KnowledgeBaseChatOptions {

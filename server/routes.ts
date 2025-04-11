@@ -255,6 +255,15 @@ Noindex: /`);
         messages: z.array(z.object({
           role: z.enum(["system", "user", "assistant"]),
           content: z.string().min(1),
+          references: z.array(
+            z.object({
+              type: z.enum(["image", "text"]),
+              imagePath: z.string().optional(),
+              caption: z.string().optional(),
+              content: z.string().optional(),
+              id: z.number().optional(),
+            })
+          ).optional(),
         })),
         model: z.string().optional(),
         temperature: z.number().min(0).max(2).optional(),

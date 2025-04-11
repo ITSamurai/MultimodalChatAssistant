@@ -6,9 +6,18 @@ import { chatWithKnowledgeBase, KnowledgeBaseChatMessage } from '../lib/api';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+interface MessageReference {
+  type: 'image' | 'text';
+  imagePath?: string;
+  caption?: string;
+  content?: string;
+  id?: number;
+}
+
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  references?: MessageReference[];
 }
 
 export function KnowledgeBaseChat() {
@@ -59,10 +68,11 @@ export function KnowledgeBaseChat() {
         throw new Error('Invalid response format from server');
       }
       
-      // Add AI response to messages
+      // Add AI response to messages with references if available
       setMessages((prev) => [...prev, {
         role: 'assistant',
         content: response.content,
+        references: response.references
       }]);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -101,6 +111,27 @@ export function KnowledgeBaseChat() {
             >
               <CardContent className="p-3">
                 <p className="whitespace-pre-wrap">{message.content}</p>
+                
+                {/* Display image references if available */}
+                {message.references && message.references.filter(ref => ref.type === 'image' && ref.imagePath).length > 0 && (
+                  <div className="mt-3 space-y-3">
+                    {message.references
+                      .filter(ref => ref.type === 'image' && ref.imagePath)
+                      .map((ref, index) => (
+                        <div key={index} className="rounded-lg overflow-hidden border border-gray-200">
+                          <img 
+                            src={ref.imagePath} 
+                            alt={ref.content || 'Generated diagram'} 
+                            className="w-full object-cover max-h-[300px] object-center" 
+                          />
+                          <div className="bg-gray-50 p-2 text-xs text-gray-600">
+                            {ref.caption || 'Generated diagram based on your request'}
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))
