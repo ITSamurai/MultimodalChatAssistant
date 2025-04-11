@@ -67,48 +67,97 @@ export const generateDiagram = async (
     console.log(`Generating diagram with prompt: ${enhancedPrompt.substring(0, 100)}...`);
     console.log('Final prompt length:', enhancedPrompt.length);
     
-    // Call DALL-E API to generate the image
-    console.log('Calling OpenAI image generation API...');
-    let response;
-    try {
-      // Use DALL-E 3 for higher quality images
-      response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: enhancedPrompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "standard",
-        response_format: "b64_json"
-      });
-      console.log('Successfully called DALL-E 3 image generation');
-    } catch (error) {
-      console.error('Error with DALL-E 3 image generation:', error);
-      throw error; // Re-throw to be caught by the outer catch
+    // Generate a text-based mermaid diagram that browsers can render
+    console.log('Generating mermaid diagram instead of DALL-E image (API access issues)');
+    
+    // Use OpenAI to generate a mermaid diagram
+    const mermaidPrompt = `Create a mermaid.js diagram code for: ${enhancedPrompt}
+The diagram should be a flowchart (use flowchart TD syntax). Keep it simple and focused on the main steps.
+For example, if it's about OS migration steps, show the main 5-7 steps in the process.
+Only generate valid mermaid.js code wrapped in a code block, nothing else. Use RiverMeadow terminology.`;
+
+    const diagramResponse = await openai.chat.completions.create({
+      model: "gpt-4o", // Use gpt-4o instead of DALL-E
+      messages: [
+        {role: "system", content: "You are a diagram creation assistant that generates only mermaid.js code. Respond with valid mermaid.js code only, no explanations."},
+        {role: "user", content: mermaidPrompt}
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+    });
+    
+    // Extract the mermaid code from the response
+    const messageContent = diagramResponse.choices[0].message.content || "";
+    const mermaidCode = messageContent.trim();
+    const cleanMermaidCode = mermaidCode
+      .replace(/```mermaid/g, '')
+      .replace(/```/g, '')
+      .trim();
+    
+    // Create an HTML file with the mermaid diagram
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RiverMeadow Diagram</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      flowchart: { useMaxWidth: true }
+    });
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
     }
-    
-    if (!response || !response.data || response.data.length === 0 || !response.data[0].b64_json) {
-      throw new Error('Failed to generate image: Empty response from DALL-E');
+    .diagram-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      max-width: 1000px;
+      margin: 0 auto;
     }
-    
-    // Get image data and info
-    const imageData = response.data[0].b64_json;
-    const revised_prompt = response.data[0].revised_prompt || enhancedPrompt;
-    
-    // Create unique filename
+    .mermaid {
+      text-align: center;
+    }
+    h1 {
+      text-align: center;
+      color: #0078d4;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram-container">
+    <h1>RiverMeadow Migration Diagram</h1>
+    <div class="mermaid">
+${cleanMermaidCode}
+    </div>
+  </div>
+</body>
+</html>`;
+
+    // Create timestamp & unique filename
     const timestamp = Date.now();
     const uuid = uuidv4().substring(0, 8);
-    const filename = `generated_diagram_${timestamp}_${uuid}.png`;
+    const filename = `generated_diagram_${timestamp}_${uuid}.html`;
     const imagePath = path.join(GENERATED_IMAGES_DIR, filename);
     
-    // Save image to disk
-    const buffer = Buffer.from(imageData, 'base64');
-    await writeFile(imagePath, buffer);
+    // Save HTML file to disk
+    await writeFile(imagePath, htmlContent);
     
-    console.log(`Successfully generated and saved diagram: ${filename}`);
+    console.log(`Successfully generated and saved mermaid diagram: ${filename}`);
     
     return {
       imagePath: `/uploads/generated/${filename}`,
-      altText: revised_prompt.substring(0, 255) // Limit alt text length
+      altText: prompt.substring(0, 255) // Limit alt text length
     };
   } catch (e: unknown) {
     const error = e instanceof Error ? e : new Error(String(e));
