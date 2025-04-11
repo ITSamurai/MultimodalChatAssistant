@@ -1,22 +1,19 @@
+import { writeFile, mkdir } from 'fs/promises';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as util from 'util';
-import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
+import OpenAI from "openai";
 
-// Initialize OpenAI client
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+// Initialize OpenAI client directly
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 
-// Promisify fs functions
-const writeFile = util.promisify(fs.writeFile);
-const mkdir = util.promisify(fs.mkdir);
-
-// Base directory for storing generated images
+// Define the directories for storing images
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 const GENERATED_IMAGES_DIR = path.join(UPLOADS_DIR, 'generated');
 
-// Ensure upload and generated images directories exist
+/**
+ * Create necessary directories for storing images
+ */
 const ensureDirectoriesExist = async () => {
   try {
     if (!fs.existsSync(UPLOADS_DIR)) {
@@ -71,16 +68,24 @@ export const generateDiagram = async (
     console.log('Final prompt length:', enhancedPrompt.length);
     
     // Call DALL-E API to generate the image
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: enhancedPrompt,
-      n: 1,
-      size: "1024x1024",
-      quality: "standard",
-      response_format: "b64_json"
-    });
+    console.log('Calling OpenAI image generation API...');
+    let response;
+    try {
+      // Try DALL-E 2 which has broader access
+      response = await openai.images.generate({
+        // DALL-E 2 is the default model, no need to specify
+        prompt: enhancedPrompt,
+        n: 1,
+        size: "1024x1024",
+        response_format: "b64_json"
+      });
+      console.log('Successfully called DALL-E image generation');
+    } catch (error) {
+      console.error('Error with DALL-E image generation:', error);
+      throw error; // Re-throw to be caught by the outer catch
+    }
     
-    if (!response.data || response.data.length === 0 || !response.data[0].b64_json) {
+    if (!response || !response.data || response.data.length === 0 || !response.data[0].b64_json) {
       throw new Error('Failed to generate image: Empty response from DALL-E');
     }
     
