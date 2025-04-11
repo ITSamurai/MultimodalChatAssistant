@@ -332,14 +332,18 @@ export async function createChatWithKnowledgeBase(messages: Array<{
     
     // Generate image if requested
     let generatedImage = null;
+    let imageGenerationAttempted = false;
+    
     if (shouldGenerateImage) {
       try {
         console.log("Image generation requested, attempting to create diagram...");
+        imageGenerationAttempted = true;
         generatedImage = await generateDiagram(latestUserMessage, knowledgeContext);
         console.log(`Successfully generated image: ${generatedImage.imagePath}`);
       } catch (error) {
         console.error("Error generating image:", error);
         // Continue without image if generation fails
+        console.log("Continuing without image due to generation failure");
       }
     }
     
@@ -362,6 +366,9 @@ ${latestUserMessage}`;
     // Add information about generated image if available
     if (generatedImage) {
       systemContent += `\n\nNote: I've generated a diagram to help illustrate this information. Please refer to it in your response and explain what it shows.`;
+    } else if (imageGenerationAttempted) {
+      // Add a note about failed image generation for better user experience
+      systemContent += `\n\nNote: The user requested a diagram, but image generation failed due to API access restrictions. Please explain that you cannot generate actual diagrams, but offer a text-based description of what the diagram would look like instead. Be specific and detailed in your description of the diagram components.`;
     }
     
     const systemMessage = {
