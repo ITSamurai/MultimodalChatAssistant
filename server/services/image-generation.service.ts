@@ -168,9 +168,16 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
       max-width: 1000px;
       margin: 0 auto;
+      overflow: hidden;
     }
     .mermaid {
       text-align: center;
+      width: 100%;
+      overflow: auto;
+    }
+    .mermaid svg {
+      max-width: 100%;
+      height: auto !important;
     }
     h1 {
       text-align: center;
