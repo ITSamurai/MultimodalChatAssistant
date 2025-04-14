@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { chatWithKnowledgeBase, KnowledgeBaseChatMessage } from '../lib/api';
-import { Loader2, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
 
@@ -27,6 +27,8 @@ export function KnowledgeBaseChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [isImageGenerating, setIsImageGenerating] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  // Store zoom levels for each diagram (path -> zoom level)
+  const [diagramZooms, setDiagramZooms] = useState<Record<string, number>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
@@ -190,18 +192,60 @@ export function KnowledgeBaseChat() {
                                 sandbox="allow-scripts allow-same-origin"
                                 style={{ 
                                   height: "380px",
-                                  transform: "scale(0.9)", 
-                                  transformOrigin: "top center"
+                                  transform: `scale(${diagramZooms[ref.imagePath!] || 0.9})`, 
+                                  transformOrigin: "top center",
+                                  transition: "transform 0.2s ease"
                                 }}
                               />
-                              <a 
-                                href={ref.imagePath} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="absolute top-2 right-2 bg-white rounded p-1 shadow text-xs px-2 hover:bg-gray-100"
-                              >
-                                Open Full View
-                              </a>
+                              
+                              {/* Diagram controls */}
+                              <div className="absolute bottom-2 right-2 bg-white rounded shadow-md flex items-center">
+                                <button
+                                  onClick={() => {
+                                    const currentZoom = diagramZooms[ref.imagePath!] || 0.9;
+                                    const newZoom = Math.max(0.5, currentZoom - 0.1);
+                                    setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
+                                  }}
+                                  className="p-1 hover:bg-gray-100 text-gray-700"
+                                  title="Zoom out"
+                                >
+                                  <ZoomOut size={16} />
+                                </button>
+                                
+                                <button
+                                  onClick={() => {
+                                    setDiagramZooms({...diagramZooms, [ref.imagePath!]: 0.9});
+                                  }}
+                                  className="p-1 hover:bg-gray-100 text-gray-700"
+                                  title="Reset zoom"
+                                >
+                                  <span className="text-xs px-1">100%</span>
+                                </button>
+                                
+                                <button
+                                  onClick={() => {
+                                    const currentZoom = diagramZooms[ref.imagePath!] || 0.9;
+                                    const newZoom = Math.min(1.5, currentZoom + 0.1);
+                                    setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
+                                  }}
+                                  className="p-1 hover:bg-gray-100 text-gray-700"
+                                  title="Zoom in"
+                                >
+                                  <ZoomIn size={16} />
+                                </button>
+                                
+                                <div className="mx-1 h-4 w-px bg-gray-200"></div>
+                                
+                                <a 
+                                  href={ref.imagePath} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="p-1 hover:bg-gray-100 text-gray-700"
+                                  title="Open in full view"
+                                >
+                                  <Maximize size={16} />
+                                </a>
+                              </div>
                             </div>
                           ) : (
                             // Render standard image
