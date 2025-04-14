@@ -201,8 +201,8 @@ export function KnowledgeBaseChat() {
                                 <button
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    const currentZoom = diagramZooms[ref.imagePath!] || 0.5;
-                                    const newZoom = Math.max(0.2, currentZoom - 0.1);
+                                    const currentZoom = diagramZooms[ref.imagePath!] || 0.7;
+                                    const newZoom = Math.max(0.4, currentZoom - 0.1);
                                     setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
                                     
                                     // Send zoom message to iframe
@@ -221,7 +221,7 @@ export function KnowledgeBaseChat() {
                                 <button
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    const defaultZoom = 0.5; // Initial scale value (50%)
+                                    const defaultZoom = 0.7; // Initial scale value (70%)
                                     setDiagramZooms({...diagramZooms, [ref.imagePath!]: defaultZoom});
                                     
                                     // Send zoom message to iframe
@@ -234,14 +234,14 @@ export function KnowledgeBaseChat() {
                                   className="p-1 hover:bg-gray-100 text-gray-700"
                                   title="Reset zoom"
                                 >
-                                  <span className="text-xs px-1">50%</span>
+                                  <span className="text-xs px-1">70%</span>
                                 </button>
                                 
                                 <button
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    const currentZoom = diagramZooms[ref.imagePath!] || 0.5;
-                                    const newZoom = Math.min(1.0, currentZoom + 0.1);
+                                    const currentZoom = diagramZooms[ref.imagePath!] || 0.7;
+                                    const newZoom = Math.min(1.2, currentZoom + 0.1);
                                     setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
                                     
                                     // Send zoom message to iframe
