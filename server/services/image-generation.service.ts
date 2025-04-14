@@ -215,6 +215,9 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     .mermaid svg {
       display: inline-block;
       max-width: none; /* Allow zooming beyond container */
+      transform: scale(0.5); /* Initial scale at 50% */
+      transform-origin: 50% 0;
+      transition: transform 0.2s ease;
     }
     h1 {
       text-align: center;
