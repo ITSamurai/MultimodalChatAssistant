@@ -89,10 +89,28 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     // Extract the mermaid code from the response
     const messageContent = diagramResponse.choices[0].message.content || "";
     const mermaidCode = messageContent.trim();
-    const cleanMermaidCode = mermaidCode
+    let cleanMermaidCode = mermaidCode
       .replace(/```mermaid/g, '')
       .replace(/```/g, '')
       .trim();
+    
+    // Validate and ensure the mermaid code has proper syntax
+    if (!cleanMermaidCode.startsWith('graph') && !cleanMermaidCode.startsWith('flowchart')) {
+      console.log('Adding flowchart TD prefix to mermaid code');
+      cleanMermaidCode = 'flowchart TD\n' + cleanMermaidCode;
+    }
+    
+    // Add a simple default diagram as fallback in case of empty or invalid diagram
+    if (cleanMermaidCode.length < 10) {
+      console.log('Generated mermaid code too short, using fallback diagram');
+      cleanMermaidCode = `flowchart TD
+    A[RiverMeadow Migration Start] --> B[Deploy Migration Appliance]
+    B --> C[Configure Source and Target]
+    C --> D[Perform Preflight Checks]
+    D --> E[Execute Migration]
+    E --> F[Verify Results]
+    F --> G[Migration Complete]`;
+    }
     
     // Create an HTML file with the mermaid diagram
     const htmlContent = `<!DOCTYPE html>
