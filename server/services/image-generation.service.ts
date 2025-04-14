@@ -219,9 +219,13 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       font-size: 14px;
       max-width: 100%;
       overflow: auto;
+      margin-bottom: 20px;
     }
     
+    /* Fix height issues with mermaid diagrams */
     .mermaid svg {
+      height: auto !important;
+      min-height: 300px !important;
       display: inline-block;
       max-width: none; /* Allow zooming beyond container */
       transform: scale(0.7); /* Initial scale at 70% */
@@ -229,10 +233,24 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       transition: transform 0.2s ease;
     }
     
+    /* Make sure text in diagram is not cut off */
+    .mermaid svg g.node foreignObject {
+      overflow: visible !important;
+      width: auto !important;
+      height: auto !important;
+      min-width: 100px !important;
+      min-height: 40px !important;
+    }
+    
     /* Make text larger for better readability */
     .mermaid svg text {
-      font-size: 16px !important;
+      font-size: 15px !important;
       font-weight: 500 !important;
+      overflow: visible !important;
+      word-break: normal !important;
+      /* Prevent text wrapping or truncation */
+      white-space: pre !important;
+      text-overflow: clip !important;
     }
     
     /* Fix overlapping text with boxes */
@@ -241,12 +259,16 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     .mermaid svg .node polygon,
     .mermaid svg .node ellipse {
       fill-opacity: 0.8 !important;
+      height: auto !important;
+      min-height: 38px !important; /* Make boxes taller */
+      padding: 8px 4px !important; /* Add internal padding */
     }
     
     /* Bring text to front */
     .mermaid svg .node text {
       z-index: 10 !important;
       position: relative !important;
+      dominant-baseline: middle !important; /* Vertically center text */
     }
     
     /* Add spacing between nodes */
