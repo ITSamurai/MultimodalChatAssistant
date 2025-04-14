@@ -201,7 +201,8 @@ export function KnowledgeBaseChat() {
                               {/* Diagram controls */}
                               <div className="absolute bottom-2 right-2 bg-white rounded shadow-md flex items-center">
                                 <button
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.preventDefault();
                                     const currentZoom = diagramZooms[ref.imagePath!] || 0.9;
                                     const newZoom = Math.max(0.5, currentZoom - 0.1);
                                     setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
@@ -213,7 +214,8 @@ export function KnowledgeBaseChat() {
                                 </button>
                                 
                                 <button
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.preventDefault();
                                     setDiagramZooms({...diagramZooms, [ref.imagePath!]: 0.9});
                                   }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
@@ -223,7 +225,8 @@ export function KnowledgeBaseChat() {
                                 </button>
                                 
                                 <button
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.preventDefault();
                                     const currentZoom = diagramZooms[ref.imagePath!] || 0.9;
                                     const newZoom = Math.min(1.5, currentZoom + 0.1);
                                     setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
