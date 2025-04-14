@@ -171,19 +171,36 @@ export function KnowledgeBaseChat() {
                             // Render iframe for HTML-based Mermaid diagram
                             <div className="relative w-full">
                               <iframe 
+                                ref={(iframe) => {
+                                  if (iframe) {
+                                    // When iframe loads, try to resize the diagram
+                                    iframe.onload = () => {
+                                      try {
+                                        iframe.contentWindow?.postMessage('resize', '*');
+                                      } catch (e) {
+                                        console.error('Failed to send resize message to iframe', e);
+                                      }
+                                    };
+                                  }
+                                }}
                                 src={ref.imagePath}
                                 title="RiverMeadow Diagram" 
-                                className="w-full min-h-[300px] border-none"
+                                className="w-full border-none"
                                 loading="lazy"
-                                sandbox="allow-scripts"
+                                sandbox="allow-scripts allow-same-origin"
+                                style={{ 
+                                  height: "380px",
+                                  transform: "scale(0.9)", 
+                                  transformOrigin: "top center"
+                                }}
                               />
                               <a 
                                 href={ref.imagePath} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="absolute top-2 right-2 bg-white rounded-full p-1 shadow text-xs"
+                                className="absolute top-2 right-2 bg-white rounded p-1 shadow text-xs px-2 hover:bg-gray-100"
                               >
-                                Open
+                                Open Full View
                               </a>
                             </div>
                           ) : (

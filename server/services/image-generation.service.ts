@@ -106,31 +106,76 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     mermaid.initialize({
       startOnLoad: true,
       theme: 'neutral',
-      flowchart: { useMaxWidth: true }
+      flowchart: { 
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis',
+        padding: 10
+      },
+      fontSize: 14
+    });
+    
+    // Make diagram fit better in iframe when embedded
+    window.addEventListener('message', function(event) {
+      if (event.data === 'resize') {
+        // Get diagram element
+        const diagram = document.querySelector('.mermaid');
+        if (diagram) {
+          setTimeout(() => {
+            const event = new Event('resize');
+            window.dispatchEvent(event);
+          }, 100);
+        }
+      }
+    });
+    
+    // Notify parent when loaded
+    window.addEventListener('load', function() {
+      if (window.parent) {
+        window.parent.postMessage('diagramLoaded', '*');
+      }
     });
   </script>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 10px;
       background: #f5f5f5;
     }
     .diagram-container {
       background: white;
-      padding: 20px;
+      padding: 15px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-      max-width: 1000px;
+      width: 100%;
+      max-width: 1200px;
       margin: 0 auto;
+      box-sizing: border-box;
     }
     .mermaid {
       text-align: center;
+      font-size: 14px;
+      max-width: 100%;
     }
     h1 {
       text-align: center;
       color: #0078d4;
-      margin-bottom: 20px;
+      margin: 0 0 15px 0;
+      font-size: 1.5rem;
+    }
+    
+    /* Scale diagram to fit viewport */
+    @media (max-width: 600px) {
+      .diagram-container {
+        padding: 10px;
+      }
+      h1 {
+        font-size: 1.2rem;
+      }
+      .mermaid {
+        zoom: 0.9;
+      }
     }
   </style>
 </head>
