@@ -135,6 +135,24 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     
     // Make diagram fit better in iframe when embedded
     window.addEventListener('message', function(event) {
+      // Handle zoom-in, zoom-out, and reset messages from parent
+      if (event.data && typeof event.data === 'object') {
+        if (event.data.action === 'zoom') {
+          const diagram = document.querySelector('.diagram-container');
+          if (diagram) {
+            // Apply zoom to the actual diagram
+            const mermaidDiv = document.querySelector('.mermaid svg');
+            if (mermaidDiv) {
+              // Apply zoom to the SVG element
+              mermaidDiv.style.transform = 'scale(' + event.data.scale + ')';
+              mermaidDiv.style.transformOrigin = 'center top';
+              mermaidDiv.style.transition = 'transform 0.2s ease';
+            }
+          }
+        }
+      }
+      
+      // Handle resize events
       if (event.data === 'resize') {
         // Get diagram element
         const diagram = document.querySelector('.mermaid');
@@ -147,10 +165,19 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       }
     });
     
-    // Notify parent when loaded
+    // Notify parent when loaded and setup diagram for zooming
     window.addEventListener('load', function() {
       if (window.parent) {
         window.parent.postMessage('diagramLoaded', '*');
+        
+        // Add zoom capability to the SVG once it's rendered
+        setTimeout(() => {
+          const svg = document.querySelector('.mermaid svg');
+          if (svg) {
+            svg.style.transition = 'transform 0.2s ease';
+            svg.style.transformOrigin = 'center top';
+          }
+        }, 200);
       }
     });
   </script>

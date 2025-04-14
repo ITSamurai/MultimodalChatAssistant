@@ -206,6 +206,13 @@ export function KnowledgeBaseChat() {
                                     const currentZoom = diagramZooms[ref.imagePath!] || 0.9;
                                     const newZoom = Math.max(0.5, currentZoom - 0.1);
                                     setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
+                                    
+                                    // Send zoom message to iframe
+                                    const iframe = e.currentTarget.closest('.relative')?.querySelector('iframe');
+                                    iframe?.contentWindow?.postMessage({
+                                      action: 'zoom',
+                                      scale: newZoom
+                                    }, '*');
                                   }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
                                   title="Zoom out"
@@ -216,7 +223,15 @@ export function KnowledgeBaseChat() {
                                 <button
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    setDiagramZooms({...diagramZooms, [ref.imagePath!]: 0.9});
+                                    const defaultZoom = 1.0;
+                                    setDiagramZooms({...diagramZooms, [ref.imagePath!]: defaultZoom});
+                                    
+                                    // Send zoom message to iframe
+                                    const iframe = e.currentTarget.closest('.relative')?.querySelector('iframe');
+                                    iframe?.contentWindow?.postMessage({
+                                      action: 'zoom',
+                                      scale: defaultZoom
+                                    }, '*');
                                   }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
                                   title="Reset zoom"
@@ -230,6 +245,13 @@ export function KnowledgeBaseChat() {
                                     const currentZoom = diagramZooms[ref.imagePath!] || 0.9;
                                     const newZoom = Math.min(1.5, currentZoom + 0.1);
                                     setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
+                                    
+                                    // Send zoom message to iframe
+                                    const iframe = e.currentTarget.closest('.relative')?.querySelector('iframe');
+                                    iframe?.contentWindow?.postMessage({
+                                      action: 'zoom',
+                                      scale: newZoom
+                                    }, '*');
                                   }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
                                   title="Zoom in"

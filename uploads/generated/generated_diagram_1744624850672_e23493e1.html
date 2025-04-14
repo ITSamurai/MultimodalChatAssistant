@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RiverMeadow Diagram</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      flowchart: { 
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis',
+        padding: 10
+      },
+      fontSize: 14
+    });
+    
+    // Make diagram fit better in iframe when embedded
+    window.addEventListener('message', function(event) {
+      if (event.data === 'resize') {
+        // Get diagram element
+        const diagram = document.querySelector('.mermaid');
+        if (diagram) {
+          setTimeout(() => {
+            const event = new Event('resize');
+            window.dispatchEvent(event);
+          }, 100);
+        }
+      }
+    });
+    
+    // Notify parent when loaded
+    window.addEventListener('load', function() {
+      if (window.parent) {
+        window.parent.postMessage('diagramLoaded', '*');
+      }
+    });
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background: #f5f5f5;
+    }
+    .diagram-container {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
+    .mermaid {
+      text-align: center;
+      font-size: 14px;
+      max-width: 100%;
+    }
+    h1 {
+      text-align: center;
+      color: #0078d4;
+      margin: 0 0 15px 0;
+      font-size: 1.5rem;
+    }
+    
+    /* Scale diagram to fit viewport */
+    @media (max-width: 600px) {
+      .diagram-container {
+        padding: 10px;
+      }
+      h1 {
+        font-size: 1.2rem;
+      }
+      .mermaid {
+        zoom: 0.9;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram-container">
+    <h1>RiverMeadow Migration Diagram</h1>
+    <div class="mermaid">
+flowchart TD
+    A[Deploy RMS Migration Appliance] --> B[Target Cloud Determination]
+    B --> C[Communicate with RiverMeadow Platform]
+    C --> D{Review OS-based Migration Requirements}
+    D --> E[Step 1: Review Requirements]
+    E --> F[Step 2: Prepare for Migration]
+    F --> G[Step 3: Execute Migration]
+    G --> H[Migration Complete]
+    subgraph Secure Network
+        A --> I[Public Cloud Deployment]
+        A --> J[Private Cloud Deployment]
+        I --> K[Use Public Cloud APIs]
+        J --> L[Download OVF + Secure Token Code]
+    end
+    </div>
+  </div>
+</body>
+</html>
