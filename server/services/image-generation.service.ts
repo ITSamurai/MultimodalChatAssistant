@@ -79,13 +79,7 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     const diagramResponse = await openai.chat.completions.create({
       model: "gpt-4o", // Use gpt-4o instead of DALL-E
       messages: [
-        {role: "system", content: `You are a diagram creation assistant that generates only mermaid.js code. Respond with valid mermaid.js code only, no explanations.
-Follow these important rules:
-1. Use <br/> to break long text into multiple lines within nodes
-2. Keep node text short and concise - max 2-3 words per line
-3. Use square brackets and double quotes format for nodes: A["Text<br/>Here"] to support HTML
-4. Add proper spacing between nodes
-5. Add text color:#000 to all classes to ensure text is visible`},
+        {role: "system", content: "You are a diagram creation assistant that generates only mermaid.js code. Respond with valid mermaid.js code only, no explanations."},
         {role: "user", content: mermaidPrompt}
       ],
       max_tokens: 1000,
@@ -110,16 +104,19 @@ Follow these important rules:
     if (cleanMermaidCode.length < 10) {
       console.log('Generated mermaid code too short, using fallback diagram');
       cleanMermaidCode = `flowchart TD
-    A["RiverMeadow<br/>Migration Start"] --> B["Deploy<br/>Migration Appliance"]
-    B --> C["Configure<br/>Source & Target"]
-    C --> D["Perform<br/>Preflight Checks"]
-    D --> E["Execute<br/>Migration"]
-    E --> F["Verify<br/>Results"]
-    F --> G["Migration<br/>Complete"]
+    A[RiverMeadow Migration Start] --> B[Deploy Migration Appliance]
+    B --> C[Configure Source and Target]
+    C --> D[Perform Preflight Checks]
+    D --> E[Execute Migration]
+    E --> F[Verify Results]
+    F --> G[Migration Complete]
     
     classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px,color:#000;
     classDef highlight fill:#e1f5fe,stroke:#03a9f4,stroke-width:2px,color:#000;
-    class A highlight`;
+    classDef process fill:#e3f2fd,stroke:#2196f3,stroke-width:1px,color:#000;
+    
+    class A highlight
+    class B,C,D,E,F,G process`;
     }
     
     // Create an HTML file with the mermaid diagram
@@ -138,11 +135,11 @@ Follow these important rules:
         useMaxWidth: true,
         htmlLabels: true,
         curve: 'basis',
-        padding: 20,
-        nodeSpacing: 60,
-        rankSpacing: 80
+        padding: 15,
+        nodeSpacing: 40,
+        rankSpacing: 60
       },
-      fontSize: 16
+      fontSize: 14
     });
     
     // Make diagram fit better in iframe when embedded
