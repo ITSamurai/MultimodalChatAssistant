@@ -192,9 +192,7 @@ export function KnowledgeBaseChat() {
                                 sandbox="allow-scripts allow-same-origin"
                                 style={{ 
                                   height: "380px",
-                                  transform: `scale(${diagramZooms[ref.imagePath!] || 0.9})`, 
-                                  transformOrigin: "top center",
-                                  transition: "transform 0.2s ease"
+                                  overflow: "hidden" 
                                 }}
                               />
                               

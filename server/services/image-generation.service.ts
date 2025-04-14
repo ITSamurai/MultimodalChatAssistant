@@ -145,8 +145,15 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
             if (mermaidDiv) {
               // Apply zoom to the SVG element
               mermaidDiv.style.transform = 'scale(' + event.data.scale + ')';
-              mermaidDiv.style.transformOrigin = 'center top';
+              mermaidDiv.style.transformOrigin = '50% 0';
               mermaidDiv.style.transition = 'transform 0.2s ease';
+              
+              // Adjust container if needed
+              const container = document.querySelector('.mermaid');
+              if (container) {
+                container.scrollTop = 0;
+                container.style.height = 'auto';
+              }
             }
           }
         }
@@ -202,6 +209,12 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       text-align: center;
       font-size: 14px;
       max-width: 100%;
+      overflow: auto;
+    }
+    
+    .mermaid svg {
+      display: inline-block;
+      max-width: none; /* Allow zooming beyond container */
     }
     h1 {
       text-align: center;
