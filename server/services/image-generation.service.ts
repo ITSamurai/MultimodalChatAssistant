@@ -109,14 +109,7 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     C --> D[Perform Preflight Checks]
     D --> E[Execute Migration]
     E --> F[Verify Results]
-    F --> G[Migration Complete]
-    
-    classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px,color:#000;
-    classDef highlight fill:#e1f5fe,stroke:#03a9f4,stroke-width:2px,color:#000;
-    classDef process fill:#e3f2fd,stroke:#2196f3,stroke-width:1px,color:#000;
-    
-    class A highlight
-    class B,C,D,E,F,G process`;
+    F --> G[Migration Complete]`;
     }
     
     // Create an HTML file with the mermaid diagram
@@ -131,15 +124,14 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     mermaid.initialize({
       startOnLoad: true,
       theme: 'neutral',
-      flowchart: { 
-        useMaxWidth: true,
-        htmlLabels: true,
-        curve: 'basis',
-        padding: 15,
-        nodeSpacing: 40,
-        rankSpacing: 60
-      },
-      fontSize: 14
+      flowchart: { useMaxWidth: true }
+    });
+    
+    // Notify parent when loaded
+    window.addEventListener('load', function() {
+      if (window.parent) {
+        window.parent.postMessage('diagramLoaded', '*');
+      }
     });
     
     // Make diagram fit better in iframe when embedded
@@ -156,44 +148,9 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
               mermaidDiv.style.transform = 'scale(' + event.data.scale + ')';
               mermaidDiv.style.transformOrigin = '50% 0';
               mermaidDiv.style.transition = 'transform 0.2s ease';
-              
-              // Adjust container if needed
-              const container = document.querySelector('.mermaid');
-              if (container) {
-                container.scrollTop = 0;
-                container.style.height = 'auto';
-              }
             }
           }
         }
-      }
-      
-      // Handle resize events
-      if (event.data === 'resize') {
-        // Get diagram element
-        const diagram = document.querySelector('.mermaid');
-        if (diagram) {
-          setTimeout(() => {
-            const event = new Event('resize');
-            window.dispatchEvent(event);
-          }, 100);
-        }
-      }
-    });
-    
-    // Notify parent when loaded and setup diagram for zooming
-    window.addEventListener('load', function() {
-      if (window.parent) {
-        window.parent.postMessage('diagramLoaded', '*');
-        
-        // Add zoom capability to the SVG once it's rendered
-        setTimeout(() => {
-          const svg = document.querySelector('.mermaid svg');
-          if (svg) {
-            svg.style.transition = 'transform 0.2s ease';
-            svg.style.transformOrigin = 'center top';
-          }
-        }, 200);
       }
     });
   </script>
@@ -201,98 +158,24 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 10px;
+      padding: 20px;
       background: #f5f5f5;
     }
     .diagram-container {
       background: white;
-      padding: 15px;
+      padding: 20px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-      width: 100%;
-      max-width: 1200px;
+      max-width: 1000px;
       margin: 0 auto;
-      box-sizing: border-box;
     }
     .mermaid {
       text-align: center;
-      font-size: 14px;
-      max-width: 100%;
-      overflow: auto;
-      margin-bottom: 20px;
-    }
-    
-    /* Fix height issues with mermaid diagrams */
-    .mermaid svg {
-      height: auto !important;
-      min-height: 300px !important;
-      display: inline-block;
-      max-width: none; /* Allow zooming beyond container */
-      transform: scale(0.7); /* Initial scale at 70% */
-      transform-origin: 50% 0;
-      transition: transform 0.2s ease;
-    }
-    
-    /* Make sure text in diagram is not cut off */
-    .mermaid svg g.node foreignObject {
-      overflow: visible !important;
-      width: auto !important;
-      height: auto !important;
-      min-width: 100px !important;
-      min-height: 40px !important;
-    }
-    
-    /* Make text larger for better readability */
-    .mermaid svg text {
-      font-size: 15px !important;
-      font-weight: 500 !important;
-      overflow: visible !important;
-      word-break: normal !important;
-      /* Prevent text wrapping or truncation */
-      white-space: pre !important;
-      text-overflow: clip !important;
-    }
-    
-    /* Fix overlapping text with boxes */
-    .mermaid svg .node rect,
-    .mermaid svg .node circle,
-    .mermaid svg .node polygon,
-    .mermaid svg .node ellipse {
-      fill-opacity: 0.8 !important;
-      height: auto !important;
-      min-height: 38px !important; /* Make boxes taller */
-      padding: 8px 4px !important; /* Add internal padding */
-    }
-    
-    /* Bring text to front */
-    .mermaid svg .node text {
-      z-index: 10 !important;
-      position: relative !important;
-      dominant-baseline: middle !important; /* Vertically center text */
-    }
-    
-    /* Add spacing between nodes */
-    .mermaid svg .node {
-      margin: 10px !important;
     }
     h1 {
       text-align: center;
       color: #0078d4;
-      margin: 0 0 15px 0;
-      font-size: 1.5rem;
-    }
-    
-    /* Scale diagram to fit viewport */
-    @media (max-width: 600px) {
-      .diagram-container {
-        padding: 10px;
-      }
-      h1 {
-        font-size: 1.2rem;
-      }
-      .mermaid {
-        zoom: 0.9;
-      }
+      margin-bottom: 20px;
     }
   </style>
 </head>
