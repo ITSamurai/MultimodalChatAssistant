@@ -94,11 +94,20 @@ export function KnowledgeBaseChat() {
             const originalWidth = targetIframe.style.width;
             
             // Set a larger size to ensure the entire diagram is visible
-            targetIframe.style.width = '1200px';
-            targetIframe.style.height = '1200px';
+            // Make the iframe much larger to ensure we capture the entire diagram
+            targetIframe.style.width = '2400px';
+            targetIframe.style.height = '2400px';
+            
+            // Also adjust the parent container
+            iframeContainer.style.width = '2000px';
+            iframeContainer.style.height = '2000px';
+            iframeContainer.style.overflow = 'hidden';
             
             // Give time for resize to apply
             await new Promise(r => setTimeout(r, 200));
+            
+            // Wait a bit longer for any resize to fully apply
+            await new Promise(r => setTimeout(r, 500));
             
             // Take screenshot of the diagram container with full dimensions
             const dataUrl = await htmlToImage.toPng(iframeContainer, {
@@ -107,12 +116,17 @@ export function KnowledgeBaseChat() {
               backgroundColor: 'white',
               fontEmbedCSS: '',
               quality: 1.0,
-              width: 1600,          // Use a fixed larger width
-              height: 1200          // Use a fixed larger height 
+              width: 2400,          // Much larger width to fit the whole diagram
+              height: 2000          // Much larger height to fit the whole diagram
             });
             
-            // Restore iframe style
+            // Restore iframe and container styles
             targetIframe.style.cssText = originalStyle;
+            
+            // Reset the container style
+            iframeContainer.style.width = '';
+            iframeContainer.style.height = '';
+            iframeContainer.style.overflow = '';
             
             // Generate filename
             const timestamp = Date.now();

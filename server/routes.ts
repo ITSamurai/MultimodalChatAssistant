@@ -9,6 +9,8 @@ import { z } from "zod";
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
+import puppeteer from 'puppeteer';
+import { v4 as uuidv4 } from 'uuid';
 import { 
   initializePineconeIndex, 
   indexDocumentInPinecone,
