@@ -170,7 +170,8 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     mermaid.initialize({
       startOnLoad: true,
       theme: 'neutral',
-      flowchart: { useMaxWidth: true }
+      flowchart: { useMaxWidth: true },
+      securityLevel: 'loose' // This allows for downloading the SVG properly
     });
     
     // Notify parent when loaded
