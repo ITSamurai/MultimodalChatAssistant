@@ -70,11 +70,33 @@ export const generateDiagram = async (
     // Generate a text-based mermaid diagram that browsers can render
     console.log('Generating mermaid diagram instead of DALL-E image (API access issues)');
     
+    // Determine if we need a network diagram instead of a flowchart
+    const isNetworkDiagram = detectNetworkDiagramRequest(prompt);
+    
     // Use OpenAI to generate a mermaid diagram
-    const mermaidPrompt = `Create a mermaid.js diagram code for: ${enhancedPrompt}
+    let mermaidPrompt;
+    
+    if (isNetworkDiagram) {
+      mermaidPrompt = `Create a mermaid.js network diagram code for: ${enhancedPrompt}
+Use the appropriate syntax for network diagrams. In Mermaid, you can represent networks using:
+1. flowchart LR - for left-to-right network diagrams
+2. Use different node shapes to represent network components:
+   - ((Database)) for databases
+   - [Server] for servers
+   - {{Firewall}} for firewalls
+   - (Router) for routers
+   - [/Load Balancer/] for load balancers
+   - [(Storage)] for storage
+   - [Cloud] for cloud services
+
+Keep the diagram focused on the key network components and their connections.
+Only generate valid mermaid.js code wrapped in a code block, nothing else. Use proper RiverMeadow terminology.`;
+    } else {
+      mermaidPrompt = `Create a mermaid.js diagram code for: ${enhancedPrompt}
 The diagram should be a flowchart (use flowchart TD syntax). Keep it simple and focused on the main steps.
 For example, if it's about OS migration steps, show the main 5-7 steps in the process.
 Only generate valid mermaid.js code wrapped in a code block, nothing else. Use RiverMeadow terminology.`;
+    }
 
     const diagramResponse = await openai.chat.completions.create({
       model: "gpt-4o", // Use gpt-4o instead of DALL-E
@@ -103,13 +125,37 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     // Add a simple default diagram as fallback in case of empty or invalid diagram
     if (cleanMermaidCode.length < 10) {
       console.log('Generated mermaid code too short, using fallback diagram');
-      cleanMermaidCode = `flowchart TD
+      
+      if (isNetworkDiagram) {
+        // Network diagram fallback
+        cleanMermaidCode = `flowchart LR
+    Internet((Internet)) --> FW{{Firewall}}
+    FW --> LB[/Load Balancer/]
+    LB --> S1[Source Server 1]
+    LB --> S2[Source Server 2]
+    S1 --> RMS[RiverMeadow Server]
+    S2 --> RMS
+    RMS --> DB[(Database)]
+    RMS --> Cloud1[Cloud Provider 1]
+    RMS --> Cloud2[Cloud Provider 2]
+    
+    classDef network fill:#e3f2fd,stroke:#2196f3,stroke-width:1px;
+    classDef source fill:#e8f5e9,stroke:#43a047,stroke-width:1px;
+    classDef target fill:#fff3e0,stroke:#ff9800,stroke-width:1px;
+    
+    class Internet,FW,LB network
+    class S1,S2 source
+    class Cloud1,Cloud2 target`;
+      } else {
+        // Process diagram fallback
+        cleanMermaidCode = `flowchart TD
     A[RiverMeadow Migration Start] --> B[Deploy Migration Appliance]
     B --> C[Configure Source and Target]
     C --> D[Perform Preflight Checks]
     D --> E[Execute Migration]
     E --> F[Verify Results]
     F --> G[Migration Complete]`;
+      }
     }
     
     // Create an HTML file with the mermaid diagram
@@ -188,7 +234,7 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
 </head>
 <body>
   <div class="diagram-container">
-    <h1>RiverMeadow Migration Diagram</h1>
+    <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
     <div class="mermaid">
 ${cleanMermaidCode}
     </div>
@@ -217,6 +263,57 @@ ${cleanMermaidCode}
     throw new Error(`Failed to generate diagram: ${error.message}`);
   }
 };
+
+/**
+ * Detect if the user is requesting a network diagram specifically
+ */
+function detectNetworkDiagramRequest(prompt: string): boolean {
+  // Convert to lowercase for case-insensitive matching
+  const lowercasePrompt = prompt.toLowerCase();
+  
+  // Keywords that indicate a network diagram request
+  const networkKeywords = [
+    'network diagram',
+    'network architecture',
+    'network topology',
+    'system architecture',
+    'infrastructure diagram',
+    'cloud architecture',
+    'cloud infrastructure',
+    'connectivity diagram',
+    'network design',
+    'infrastructure architecture',
+    'deployment architecture',
+    'communication architecture',
+    'system topology'
+  ];
+  
+  // Check if any network keywords are in the prompt
+  const hasNetworkKeyword = networkKeywords.some(keyword => 
+    lowercasePrompt.includes(keyword)
+  );
+  
+  // Additional check for common network-related terms combined with diagram requests
+  const hasNetworkContext = 
+    (lowercasePrompt.includes('network') || 
+     lowercasePrompt.includes('infrastructure') || 
+     lowercasePrompt.includes('cloud') || 
+     lowercasePrompt.includes('server') || 
+     lowercasePrompt.includes('router') || 
+     lowercasePrompt.includes('firewall') ||
+     lowercasePrompt.includes('architecture')) && 
+    (lowercasePrompt.includes('diagram') || 
+     lowercasePrompt.includes('map') || 
+     lowercasePrompt.includes('topology') ||
+     lowercasePrompt.includes('layout'));
+  
+  if (hasNetworkKeyword || hasNetworkContext) {
+    console.log('Network diagram request detected');
+    return true;
+  }
+  
+  return false;
+}
 
 /**
  * Check if a prompt is asking for an image or diagram
