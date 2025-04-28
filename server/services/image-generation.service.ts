@@ -171,7 +171,13 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       startOnLoad: true,
       theme: 'neutral',
       flowchart: { useMaxWidth: true },
-      securityLevel: 'loose' // This allows for downloading the SVG properly
+      securityLevel: 'loose', // This allows for downloading the SVG properly
+      fontFamily: 'Arial, sans-serif', // Use basic, widely supported font
+      themeVariables: {
+        fontFamily: 'Arial, sans-serif',
+        primaryTextColor: '#333333',
+        fontSize: '14px'
+      }
     });
     
     // Notify parent when loaded
@@ -225,6 +231,12 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     .mermaid svg {
       max-width: 100%;
       height: auto !important;
+      font-family: Arial, sans-serif !important;
+    }
+    /* Force basic fonts on all text elements in the SVG */
+    .mermaid svg text, .mermaid svg tspan {
+      font-family: Arial, sans-serif !important;
+      font-weight: normal;
     }
     h1 {
       text-align: center;
