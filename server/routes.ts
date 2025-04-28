@@ -390,48 +390,77 @@ Noindex: /`);
       
       const mermaidCode = mermaidMatch[1].trim();
       
-      // Create a simple SVG wrapper for the diagram with proper attributes
-      // This is a basic flowchart SVG structure that will work for most Mermaid diagrams
-      const svgContent = `
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" style="background-color: white;">
-  <style>
-    .node rect { fill: #fff; stroke: #000; }
-    .edgePath path { stroke: #000; stroke-width: 2px; }
-    .label { font-family: Arial; font-size: 14px; }
-    text { font-family: Arial; font-size: 14px; }
-  </style>
-  <text x="10" y="30" font-family="Arial" font-size="16" font-weight="bold">OS-based Migration Diagram</text>
-  <g transform="translate(20, 50)">
-    ${mermaidCode.split('\n').map((line, i) => {
-      // Create text elements for each line of the diagram code
-      const indent = line.match(/^\s*/)[0].length;
-      const y = 20 * (i + 1);
-      const x = 10 + (indent * 10); // Indentation
-      return `<text x="${x}" y="${y}" font-family="monospace">${line.trim()}</text>`;
-    }).join('\n')}
-  </g>
-</svg>`;
-      
-      // Convert to PNG with higher density for better text
-      await sharp(Buffer.from(svgContent), { 
-        density: 300,
-        limitInputPixels: false 
-      })
-        .resize({
-          width: 1800,
-          height: 1350,
-          fit: 'inside',
-          background: { r: 255, g: 255, b: 255, alpha: 1 },
-          withoutEnlargement: false
-        })
-        .flatten({ background: { r: 255, g: 255, b: 255, alpha: 1 } })
-        .sharpen()
-        .png({ quality: 100 })
-        .toFile(outputPath);
-      
-      return res.status(200).json({
-        pngPath: `/uploads/png/${pngFileName}`
+      // Use Puppeteer for better screenshot quality
+      const browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
+      
+      try {
+        const page = await browser.newPage();
+        
+        // Use a larger viewport to capture more content
+        await page.setViewport({ 
+          width: 1600, 
+          height: 1600,
+          deviceScaleFactor: 2 // Higher quality
+        });
+        
+        // Load the HTML file directly
+        const fullHtmlPath = path.resolve(htmlFilePath);
+        await page.goto(`file://${fullHtmlPath}`, { 
+          waitUntil: ['load', 'networkidle0']
+        });
+        
+        // Wait a bit for Mermaid to fully render
+        await page.waitForSelector('.mermaid svg', { timeout: 5000 });
+        
+        // Modify the diagram container to make sure it's fully visible
+        await page.evaluate(() => {
+          document.body.style.margin = '0';
+          document.body.style.padding = '0';
+          document.body.style.overflow = 'visible';
+          
+          const container = document.querySelector('.diagram-container');
+          if (container) {
+            container.style.maxWidth = 'none';
+            container.style.width = '1600px';
+            container.style.overflow = 'visible';
+            container.style.margin = '0';
+            container.style.padding = '40px';
+            container.style.boxShadow = 'none';
+          }
+          
+          const svg = document.querySelector('.mermaid svg');
+          if (svg) {
+            svg.style.maxWidth = 'none';
+            svg.style.width = '100%';
+            svg.style.height = 'auto';
+          }
+        });
+        
+        // Wait a moment for style changes to take effect
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Take a screenshot of the diagram container
+        const diagramElement = await page.$('.diagram-container');
+        if (!diagramElement) {
+          throw new Error('Diagram container not found');
+        }
+        
+        const screenshot = await diagramElement.screenshot({
+          type: 'png',
+          omitBackground: false,
+          captureBeyondViewport: true,
+          path: outputPath
+        });
+        
+        return res.status(200).json({
+          pngPath: `/uploads/png/${pngFileName}`
+        });
+      } finally {
+        await browser.close();
+      }
     } catch (error: any) {
       console.error('Error generating screenshot:', error);
       return res.status(500).json({ 

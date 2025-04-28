@@ -254,9 +254,10 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-      max-width: 1000px;
+      max-width: 1400px;
+      width: 90%;
       margin: 0 auto;
-      overflow: hidden;
+      overflow: visible;
     }
     .mermaid {
       text-align: center;

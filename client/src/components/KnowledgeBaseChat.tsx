@@ -89,13 +89,26 @@ export function KnowledgeBaseChat() {
             targetIframe.style.border = 'none';
             targetIframe.style.backgroundColor = 'white';
             
-            // Take screenshot of the diagram container
+            // Before taking screenshot, ensure the iframe is large enough
+            const originalHeight = targetIframe.style.height;
+            const originalWidth = targetIframe.style.width;
+            
+            // Set a larger size to ensure the entire diagram is visible
+            targetIframe.style.width = '1200px';
+            targetIframe.style.height = '1200px';
+            
+            // Give time for resize to apply
+            await new Promise(r => setTimeout(r, 200));
+            
+            // Take screenshot of the diagram container with full dimensions
             const dataUrl = await htmlToImage.toPng(iframeContainer, {
-              skipAutoScale: true,
-              pixelRatio: 2,
+              skipAutoScale: false, // Allow auto-scaling
+              pixelRatio: 2,        // Higher quality
               backgroundColor: 'white',
               fontEmbedCSS: '',
-              quality: 1.0
+              quality: 1.0,
+              width: 1600,          // Use a fixed larger width
+              height: 1200          // Use a fixed larger height 
             });
             
             // Restore iframe style
