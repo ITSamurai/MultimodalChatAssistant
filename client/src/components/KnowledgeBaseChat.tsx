@@ -61,38 +61,90 @@ export function KnowledgeBaseChat() {
             setTimeout(() => {
               try {
                 if (tempFrame.contentDocument) {
-                  // Generate a unique filename for the download
-                  const filename = `rivermeadow_diagram_${Date.now()}.svg`;
-                  
                   // Find the SVG element in the iframe
                   const svgElement = tempFrame.contentDocument.querySelector('.mermaid svg');
                   
                   if (svgElement) {
-                    // Clone the SVG to avoid modifications affecting the display
-                    const svgClone = svgElement.cloneNode(true) as SVGElement;
+                    // Convert SVG to PNG using canvas
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
                     
-                    // Convert SVG to string
-                    const svgString = new XMLSerializer().serializeToString(svgClone);
+                    // Get SVG dimensions
+                    const svgRect = svgElement.getBoundingClientRect();
+                    const width = svgRect.width || 800;
+                    const height = svgRect.height || 600;
                     
-                    // Create a blob with the SVG content
-                    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+                    // Set canvas size with higher resolution (2x)
+                    canvas.width = width * 2;
+                    canvas.height = height * 2;
                     
-                    // Create a download link
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
+                    // Create an image from the SVG
+                    const svgString = new XMLSerializer().serializeToString(svgElement);
+                    const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+                    const DOMURL = window.URL || window.webkitURL || window;
+                    const url = DOMURL.createObjectURL(svgBlob);
                     
-                    // Clean up
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
+                    const img = new Image();
+                    img.onload = () => {
+                      // Scale context for higher resolution
+                      if (ctx) {
+                        ctx.scale(2, 2);
+                        // Fill with white background
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(0, 0, width, height);
+                        // Draw the image
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Convert to PNG
+                        canvas.toBlob((blob) => {
+                          if (blob) {
+                            // Generate unique filename
+                            const filename = `rivermeadow_diagram_${Date.now()}.png`;
+                            
+                            // Create download link
+                            const pngUrl = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = pngUrl;
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            
+                            // Clean up
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(pngUrl);
+                            DOMURL.revokeObjectURL(url);
+                            
+                            toast({
+                              title: "Success",
+                              description: "Diagram downloaded as PNG successfully",
+                            });
+                          } else {
+                            throw new Error("Failed to create PNG blob");
+                          }
+                        }, 'image/png', 1.0);
+                      }
+                    };
                     
-                    toast({
-                      title: "Success",
-                      description: "Diagram downloaded successfully",
-                    });
+                    img.onerror = () => {
+                      console.error("Error loading SVG as image");
+                      // Fallback to SVG download if PNG conversion fails
+                      const svgBlob = new Blob([svgString], { type: 'image/svg+xml' });
+                      const svgUrl = URL.createObjectURL(svgBlob);
+                      const link = document.createElement('a');
+                      link.href = svgUrl;
+                      link.download = `rivermeadow_diagram_${Date.now()}.svg`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(svgUrl);
+                      
+                      toast({
+                        title: "Note",
+                        description: "Downloaded as SVG (PNG conversion failed)",
+                      });
+                    };
+                    
+                    img.src = url;
                   } else {
                     // If SVG not found, try to get the code and download as text
                     const preElement = tempFrame.contentDocument.querySelector('.code-fallback');
@@ -118,7 +170,7 @@ export function KnowledgeBaseChat() {
                   }
                 }
               } catch (error) {
-                console.error("Error extracting SVG:", error);
+                console.error("Error converting/downloading diagram:", error);
                 toast({
                   title: "Download failed",
                   description: "Could not extract the diagram for download",
