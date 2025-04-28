@@ -100,3 +100,15 @@ export async function convertSvgToPng(svgContent: string): Promise<string> {
   const result = await response.json();
   return result.pngPath;
 }
+
+// Get screenshot of HTML diagram (extracts SVG server-side)
+export async function getDiagramScreenshot(htmlFileName: string): Promise<string> {
+  // Extract just the filename from a full path if needed
+  const fileName = htmlFileName.includes('/') 
+    ? htmlFileName.split('/').pop() 
+    : htmlFileName;
+  
+  const response = await apiRequest("GET", `/api/screenshot-diagram/${fileName}`);
+  const result = await response.json();
+  return result.pngPath;
+}

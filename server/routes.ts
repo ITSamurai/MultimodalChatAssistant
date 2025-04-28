@@ -354,6 +354,72 @@ Noindex: /`);
     }
   });
   
+  // Direct screenshot capture endpoint for HTML diagrams
+  app.get('/api/screenshot-diagram/:fileName', async (req: Request, res: Response) => {
+    try {
+      const { fileName } = req.params;
+      
+      // Make sure the file exists and is a HTML file to prevent security issues
+      const htmlDirPath = path.join('uploads', 'generated');
+      const htmlFilePath = path.join(htmlDirPath, fileName);
+      
+      if (!fs.existsSync(htmlFilePath) || !fileName.endsWith('.html')) {
+        return res.status(404).json({ error: 'Diagram not found or invalid type' });
+      }
+      
+      // Create uploads/png directory if it doesn't exist
+      const pngDir = path.join('uploads', 'png');
+      if (!fs.existsSync(pngDir)) {
+        fs.mkdirSync(pngDir, { recursive: true });
+      }
+      
+      // Generate a unique filename
+      const timestamp = Date.now();
+      const pngFileName = `diagram_${timestamp}.png`;
+      const outputPath = path.join(pngDir, pngFileName);
+      
+      // Read the HTML file
+      const htmlContent = fs.readFileSync(htmlFilePath, 'utf-8');
+      
+      // Extract just the SVG content using a regular expression
+      const svgMatch = htmlContent.match(/<svg[^>]*>[\s\S]*?<\/svg>/);
+      
+      if (!svgMatch) {
+        return res.status(400).json({ error: 'No SVG found in the HTML file' });
+      }
+      
+      // Add a white background
+      const svgWithBackground = svgMatch[0].replace('<svg', '<svg style="background-color: white;"');
+      
+      // Convert to PNG with higher density for better text
+      await sharp(Buffer.from(svgWithBackground), { 
+        density: 300,
+        limitInputPixels: false 
+      })
+        .resize({
+          width: 1800,
+          height: 1350,
+          fit: 'inside',
+          background: { r: 255, g: 255, b: 255, alpha: 1 },
+          withoutEnlargement: false
+        })
+        .flatten({ background: { r: 255, g: 255, b: 255, alpha: 1 } })
+        .sharpen()
+        .png({ quality: 100 })
+        .toFile(outputPath);
+      
+      return res.status(200).json({
+        pngPath: `/uploads/png/${pngFileName}`
+      });
+    } catch (error: any) {
+      console.error('Error generating screenshot:', error);
+      return res.status(500).json({ 
+        error: 'Failed to generate screenshot', 
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // SVG to PNG conversion endpoint
   app.post('/api/convert-svg-to-png', async (req: Request, res: Response) => {
     try {
