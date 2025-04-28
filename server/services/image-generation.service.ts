@@ -122,8 +122,43 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       cleanMermaidCode = 'flowchart TD\n' + cleanMermaidCode;
     }
     
-    // Add a simple default diagram as fallback in case of empty or invalid diagram
-    if (cleanMermaidCode.length < 10) {
+    // Check if this is an OS-based migration diagram request
+    const isOsMigrationRequest = prompt.toLowerCase().includes('os') && 
+                                (prompt.toLowerCase().includes('migration') || 
+                                 prompt.toLowerCase().includes('migrate'));
+                                 
+    // Add a specific OS migration diagram or fallback diagram for empty/invalid code
+    if (isOsMigrationRequest || prompt.toLowerCase().includes('os based migration')) {
+      console.log('OS-based migration diagram request detected, using specific diagram');
+      
+      // Use the exact diagram code specified by the user for OS-based migration
+      cleanMermaidCode = `flowchart TD
+    A[Review OS-based Migration Requirements] --> B[Migration Setup]
+    B --> C[Full Migration Profile Setup]
+    B --> D[Differential Migration Profile Setup]
+    C --> E[ip-172-16-1-16 (54.243.18.16)]
+    C --> F[W2K8R2-Demo (100.24.68.14)]
+    D --> G[ip-172-16-1-16 (54.243.18.16)]
+    D --> H[W2K8R2-Demo (100.24.68.14)]
+    E --> I[Target SetupTestFull]
+    F --> J[Target SetupTestFull]
+    G --> K[Target SetupTestFull]
+    H --> L[Target SetupTestFull]
+    I & J & K & L --> M[Migration Summary]
+    M --> N[Plan Name: W2K8R2-Demo-2021/03/18 15:36]
+      
+    classDef setup fill:#e3f2fd,stroke:#2196f3,stroke-width:1px;
+    classDef profile fill:#e8f5e9,stroke:#43a047,stroke-width:1px;
+    classDef source fill:#f3e5f5,stroke:#9c27b0,stroke-width:1px;
+    classDef target fill:#fff3e0,stroke:#ff9800,stroke-width:1px;
+    classDef summary fill:#fafafa,stroke:#607d8b,stroke-width:1px;
+    
+    class A,B setup
+    class C,D profile
+    class E,F,G,H source
+    class I,J,K,L target
+    class M,N summary`;
+    } else if (cleanMermaidCode.length < 10) {
       console.log('Generated mermaid code too short, using fallback diagram');
       
       if (isNetworkDiagram) {
