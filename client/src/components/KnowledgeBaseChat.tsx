@@ -6,6 +6,7 @@ import { chatWithKnowledgeBase, KnowledgeBaseChatMessage, convertSvgToPng, getDi
 import { Loader2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
+import * as htmlToImage from 'html-to-image';
 
 interface MessageReference {
   type: 'image' | 'text';
@@ -32,7 +33,7 @@ export function KnowledgeBaseChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Function to download diagrams using direct SVG export
+  // Function to download diagrams using Mermaid's built-in PNG export
   const downloadDiagram = async (imagePath: string, index: number) => {
     try {
       setIsLoading(true);
@@ -60,7 +61,7 @@ export function KnowledgeBaseChat() {
           throw new Error("Could not find the diagram iframe");
         }
         
-        // Wait for iframe to be fully loaded
+        // Wait for iframe to be fully loaded if needed
         await new Promise<void>((resolve) => {
           if (targetIframe!.contentDocument?.readyState === 'complete') {
             resolve();
@@ -69,78 +70,148 @@ export function KnowledgeBaseChat() {
           }
         });
         
-        // Extract the mermaid code from the iframe's HTML content
+        // Access the iframe document
+        const iframeWindow = targetIframe.contentWindow;
         const iframeDocument = targetIframe.contentDocument;
-        if (!iframeDocument) {
+        
+        if (!iframeWindow || !iframeDocument) {
           throw new Error("Cannot access iframe content");
         }
         
-        // First try to get the SVG directly
-        const svgElement = iframeDocument.querySelector('.mermaid svg');
+        // Check if Mermaid is available in the iframe
+        if (typeof iframeWindow.mermaid === 'undefined') {
+          throw new Error("Mermaid is not initialized in the diagram");
+        }
         
-        if (svgElement) {
-          // Clone SVG to avoid modifying the display
-          const svgClone = svgElement.cloneNode(true) as SVGElement;
-          
-          // Add necessary attributes for standalone SVG
-          svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-          
-          // Add width and height based on actual size
-          const bbox = svgElement.getBoundingClientRect();
-          svgClone.setAttribute('width', `${bbox.width}`);
-          svgClone.setAttribute('height', `${bbox.height}`);
-          
-          // Set explicit background
-          const rectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          rectElement.setAttribute('width', '100%');
-          rectElement.setAttribute('height', '100%');
-          rectElement.setAttribute('fill', 'white');
-          svgClone.insertBefore(rectElement, svgClone.firstChild);
-          
-          // Convert SVG to string
-          const svgString = new XMLSerializer().serializeToString(svgClone);
-          
-          // Create a Blob with the SVG content
-          const blob = new Blob([svgString], { type: 'image/svg+xml' });
-          const url = URL.createObjectURL(blob);
-          
-          // Create a download link
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `rivermeadow_diagram_${Date.now()}.svg`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          
-          toast({
-            title: "Success",
-            description: "Diagram downloaded as SVG successfully",
-          });
-        } else {
-          // If SVG is not available, download the mermaid code
-          const mermaidElement = iframeDocument.querySelector('.mermaid');
-          if (mermaidElement) {
-            const mermaidCode = mermaidElement.textContent || '';
-            const blob = new Blob([mermaidCode], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            
+        // Find the diagram container
+        const mermaidDiv = iframeDocument.querySelector('.mermaid');
+        if (!mermaidDiv) {
+          throw new Error("Could not find diagram in the iframe");
+        }
+        
+        // Generate a timestamp for the filename
+        const timestamp = Date.now();
+        const filename = `rivermeadow_diagram_${timestamp}.png`;
+        
+        // Look for the SVG element which is the actual rendered diagram
+        const svgElement = mermaidDiv.querySelector('svg');
+        if (!svgElement) {
+          throw new Error("Could not find rendered SVG in diagram");
+        }
+        
+        // Create a function that communicates with the iframe to export the diagram as PNG
+        const exportPng = () => {
+          // Execute this in the iframe context
+          iframeWindow.postMessage({
+            action: 'exportPNG',
+            elementId: mermaidDiv.id || 'mermaid-diagram'
+          }, '*');
+        };
+        
+        // Set up a message listener to receive the exported PNG
+        const messageListener = (event: MessageEvent) => {
+          if (event.data && event.data.action === 'pngExport' && event.data.dataUrl) {
+            // We've received the PNG data URL from the iframe
             const link = document.createElement('a');
-            link.href = url;
-            link.download = `rivermeadow_diagram_${Date.now()}.mmd`;
+            link.href = event.data.dataUrl;
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            
+            // Clean up listener
+            window.removeEventListener('message', messageListener);
             
             toast({
               title: "Success",
-              description: "Diagram code downloaded successfully",
+              description: "Diagram downloaded as PNG with text preserved",
             });
-          } else {
-            throw new Error("Could not find diagram content");
+            
+            setIsLoading(false);
           }
-        }
+        };
+        
+        // Add the listener
+        window.addEventListener('message', messageListener);
+        
+        // Inject a script into the iframe that will handle the export
+        const script = iframeDocument.createElement('script');
+        script.textContent = `
+          window.addEventListener('message', function(event) {
+            if (event.data && event.data.action === 'exportPNG') {
+              try {
+                const svg = document.querySelector('svg');
+                if (!svg) {
+                  window.parent.postMessage({
+                    action: 'pngExport',
+                    error: 'SVG not found'
+                  }, '*');
+                  return;
+                }
+                
+                // Create a canvas element
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Get SVG dimensions
+                const rect = svg.getBoundingClientRect();
+                
+                // Set canvas dimensions (multiply by 2 for higher resolution)
+                canvas.width = rect.width * 2;
+                canvas.height = rect.height * 2;
+                
+                // Draw white background
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Create a blob from the SVG
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                const url = URL.createObjectURL(svgBlob);
+                
+                // Create image and draw to canvas
+                const img = new Image();
+                img.onload = function() {
+                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                  URL.revokeObjectURL(url);
+                  
+                  // Get the PNG data URL
+                  const pngDataUrl = canvas.toDataURL('image/png');
+                  
+                  // Send the PNG data back to the parent
+                  window.parent.postMessage({
+                    action: 'pngExport',
+                    dataUrl: pngDataUrl
+                  }, '*');
+                };
+                
+                img.src = url;
+              } catch (error) {
+                window.parent.postMessage({
+                  action: 'pngExport',
+                  error: error.message || 'Error generating PNG'
+                }, '*');
+              }
+            }
+          });
+        `;
+        iframeDocument.head.appendChild(script);
+        
+        // Start the export process
+        exportPng();
+        
+        // Set a timeout to handle cases where the export doesn't complete
+        setTimeout(() => {
+          window.removeEventListener('message', messageListener);
+          if (setIsLoading) { // Check if the component is still mounted
+            setIsLoading(false);
+            toast({
+              title: "Error",
+              description: "Diagram export timed out. Please try again.",
+              variant: "destructive",
+            });
+          }
+        }, 10000); // 10 second timeout
       } else {
         // For regular images, just create a download link
         const link = document.createElement('a');
@@ -154,6 +225,7 @@ export function KnowledgeBaseChat() {
           title: "Success",
           description: "Image downloaded successfully",
         });
+        setIsLoading(false);
       }
     } catch (error) {
       console.error("Error downloading diagram:", error);
@@ -162,7 +234,6 @@ export function KnowledgeBaseChat() {
         description: error instanceof Error ? error.message : "Could not download the diagram",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
