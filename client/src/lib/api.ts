@@ -93,3 +93,10 @@ export async function chatWithKnowledgeBase(
   const response = await apiRequest("POST", "/api/chat", payload);
   return response.json();
 }
+
+// Convert SVG to PNG using server-side processing
+export async function convertSvgToPng(svgContent: string): Promise<string> {
+  const response = await apiRequest("POST", "/api/convert-svg-to-png", { svgContent });
+  const result = await response.json();
+  return result.pngPath;
+}

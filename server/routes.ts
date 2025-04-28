@@ -6,6 +6,9 @@ import { processDocument, getDocumentData } from "./services/document.service";
 import { processMessage } from "./services/openai.service";
 import { chatMessageSchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
 import { 
   initializePineconeIndex, 
   indexDocumentInPinecone,
@@ -346,6 +349,52 @@ Noindex: /`);
       console.error('Error generating diagram:', error);
       return res.status(500).json({ 
         error: 'Failed to generate diagram', 
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // SVG to PNG conversion endpoint
+  app.post('/api/convert-svg-to-png', async (req: Request, res: Response) => {
+    try {
+      const { svgContent } = req.body;
+      
+      if (!svgContent) {
+        return res.status(400).json({ error: 'SVG content is required' });
+      }
+      
+      // Create uploads/png directory if it doesn't exist
+      const pngDir = path.join('uploads', 'png');
+      if (!fs.existsSync(pngDir)) {
+        fs.mkdirSync(pngDir, { recursive: true });
+      }
+      
+      // Generate a unique filename
+      const timestamp = Date.now();
+      const filename = `diagram_${timestamp}.png`;
+      const outputPath = path.join(pngDir, filename);
+      
+      // Convert SVG to PNG with white background
+      await sharp(Buffer.from(svgContent))
+        .resize({
+          width: 1200,
+          height: 900,
+          fit: 'inside',
+          background: { r: 255, g: 255, b: 255, alpha: 1 }
+        })
+        .flatten({ background: { r: 255, g: 255, b: 255, alpha: 1 } })
+        .png()
+        .toFile(outputPath);
+      
+      console.log(`Successfully converted SVG to PNG: ${outputPath}`);
+      
+      return res.status(200).json({
+        pngPath: `/uploads/png/${filename}`
+      });
+    } catch (error: any) {
+      console.error('Error converting SVG to PNG:', error);
+      return res.status(500).json({ 
+        error: 'Failed to convert SVG to PNG', 
         message: error instanceof Error ? error.message : String(error)
       });
     }
