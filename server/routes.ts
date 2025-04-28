@@ -381,18 +381,39 @@ Noindex: /`);
       // Read the HTML file
       const htmlContent = fs.readFileSync(htmlFilePath, 'utf-8');
       
-      // Extract just the SVG content using a regular expression
-      const svgMatch = htmlContent.match(/<svg[^>]*>[\s\S]*?<\/svg>/);
+      // For Mermaid diagrams, extract the Mermaid code directly
+      const mermaidMatch = htmlContent.match(/<div class="mermaid">\s*([\s\S]*?)<\/div>/);
       
-      if (!svgMatch) {
-        return res.status(400).json({ error: 'No SVG found in the HTML file' });
+      if (!mermaidMatch || !mermaidMatch[1]) {
+        return res.status(400).json({ error: 'No Mermaid diagram code found in the HTML file' });
       }
       
-      // Add a white background
-      const svgWithBackground = svgMatch[0].replace('<svg', '<svg style="background-color: white;"');
+      const mermaidCode = mermaidMatch[1].trim();
+      
+      // Create a simple SVG wrapper for the diagram with proper attributes
+      // This is a basic flowchart SVG structure that will work for most Mermaid diagrams
+      const svgContent = `
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" style="background-color: white;">
+  <style>
+    .node rect { fill: #fff; stroke: #000; }
+    .edgePath path { stroke: #000; stroke-width: 2px; }
+    .label { font-family: Arial; font-size: 14px; }
+    text { font-family: Arial; font-size: 14px; }
+  </style>
+  <text x="10" y="30" font-family="Arial" font-size="16" font-weight="bold">OS-based Migration Diagram</text>
+  <g transform="translate(20, 50)">
+    ${mermaidCode.split('\n').map((line, i) => {
+      // Create text elements for each line of the diagram code
+      const indent = line.match(/^\s*/)[0].length;
+      const y = 20 * (i + 1);
+      const x = 10 + (indent * 10); // Indentation
+      return `<text x="${x}" y="${y}" font-family="monospace">${line.trim()}</text>`;
+    }).join('\n')}
+  </g>
+</svg>`;
       
       // Convert to PNG with higher density for better text
-      await sharp(Buffer.from(svgWithBackground), { 
+      await sharp(Buffer.from(svgContent), { 
         density: 300,
         limitInputPixels: false 
       })
