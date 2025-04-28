@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { chatWithKnowledgeBase, KnowledgeBaseChatMessage } from '../lib/api';
+import { chatWithKnowledgeBase, KnowledgeBaseChatMessage, convertSvgToPng } from '../lib/api';
 import { Loader2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
@@ -32,9 +32,16 @@ export function KnowledgeBaseChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Function to download diagrams
+  // Function to download diagrams with server-side PNG conversion
   const downloadDiagram = async (imagePath: string, index: number) => {
     try {
+      setIsLoading(true);
+      
+      toast({
+        title: "Processing",
+        description: "Preparing your PNG download...",
+      });
+      
       // Check if it's an HTML diagram
       if (imagePath.endsWith('.html')) {
         // For HTML diagrams (Mermaid), we need to fetch the content and extract SVG
@@ -50,102 +57,101 @@ export function KnowledgeBaseChat() {
         tempFrame.style.height = '800px';
         document.body.appendChild(tempFrame);
         
-        // Set HTML content in iframe
-        if (tempFrame.contentDocument) {
-          tempFrame.contentDocument.open();
-          tempFrame.contentDocument.write(html);
-          tempFrame.contentDocument.close();
-          
-          // Add event listener for when iframe is loaded and ready
-          tempFrame.onload = () => {
-            setTimeout(() => {
-              try {
-                if (tempFrame.contentDocument) {
-                  // Find the SVG element in the iframe
-                  const svgElement = tempFrame.contentDocument.querySelector('.mermaid svg');
-                  
-                  if (svgElement) {
-                    // Clone the SVG to avoid modifications affecting the display
-                    const svgClone = svgElement.cloneNode(true) as SVGElement;
-                    
-                    // Add required attributes for download
-                    svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                    
-                    // Get SVG dimensions
-                    const svgRect = svgElement.getBoundingClientRect();
-                    const width = svgRect.width || 800;
-                    const height = svgRect.height || 600;
-                    
-                    // Set explicit width and height
-                    svgClone.setAttribute('width', `${width}`);
-                    svgClone.setAttribute('height', `${height}`);
-                    
-                    // Add white background
-                    const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                    background.setAttribute('width', '100%');
-                    background.setAttribute('height', '100%');
-                    background.setAttribute('fill', 'white');
-                    svgClone.insertBefore(background, svgClone.firstChild);
-                    
-                    // Convert SVG to string
-                    const svgString = new XMLSerializer().serializeToString(svgClone);
-                    
-                    // Create a blob with the SVG content
-                    const blob = new Blob([svgString], { type: 'image/svg+xml' });
-                    
-                    // Create a download link
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `rivermeadow_diagram_${Date.now()}.svg`;
-                    document.body.appendChild(link);
-                    link.click();
-                    
-                    // Clean up
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    
-                    toast({
-                      title: "Success",
-                      description: "Diagram downloaded as SVG successfully",
-                    });
-                  } else {
-                    // If SVG not found, try to get the code and download as text
-                    const preElement = tempFrame.contentDocument.querySelector('.code-fallback');
-                    if (preElement) {
-                      const mermaidCode = preElement.textContent || '';
-                      const blob = new Blob([mermaidCode], { type: 'text/plain' });
-                      const url = URL.createObjectURL(blob);
-                      const link = document.createElement('a');
-                      link.href = url;
-                      link.download = `rivermeadow_diagram_${Date.now()}.mmd`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      URL.revokeObjectURL(url);
-                      
-                      toast({
-                        title: "Success",
-                        description: "Diagram code downloaded successfully",
-                      });
-                    } else {
-                      throw new Error("SVG element not found in the diagram");
-                    }
-                  }
-                }
-              } catch (error) {
-                console.error("Error downloading diagram:", error);
+        try {
+          // Set HTML content in iframe
+          if (tempFrame.contentDocument) {
+            tempFrame.contentDocument.open();
+            tempFrame.contentDocument.write(html);
+            tempFrame.contentDocument.close();
+            
+            // Create a Promise to wait for iframe to load
+            await new Promise<void>((resolve) => {
+              tempFrame.onload = () => {
+                // Wait a moment for the diagram to render
+                setTimeout(resolve, 1000);
+              };
+            });
+            
+            if (tempFrame.contentDocument) {
+              // Find the SVG element in the iframe
+              const svgElement = tempFrame.contentDocument.querySelector('.mermaid svg');
+              
+              if (svgElement) {
+                // Clone the SVG to avoid modifications affecting the display
+                const svgClone = svgElement.cloneNode(true) as SVGElement;
+                
+                // Add required attributes for download
+                svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                
+                // Get SVG dimensions
+                const svgRect = svgElement.getBoundingClientRect();
+                const width = svgRect.width || 800;
+                const height = svgRect.height || 600;
+                
+                // Set explicit width and height
+                svgClone.setAttribute('width', `${width}`);
+                svgClone.setAttribute('height', `${height}`);
+                
+                // Add white background
+                const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                background.setAttribute('width', '100%');
+                background.setAttribute('height', '100%');
+                background.setAttribute('fill', 'white');
+                svgClone.insertBefore(background, svgClone.firstChild);
+                
+                // Convert SVG to string
+                const svgString = new XMLSerializer().serializeToString(svgClone);
+                
+                // Send SVG to server for PNG conversion
+                const pngPath = await convertSvgToPng(svgString);
+                
+                // Download the PNG
+                const link = document.createElement('a');
+                link.href = pngPath;
+                link.download = `rivermeadow_diagram_${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
                 toast({
-                  title: "Download failed",
-                  description: "Could not extract the diagram for download",
-                  variant: "destructive",
+                  title: "Success",
+                  description: "Diagram downloaded as PNG successfully",
                 });
-              } finally {
-                // Remove the temporary iframe
-                document.body.removeChild(tempFrame);
+              } else {
+                // If SVG not found, try to get the code and download as text
+                const preElement = tempFrame.contentDocument.querySelector('.code-fallback');
+                if (preElement) {
+                  const mermaidCode = preElement.textContent || '';
+                  const blob = new Blob([mermaidCode], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `rivermeadow_diagram_${Date.now()}.mmd`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(url);
+                  
+                  toast({
+                    title: "Success",
+                    description: "Diagram code downloaded successfully",
+                  });
+                } else {
+                  throw new Error("SVG element not found in the diagram");
+                }
               }
-            }, 1000); // Wait for the diagram to fully render
-          };
+            }
+          }
+        } catch (error) {
+          console.error("Error converting/downloading diagram:", error);
+          toast({
+            title: "Download failed",
+            description: "Could not convert diagram to PNG",
+            variant: "destructive",
+          });
+        } finally {
+          // Remove the temporary iframe
+          document.body.removeChild(tempFrame);
         }
       } else {
         // For regular images, just create a download link
@@ -168,6 +174,8 @@ export function KnowledgeBaseChat() {
         description: "Could not download the diagram",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -380,7 +388,7 @@ export function KnowledgeBaseChat() {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     const currentZoom = diagramZooms[ref.imagePath!] || 0.7;
-                                    const newZoom = Math.min(1.2, currentZoom + 0.1);
+                                    const newZoom = Math.min(1.5, currentZoom + 0.1);
                                     setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
                                     
                                     // Send zoom message to iframe
@@ -396,107 +404,123 @@ export function KnowledgeBaseChat() {
                                   <ZoomIn size={16} />
                                 </button>
                                 
-                                <div className="mx-1 h-4 w-px bg-gray-200"></div>
-                                
-                                <a 
-                                  href={ref.imagePath} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    
+                                    // Open diagram in new tab for full view
+                                    window.open(ref.imagePath, '_blank');
+                                  }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
-                                  title="Open in full view"
+                                  title="Open in new tab"
                                 >
                                   <Maximize size={16} />
-                                </a>
-                                
-                                <div className="mx-1 h-4 w-px bg-gray-200"></div>
+                                </button>
                                 
                                 <button
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    // Handle diagram download
-                                    if (ref.imagePath) {
-                                      // Create a download function that works with HTML diagrams
-                                      downloadDiagram(ref.imagePath, index);
-                                    }
+                                    
+                                    // Download the diagram
+                                    downloadDiagram(ref.imagePath!, index);
                                   }}
-                                  className="p-1 hover:bg-gray-100 text-gray-700 flex items-center space-x-1"
-                                  title="Download diagram"
+                                  className="p-1 hover:bg-gray-100 text-gray-700"
+                                  title="Download as PNG"
                                 >
                                   <Download size={16} />
-                                  <span className="text-xs hidden sm:inline">Download</span>
                                 </button>
                               </div>
                             </div>
                           ) : (
-                            // Render standard image with download button
+                            // Render regular image
                             <div className="relative">
                               <img 
                                 src={ref.imagePath} 
-                                alt={ref.content || 'Generated diagram'} 
-                                className="w-full object-cover max-h-[300px] object-center" 
+                                alt={ref.caption || 'AI generated image'} 
+                                className="w-full h-auto max-h-[500px] object-contain"
                               />
-                              <div className="absolute bottom-2 right-2 bg-white rounded shadow-md">
+                              {/* Image controls */}
+                              <div className="absolute bottom-2 right-2 bg-white rounded shadow-md flex">
                                 <button
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    if (ref.imagePath) {
-                                      downloadDiagram(ref.imagePath, index);
-                                    }
+                                    window.open(ref.imagePath, '_blank');
                                   }}
-                                  className="p-1 hover:bg-gray-100 text-gray-700 flex items-center space-x-1"
-                                  title="Download image"
+                                  className="p-1 hover:bg-gray-100 text-gray-700"
+                                  title="Open in new tab"
+                                >
+                                  <Maximize size={16} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    downloadDiagram(ref.imagePath!, index);
+                                  }}
+                                  className="p-1 hover:bg-gray-100 text-gray-700"
+                                  title="Download"
                                 >
                                   <Download size={16} />
-                                  <span className="text-xs">Download</span>
                                 </button>
                               </div>
                             </div>
                           )}
-                          <div className="bg-gray-50 p-2 text-xs text-gray-600">
-                            {ref.caption || 'Generated diagram based on your request'}
-                          </div>
+                          {ref.caption && (
+                            <div className="p-2 bg-gray-50 text-sm text-gray-700 border-t">
+                              <span className="font-medium">Caption:</span> {ref.caption}
+                            </div>
+                          )}
                         </div>
                       );
-                    })
-                  }
+                    })}
                 </div>
               )}
             </CardContent>
           </Card>
         ))}
-        
-        {isImageGenerating && (
-          <div className="mx-auto max-w-md w-full bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center space-x-2 mb-2">
-              <ImageIcon className="h-5 w-5 text-primary animate-pulse" />
-              <p className="text-sm font-medium">Generating diagram...</p>
-            </div>
-            <Progress value={loadingProgress} className="h-2 mb-1" />
-            <p className="text-xs text-gray-500 text-right">{loadingProgress}%</p>
-          </div>
-        )}
+        <div ref={messagesEndRef} />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-auto p-4">
-        {renderMessages()}
-        <div ref={messagesEndRef} />
+    <div className="flex flex-col h-screen">
+      <div className="flex justify-center items-center p-4 border-b">
+        <h1 className="text-2xl font-bold">RiverMeadow AI Chat</h1>
       </div>
       
-      <div className="p-4 border-t">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      <div className="flex-1 p-4 overflow-auto pb-20 md:pb-32">
+        {renderMessages()}
+      </div>
+      
+      <div className="p-4 border-t fixed bottom-0 w-full bg-background">
+        {isImageGenerating && (
+          <div className="mb-2">
+            <div className="flex justify-between mb-1 text-xs">
+              <span>Generating diagram...</span>
+              <span>{loadingProgress}%</span>
+            </div>
+            <Progress value={loadingProgress} className="h-1" />
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="flex space-x-2">
           <Input
+            placeholder="Ask about RiverMeadow documentation..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question..."
-            disabled={isLoading}
             className="flex-1"
+            disabled={isLoading}
           />
-          <Button type="submit" disabled={isLoading || !input.trim()}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send'}
+          <Button 
+            type="submit" 
+            disabled={isLoading || !input.trim()}
+            className="w-24"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              'Send'
+            )}
           </Button>
         </form>
       </div>
