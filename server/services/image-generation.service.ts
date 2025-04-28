@@ -131,33 +131,39 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     if (isOsMigrationRequest || prompt.toLowerCase().includes('os based migration')) {
       console.log('OS-based migration diagram request detected, using specific diagram');
       
-      // Use the exact diagram code specified by the user for OS-based migration
-      cleanMermaidCode = `flowchart TD
+      // Use a simpler version of the OS migration diagram that's guaranteed to render
+      cleanMermaidCode = `graph TD
     A[Review OS-based Migration Requirements] --> B[Migration Setup]
     B --> C[Full Migration Profile Setup]
     B --> D[Differential Migration Profile Setup]
-    C --> E[ip-172-16-1-16 (54.243.18.16)]
-    C --> F[W2K8R2-Demo (100.24.68.14)]
-    D --> G[ip-172-16-1-16 (54.243.18.16)]
-    D --> H[W2K8R2-Demo (100.24.68.14)]
-    E --> I[Target SetupTestFull]
-    F --> J[Target SetupTestFull]
-    G --> K[Target SetupTestFull]
-    H --> L[Target SetupTestFull]
-    I & J & K & L --> M[Migration Summary]
-    M --> N[Plan Name: W2K8R2-Demo-2021/03/18 15:36]
-      
-    classDef setup fill:#e3f2fd,stroke:#2196f3,stroke-width:1px;
-    classDef profile fill:#e8f5e9,stroke:#43a047,stroke-width:1px;
-    classDef source fill:#f3e5f5,stroke:#9c27b0,stroke-width:1px;
-    classDef target fill:#fff3e0,stroke:#ff9800,stroke-width:1px;
-    classDef summary fill:#fafafa,stroke:#607d8b,stroke-width:1px;
+    C --> E[Source Server 1]
+    C --> F[Source Server 2]
+    D --> G[Source Server 1]
+    D --> H[Source Server 2]
+    E --> I[Target Setup]
+    F --> J[Target Setup]
+    G --> K[Target Setup]
+    H --> L[Target Setup]
+    I --> M[Migration Summary]
+    J --> M
+    K --> M
+    L --> M
+    M --> N[Deployment Plan]
     
-    class A,B setup
-    class C,D profile
-    class E,F,G,H source
-    class I,J,K,L target
-    class M,N summary`;
+    style A fill:#e3f2fd,stroke:#2196f3
+    style B fill:#e3f2fd,stroke:#2196f3
+    style C fill:#e8f5e9,stroke:#43a047
+    style D fill:#e8f5e9,stroke:#43a047
+    style E fill:#f3e5f5,stroke:#9c27b0
+    style F fill:#f3e5f5,stroke:#9c27b0
+    style G fill:#f3e5f5,stroke:#9c27b0
+    style H fill:#f3e5f5,stroke:#9c27b0
+    style I fill:#fff3e0,stroke:#ff9800
+    style J fill:#fff3e0,stroke:#ff9800
+    style K fill:#fff3e0,stroke:#ff9800
+    style L fill:#fff3e0,stroke:#ff9800
+    style M fill:#fafafa,stroke:#607d8b
+    style N fill:#fafafa,stroke:#607d8b`;
     } else if (cleanMermaidCode.length < 10) {
       console.log('Generated mermaid code too short, using fallback diagram');
       
@@ -205,13 +211,20 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
     mermaid.initialize({
       startOnLoad: true,
       theme: 'neutral',
-      flowchart: { useMaxWidth: true },
+      flowchart: { 
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: 'basis' 
+      },
       securityLevel: 'loose', // This allows for downloading the SVG properly
       fontFamily: 'Arial, sans-serif', // Use basic, widely supported font
       themeVariables: {
         fontFamily: 'Arial, sans-serif',
         primaryTextColor: '#333333',
-        fontSize: '14px'
+        primaryColor: '#2196f3',
+        primaryBorderColor: '#2196f3',
+        lineColor: '#333333',
+        fontSize: '16px'
       }
     });
     
@@ -316,6 +329,16 @@ ${cleanMermaidCode}
       document.querySelector('.error-message').style.display = 'block';
       document.querySelector('.code-fallback').style.display = 'block';
     };
+    
+    // Force render mermaid diagram with a delay to ensure DOM is ready
+    setTimeout(function() {
+      try {
+        console.log('Attempting to reinitialize mermaid diagrams...');
+        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+      } catch (e) {
+        console.error('Error reinitializing mermaid:', e);
+      }
+    }, 1000);
   </script>
 </body>
 </html>`;
