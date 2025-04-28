@@ -42,7 +42,7 @@ export function KnowledgeBaseChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Function to download diagrams using html-to-image direct screenshot approach
+  // Function to download diagrams using server-side screenshot functionality
   const downloadDiagram = async (imagePath: string, index: number) => {
     try {
       setIsLoading(true);
@@ -54,152 +54,37 @@ export function KnowledgeBaseChat() {
       
       // Check if it's an HTML diagram
       if (imagePath.endsWith('.html')) {
-        // Get the iframe containing the diagram
-        const iframes = document.querySelectorAll('iframe');
-        let targetIframe: HTMLIFrameElement | null = null;
+        // Extract the filename from the path for server request
+        const pathParts = imagePath.split('/');
+        const fileName = pathParts[pathParts.length - 1];
         
-        // Find the iframe with the matching src
-        for (let i = 0; i < iframes.length; i++) {
-          if (iframes[i].src.includes(imagePath)) {
-            targetIframe = iframes[i] as HTMLIFrameElement;
-            break;
-          }
+        console.log(`Requesting server-side screenshot for ${fileName}`);
+        
+        // Request screenshot from server - this method now uses puppeteer on the server
+        // to properly render and screenshot the entire diagram
+        const response = await getDiagramScreenshot(fileName);
+        
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
         }
         
-        if (!targetIframe) {
-          throw new Error("Could not find the diagram iframe");
-        }
+        // Convert response to blob
+        const imageBlob = await response.blob();
+        const url = URL.createObjectURL(imageBlob);
         
-        try {
-          // Find the container of the iframe
-          const iframeContainer = targetIframe.parentElement;
-          if (!iframeContainer) {
-            throw new Error("Could not find diagram container");
-          }
-          
-          // Hide diagram controls to get clean screenshot
-          const controls = iframeContainer.querySelector('.absolute.bottom-2.right-2');
-          if (controls instanceof HTMLElement) {
-            controls.style.display = 'none';
-          }
-          
-          try {
-            // Adjust iframe styling for good capture
-            const originalStyle = targetIframe.style.cssText;
-            targetIframe.style.border = 'none';
-            targetIframe.style.backgroundColor = 'white';
-            
-            // Before taking screenshot, ensure the iframe is large enough
-            const originalHeight = targetIframe.style.height;
-            const originalWidth = targetIframe.style.width;
-            
-            // Set a larger size to ensure the entire diagram is visible
-            // Make the iframe extremely large to ensure we capture the entire diagram
-            targetIframe.style.width = '3200px';
-            targetIframe.style.height = '3200px';
-            
-            // Also adjust the parent container
-            iframeContainer.style.width = '3000px';
-            iframeContainer.style.height = '3000px';
-            iframeContainer.style.overflow = 'hidden';
-            
-            // Give time for resize to apply
-            await new Promise(r => setTimeout(r, 500));
-            
-            // Try to render or reinitialize mermaid diagrams if needed
-            try {
-              // Post a message to the iframe to force redraw
-              targetIframe.contentWindow?.postMessage({ action: 'forceRedraw' }, '*');
-            } catch (e) {
-              console.warn('Could not send redraw message', e);
-            }
-            
-            // Wait longer for the diagram to fully render in the new size
-            await new Promise(r => setTimeout(r, 1000));
-            
-            // Take screenshot of the diagram container with full dimensions
-            const dataUrl = await htmlToImage.toPng(iframeContainer, {
-              skipAutoScale: false, // Allow auto-scaling
-              pixelRatio: 2,        // Higher quality
-              backgroundColor: 'white',
-              fontEmbedCSS: '',
-              quality: 1.0,
-              width: 3200,          // Extremely large width to fit the whole diagram
-              height: 3000          // Extremely large height to fit the whole diagram
-            });
-            
-            // Restore iframe and container styles
-            targetIframe.style.cssText = originalStyle;
-            
-            // Reset the container style
-            iframeContainer.style.width = '';
-            iframeContainer.style.height = '';
-            iframeContainer.style.overflow = '';
-            
-            // Generate filename
-            const timestamp = Date.now();
-            const filename = `rivermeadow_diagram_${timestamp}.png`;
-            
-            // Create and trigger download
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            toast({
-              title: "Success",
-              description: "Diagram downloaded as PNG successfully",
-            });
-          } finally {
-            // Restore diagram controls
-            if (controls instanceof HTMLElement) {
-              controls.style.display = '';
-            }
-          }
-        } catch (error) {
-          console.error("Error taking screenshot:", error);
-          
-          // Fallback to server-side screenshot
-          toast({
-            title: "Using alternative method",
-            description: "Direct screenshot failed, trying server-side capture...",
-          });
-          
-          // Extract the filename from the path for server request
-          const pathParts = imagePath.split('/');
-          const fileName = pathParts[pathParts.length - 1];
-          
-          try {
-            // Request screenshot from server
-            const response = await getDiagramScreenshot(fileName);
-            if (!response.ok) {
-              throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-            }
-            
-            // Convert response to blob
-            const imageBlob = await response.blob();
-            const url = URL.createObjectURL(imageBlob);
-            
-            // Trigger download
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `rivermeadow_diagram_${Date.now()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            
-            toast({
-              title: "Success",
-              description: "Diagram downloaded from server successfully",
-            });
-          } catch (serverError) {
-            console.error("Server-side screenshot failed:", serverError);
-            throw new Error("Both client and server-side screenshot methods failed");
-          }
-        }
+        // Trigger download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `rivermeadow_diagram_${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Success",
+          description: "Diagram downloaded successfully",
+        });
       } else {
         // For regular images, just create a download link
         const link = document.createElement('a');

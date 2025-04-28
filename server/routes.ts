@@ -11,6 +11,16 @@ import fs from 'fs';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import { v4 as uuidv4 } from 'uuid';
+
+// Define mermaid interface for typescript
+declare global {
+  interface Window {
+    mermaid?: {
+      render: (id: string, text: string) => Promise<{ svg: string }>;
+      init?: (config: any, nodes: NodeListOf<Element>) => void;
+    };
+  }
+}
 import { 
   initializePineconeIndex, 
   indexDocumentInPinecone,
@@ -541,35 +551,114 @@ Noindex: /`);
         return res.status(404).json({ error: 'Diagram file not found' });
       }
       
-      // Create the screenshots directory if it doesn't exist
-      const screenshotsDir = path.join(process.cwd(), 'uploads', 'screenshots');
-      if (!fs.existsSync(screenshotsDir)) {
-        await fs.promises.mkdir(screenshotsDir, { recursive: true });
+      // Create the png directory if it doesn't exist
+      const pngDir = path.join(process.cwd(), 'uploads', 'png');
+      if (!fs.existsSync(pngDir)) {
+        await fs.promises.mkdir(pngDir, { recursive: true });
       }
       
       // Generate PNG filename
       const timestamp = Date.now();
       const pngFileName = `diagram_${timestamp}.png`;
-      const pngFilePath = path.join(screenshotsDir, pngFileName);
+      const outputPath = path.join(pngDir, pngFileName);
       
-      // For this server-side version, we'll just return a simple placeholder PNG
-      // (Since server-side Puppeteer/headless Chrome is complex in this environment)
+      console.log(`Taking screenshot of ${htmlFilePath} to ${outputPath}`);
       
-      // Set appropriate headers for the PNG image
-      res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Content-Disposition', `attachment; filename="${pngFileName}"`);
+      // Use Puppeteer to take a screenshot
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
       
-      // Return a placeholder response indicating client-side fallback
-      const placeholderMsg = "Please use the client-side screenshot approach";
-      console.log("Server-side screenshot requested but not implemented: " + placeholderMsg);
-      
-      // Send a fallback transparent PNG (1x1 pixel)
-      const transparentPixel = Buffer.from(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-        'base64'
-      );
-      
-      res.send(transparentPixel);
+      try {
+        const page = await browser.newPage();
+        
+        // Use a much larger viewport
+        await page.setViewport({ 
+          width: 3000, 
+          height: 3000,
+          deviceScaleFactor: 2
+        });
+        
+        // Load the HTML file directly
+        const fullHtmlPath = path.resolve(htmlFilePath);
+        await page.goto(`file://${fullHtmlPath}`, { 
+          waitUntil: ['load', 'networkidle0']
+        });
+        
+        // Wait for mermaid to render
+        await page.waitForSelector('.mermaid svg', { timeout: 5000 })
+          .catch(() => console.log('Timeout waiting for .mermaid svg, proceeding anyway'));
+        
+        // Add styles to ensure everything is visible
+        await page.addStyleTag({
+          content: `
+            body { margin: 0; padding: 0; overflow: visible; }
+            .diagram-container { 
+              max-width: none !important; 
+              width: 2400px !important; 
+              overflow: visible !important;
+              margin: 0 !important;
+              padding: 40px !important;
+              box-shadow: none !important;
+            }
+            .mermaid svg {
+              max-width: none !important;
+              width: 100% !important;
+              height: auto !important;
+              display: block !important;
+            }
+          `
+        });
+        
+        // Wait for styles to apply
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Force diagram rerender if needed
+        await page.evaluate(() => {
+          try {
+            // Execute script to rerender the mermaid diagram
+            const script = document.createElement('script');
+            script.textContent = `
+              try {
+                console.log('Attempting to reinitialize mermaid diagrams...');
+                // Safely check if mermaid object exists and has the appropriate methods
+                if (window.mermaid && typeof window.mermaid.init === 'function') {
+                  window.mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+                }
+              } catch (e) {
+                console.error('Error in mermaid reinitialization:', e);
+              }
+            `;
+            document.head.appendChild(script);
+          } catch (e) {
+            console.error('Error executing diagram rerender script:', e);
+          }
+        });
+        
+        // Wait longer for rendering to complete
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Take screenshot of the entire page
+        await page.screenshot({
+          path: outputPath,
+          fullPage: true,
+          omitBackground: false,
+          type: 'png'
+        });
+        
+        console.log(`Successfully saved screenshot to ${outputPath}`);
+        
+        // Set headers for file download
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Disposition', `attachment; filename="${pngFileName}"`);
+        
+        // Send the file
+        const fileStream = fs.createReadStream(outputPath);
+        fileStream.pipe(res);
+      } finally {
+        await browser.close();
+      }
     } catch (error) {
       console.error('Error generating diagram PNG:', error);
       res.status(500).json({ error: 'Failed to generate diagram PNG' });
