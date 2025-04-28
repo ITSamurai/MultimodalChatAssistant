@@ -492,9 +492,9 @@ export function KnowledgeBaseChat() {
         {renderMessages()}
       </div>
       
-      <div className="p-4 border-t fixed bottom-0 w-full bg-background">
+      <div className="p-4 border-t fixed bottom-0 left-0 right-0 z-10 bg-background">
         {isImageGenerating && (
-          <div className="mb-2">
+          <div className="mb-2 mx-auto max-w-screen-lg">
             <div className="flex justify-between mb-1 text-xs">
               <span>Generating diagram...</span>
               <span>{loadingProgress}%</span>
@@ -503,7 +503,7 @@ export function KnowledgeBaseChat() {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="flex space-x-2">
+        <form onSubmit={handleSubmit} className="flex space-x-2 mx-auto max-w-screen-lg">
           <Input
             placeholder="Ask about RiverMeadow documentation..."
             value={input}

@@ -375,15 +375,21 @@ Noindex: /`);
       const outputPath = path.join(pngDir, filename);
       
       // Convert SVG to PNG with white background
-      await sharp(Buffer.from(svgContent))
+      // Use density option to ensure text is rendered correctly and clearly
+      await sharp(Buffer.from(svgContent), { 
+        density: 300, // Higher density for better text rendering
+        limitInputPixels: false // Remove size limit to handle large diagrams
+      })
         .resize({
-          width: 1200,
-          height: 900,
+          width: 1800, // Larger width for better text clarity
+          height: 1350, // Proportionally larger height
           fit: 'inside',
-          background: { r: 255, g: 255, b: 255, alpha: 1 }
+          background: { r: 255, g: 255, b: 255, alpha: 1 },
+          withoutEnlargement: false // Allow enlargement for better text clarity
         })
         .flatten({ background: { r: 255, g: 255, b: 255, alpha: 1 } })
-        .png()
+        .sharpen() // Sharpen to improve text clarity
+        .png({ quality: 100 }) // Maximum quality
         .toFile(outputPath);
       
       console.log(`Successfully converted SVG to PNG: ${outputPath}`);
