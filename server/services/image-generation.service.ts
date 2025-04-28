@@ -322,66 +322,88 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
   // Convert to lowercase for case-insensitive matching
   const lowercasePrompt = prompt.toLowerCase();
   
+  // First, check if this is a question - if it starts with what, how, why, when, etc.
+  // If so, we DON'T want to generate a diagram for it unless it explicitly asks
+  const isQuestion = /^(?:what|how|why|when|where|who|can|is|are|do|does|which|could|would|should|will)\b/i.test(lowercasePrompt);
+  
+  // ONLY if this is a question, let's check if it EXPLICITLY asks for a diagram
+  if (isQuestion) {
+    // If it's a question, it should explicitly ask for a visual
+    const explicitlyAsksForDiagram = 
+      /(?:show|create|draw|generate|make|give)\s+(?:me|us|a|an)?\s*(?:diagram|chart|visual|graph|picture)/i.test(lowercasePrompt) ||
+      /(?:can|could)\s+(?:you|i)\s+(?:show|see|have|get)\s+(?:a|an)?\s*(?:diagram|visual|chart|graph)/i.test(lowercasePrompt) ||
+      /(?:i|we)\s+(?:want|need|would like)\s+(?:a|an|to see)?\s*(?:diagram|chart|visual|graph)/i.test(lowercasePrompt);
+      
+    if (!explicitlyAsksForDiagram) {
+      console.log('Question detected but does not explicitly ask for a diagram');
+      return false;
+    }
+  }
+  
   // Check for commands that explicitly ask for OS migration diagrams/visuals
   if (
-    lowercasePrompt.includes('os migration') ||
-    lowercasePrompt.includes('rivermeadow') ||
+    (lowercasePrompt.includes('os migration') && lowercasePrompt.includes('diagram')) ||
+    (lowercasePrompt.includes('rivermeadow') && lowercasePrompt.includes('diagram')) ||
     (lowercasePrompt.includes('migration') && lowercasePrompt.includes('diagram'))
   ) {
     console.log('OS Migration or RiverMeadow diagram request detected');
     return true;
   }
   
-  // Simple detection for common phrases for broad matching
-  if (
+  // More focused detection for direct diagram requests (must contain diagram-specific words)
+  const containsDiagramWords = 
     lowercasePrompt.includes('diagram') || 
-    lowercasePrompt.includes('create diagram') || 
-    lowercasePrompt.includes('draw') || 
     lowercasePrompt.includes('chart') || 
-    lowercasePrompt.includes('graph') || 
-    lowercasePrompt.includes('visual') || 
-    lowercasePrompt.includes('visualization') || 
-    lowercasePrompt.includes('illustration') ||
-    lowercasePrompt.includes('picture') ||
-    lowercasePrompt.includes('image') ||
-    lowercasePrompt.includes('generate') && (
-      lowercasePrompt.includes('diagram') || 
-      lowercasePrompt.includes('visual') || 
-      lowercasePrompt.includes('illustration')
-    )
-  ) {
-    console.log('Image generation request detected via simple keyword matching');
+    lowercasePrompt.includes('graph') ||
+    lowercasePrompt.includes('visualization') ||
+    lowercasePrompt.includes('flowchart') ||
+    lowercasePrompt.includes('architecture');
+  
+  if (!containsDiagramWords) {
+    return false;
+  }
+  
+  // Additional check for action verbs specific to creating visuals
+  const containsActionVerbs =
+    lowercasePrompt.includes('create') ||
+    lowercasePrompt.includes('draw') ||
+    lowercasePrompt.includes('show') ||
+    lowercasePrompt.includes('generate') ||
+    lowercasePrompt.includes('visualize') ||
+    lowercasePrompt.includes('make') ||
+    lowercasePrompt.includes('design');
+    
+  if (containsActionVerbs && containsDiagramWords) {
+    console.log('Direct diagram request detected via keyword matching');
     return true;
   }
   
-  // More specific regex patterns as fallback
+  // More specific regex patterns for clear diagram requests
   const imageRequestPatterns = [
-    // Direct requests for diagrams
-    /create\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization|figure|illustration)/i,
-    /generate\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization|figure|illustration)/i,
-    /draw\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization|figure|illustration)/i,
-    /show\s+(?:a|an|me|us)?\s*(?:diagram|chart|graph|visualization|figure|illustration)/i,
-    /visualize/i,
-    /illustrate/i,
+    // Direct requests for diagrams with clear intent
+    /create\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization)/i,
+    /generate\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization)/i,
+    /draw\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization)/i,
+    /show\s+(?:a|an|me|us)?\s*(?:diagram|chart|graph|visualization)/i,
     
-    // More generic visual requests with diagram-related context
-    /(?:diagram|chart|graph)(?:\s+showing|\s+of|\s+for)?/i,
-    /visual representation/i,
+    // Explicit architectural diagram requests
+    /(?:system|network|component|architectural)\s+diagram/i,
     /(?:flow|process|architecture|system|component)\s+diagram/i,
-    /(?:workflow|process|sequence|data)\s+(?:chart|flow)/i,
     
-    // Visual requests with architecture terminology
-    /(?:system|network|component|architectural)\s+(?:diagram|layout|topology)/i,
+    // Network diagram specific
+    /network\s+(?:diagram|architecture|topology)/i,
+    /infrastructure\s+(?:diagram|architecture|map)/i,
     
-    // OS Migration specific patterns
-    /generate\s+(?:.*?)\s*(?:based on|using|for|about)\s+(?:.*?)\s*(?:rivermeadow|migration)/i,
-    /(?:OS|operating system)\s+migration/i
+    // Very specific rivermeadow diagram requests
+    /(?:rivermeadow|migration)\s+(?:diagram|architecture|flow|process)/i
   ];
 
   const regexMatch = imageRequestPatterns.some(pattern => pattern.test(prompt));
   if (regexMatch) {
-    console.log('Image generation request detected via regex pattern matching');
+    console.log('Image generation request detected via specific pattern matching');
+    return true;
   }
   
-  return regexMatch;
+  console.log('No clear diagram request detected');
+  return false;
 };
