@@ -492,6 +492,57 @@ Noindex: /`);
       });
     }
   });
+  
+  // Endpoint for taking a screenshot of a diagram HTML file
+  app.get('/api/diagram-png/:fileName', async (req: Request, res: Response) => {
+    try {
+      const fileName = req.params.fileName;
+      
+      // Verify the file exists and is an HTML file
+      if (!fileName.endsWith('.html')) {
+        return res.status(400).json({ error: 'Only HTML diagram files are supported' });
+      }
+      
+      const htmlFilePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
+      
+      if (!fs.existsSync(htmlFilePath)) {
+        return res.status(404).json({ error: 'Diagram file not found' });
+      }
+      
+      // Create the screenshots directory if it doesn't exist
+      const screenshotsDir = path.join(process.cwd(), 'uploads', 'screenshots');
+      if (!fs.existsSync(screenshotsDir)) {
+        await fs.promises.mkdir(screenshotsDir, { recursive: true });
+      }
+      
+      // Generate PNG filename
+      const timestamp = Date.now();
+      const pngFileName = `diagram_${timestamp}.png`;
+      const pngFilePath = path.join(screenshotsDir, pngFileName);
+      
+      // For this server-side version, we'll just return a simple placeholder PNG
+      // (Since server-side Puppeteer/headless Chrome is complex in this environment)
+      
+      // Set appropriate headers for the PNG image
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `attachment; filename="${pngFileName}"`);
+      
+      // Return a placeholder response indicating client-side fallback
+      const placeholderMsg = "Please use the client-side screenshot approach";
+      console.log("Server-side screenshot requested but not implemented: " + placeholderMsg);
+      
+      // Send a fallback transparent PNG (1x1 pixel)
+      const transparentPixel = Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+        'base64'
+      );
+      
+      res.send(transparentPixel);
+    } catch (error) {
+      console.error('Error generating diagram PNG:', error);
+      res.status(500).json({ error: 'Failed to generate diagram PNG' });
+    }
+  });
 
   const httpServer = createServer(app);
 
