@@ -37,7 +37,7 @@ export function KnowledgeBaseChat() {
     try {
       // Check if it's an HTML diagram
       if (imagePath.endsWith('.html')) {
-        // For HTML diagrams (Mermaid), we need to fetch the content and extract SVG
+        // For HTML diagrams (d2), we need to fetch the content and extract SVG
         const response = await fetch(imagePath);
         const html = await response.text();
         
@@ -64,12 +64,17 @@ export function KnowledgeBaseChat() {
                   // Generate a unique filename for the download
                   const filename = `rivermeadow_diagram_${Date.now()}.svg`;
                   
-                  // Find the SVG element in the iframe
-                  const svgElement = tempFrame.contentDocument.querySelector('.mermaid svg');
+                  // Find the SVG element in the iframe - updated for d2 diagrams
+                  const svgElement = tempFrame.contentDocument.querySelector('#diagram-container svg');
                   
                   if (svgElement) {
                     // Clone the SVG to avoid modifications affecting the display
                     const svgClone = svgElement.cloneNode(true) as SVGElement;
+                    
+                    // Ensure SVG has proper dimensions
+                    svgClone.setAttribute('width', '100%');
+                    svgClone.setAttribute('height', 'auto');
+                    svgClone.setAttribute('viewBox', svgClone.getAttribute('viewBox') || '0 0 800 600');
                     
                     // Convert SVG to string
                     const svgString = new XMLSerializer().serializeToString(svgClone);
@@ -94,7 +99,27 @@ export function KnowledgeBaseChat() {
                       description: "Diagram downloaded successfully",
                     });
                   } else {
-                    throw new Error("SVG element not found in the diagram");
+                    // If SVG not found, try to get the code and download as text
+                    const preElement = tempFrame.contentDocument.querySelector('pre');
+                    if (preElement) {
+                      const d2Code = preElement.textContent || '';
+                      const blob = new Blob([d2Code], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `rivermeadow_diagram_${Date.now()}.d2`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(url);
+                      
+                      toast({
+                        title: "Success",
+                        description: "Diagram code downloaded successfully",
+                      });
+                    } else {
+                      throw new Error("SVG element not found in the diagram");
+                    }
                   }
                 }
               } catch (error) {
@@ -108,7 +133,7 @@ export function KnowledgeBaseChat() {
                 // Remove the temporary iframe
                 document.body.removeChild(tempFrame);
               }
-            }, 1000); // Wait for the diagram to fully render
+            }, 1500); // Longer wait for d2 diagrams to fully render
           };
         }
       } else {

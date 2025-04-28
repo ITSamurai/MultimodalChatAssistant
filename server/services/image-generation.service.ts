@@ -67,134 +67,255 @@ export const generateDiagram = async (
     console.log(`Generating diagram with prompt: ${enhancedPrompt.substring(0, 100)}...`);
     console.log('Final prompt length:', enhancedPrompt.length);
     
-    // Generate a text-based mermaid diagram that browsers can render
-    console.log('Generating mermaid diagram instead of DALL-E image (API access issues)');
+    // Generate a text-based d2 diagram that browsers can render
+    console.log('Generating d2 diagram instead of DALL-E image');
     
     // Determine if we need a network diagram instead of a flowchart
     const isNetworkDiagram = detectNetworkDiagramRequest(prompt);
+    console.log(`Diagram type: ${isNetworkDiagram ? 'Network diagram' : 'Standard diagram'}`);
     
-    // Use OpenAI to generate a mermaid diagram
-    let mermaidPrompt;
+    // Use OpenAI to generate a d2 diagram
+    let d2Prompt;
     
     if (isNetworkDiagram) {
-      mermaidPrompt = `Create a mermaid.js network diagram code for: ${enhancedPrompt}
-Use the appropriate syntax for network diagrams. In Mermaid, you can represent networks using:
-1. flowchart LR - for left-to-right network diagrams
-2. Use different node shapes to represent network components:
-   - ((Database)) for databases
-   - [Server] for servers
-   - {{Firewall}} for firewalls
-   - (Router) for routers
-   - [/Load Balancer/] for load balancers
-   - [(Storage)] for storage
-   - [Cloud] for cloud services
+      d2Prompt = `Create a d2 diagram code for: ${enhancedPrompt}
+Use the appropriate syntax for network diagrams in d2. In d2, you can represent networks using boxes, shapes, and connections with arrows.
+Consider these examples for network components:
+- databases using shape: cylinder
+- servers using shape: rectangle
+- firewalls using style.fill: "#f8d7da"
+- routers with style.stroke-dash: 3
+- load balancers using shape: oval
+- storage elements with shape: storage
+
+Networks can be arranged with "direction: right" for horizontal layouts.
+Connection syntax uses arrows: server -> router -> internet
 
 Keep the diagram focused on the key network components and their connections.
-Only generate valid mermaid.js code wrapped in a code block, nothing else. Use proper RiverMeadow terminology.`;
+Only generate valid d2 syntax, nothing else. Use proper RiverMeadow terminology.`;
     } else {
-      mermaidPrompt = `Create a mermaid.js diagram code for: ${enhancedPrompt}
-The diagram should be a flowchart (use flowchart TD syntax). Keep it simple and focused on the main steps.
+      d2Prompt = `Create a d2 diagram code for: ${enhancedPrompt}
+The diagram should be a flowchart. Keep it simple and focused on the main steps.
 For example, if it's about OS migration steps, show the main 5-7 steps in the process.
-Only generate valid mermaid.js code wrapped in a code block, nothing else. Use RiverMeadow terminology.`;
+Use "direction: down" for vertical flow.
+Connect elements with arrows: step1 -> step2 -> step3
+Add colors with style.fill: "#e6f7ff" and style.stroke: "#1890ff"
+Only generate valid d2 syntax, nothing else. Use RiverMeadow terminology.`;
     }
 
     const diagramResponse = await openai.chat.completions.create({
-      model: "gpt-4o", // Use gpt-4o instead of DALL-E
+      model: "gpt-4o", // Use GPT-4o for diagram generation
       messages: [
-        {role: "system", content: "You are a diagram creation assistant that generates only mermaid.js code. Respond with valid mermaid.js code only, no explanations."},
-        {role: "user", content: mermaidPrompt}
+        {role: "system", content: "You are a diagram creation assistant that generates only d2 diagram code. Respond with valid d2 code only, no explanations. D2 is a modern diagram language that uses a simple syntax."},
+        {role: "user", content: d2Prompt}
       ],
       max_tokens: 1000,
       temperature: 0.7,
     });
     
-    // Extract the mermaid code from the response
+    // Extract the d2 code from the response
     const messageContent = diagramResponse.choices[0].message.content || "";
-    const mermaidCode = messageContent.trim();
-    let cleanMermaidCode = mermaidCode
-      .replace(/```mermaid/g, '')
+    const d2Code = messageContent.trim();
+    let cleanD2Code = d2Code
+      .replace(/```d2/g, '')
       .replace(/```/g, '')
       .trim();
     
-    // Validate and ensure the mermaid code has proper syntax
-    if (!cleanMermaidCode.startsWith('graph') && !cleanMermaidCode.startsWith('flowchart')) {
-      console.log('Adding flowchart TD prefix to mermaid code');
-      cleanMermaidCode = 'flowchart TD\n' + cleanMermaidCode;
-    }
-    
     // Add a simple default diagram as fallback in case of empty or invalid diagram
-    if (cleanMermaidCode.length < 10) {
-      console.log('Generated mermaid code too short, using fallback diagram');
+    if (cleanD2Code.length < 10) {
+      console.log('Generated d2 code too short, using fallback diagram');
       
       if (isNetworkDiagram) {
         // Network diagram fallback
-        cleanMermaidCode = `flowchart LR
-    Internet((Internet)) --> FW{{Firewall}}
-    FW --> LB[/Load Balancer/]
-    LB --> S1[Source Server 1]
-    LB --> S2[Source Server 2]
-    S1 --> RMS[RiverMeadow Server]
-    S2 --> RMS
-    RMS --> DB[(Database)]
-    RMS --> Cloud1[Cloud Provider 1]
-    RMS --> Cloud2[Cloud Provider 2]
-    
-    classDef network fill:#e3f2fd,stroke:#2196f3,stroke-width:1px;
-    classDef source fill:#e8f5e9,stroke:#43a047,stroke-width:1px;
-    classDef target fill:#fff3e0,stroke:#ff9800,stroke-width:1px;
-    
-    class Internet,FW,LB network
-    class S1,S2 source
-    class Cloud1,Cloud2 target`;
+        cleanD2Code = `direction: right
+Internet: {
+  shape: cloud
+  style.fill: "#e3f2fd"
+}
+Firewall: {
+  shape: rectangle
+  style.fill: "#ffcdd2"
+  style.stroke: "#f44336"
+}
+LoadBalancer: {
+  shape: oval
+  label: "Load Balancer"
+  style.fill: "#e1f5fe"
+}
+SourceServer1: {
+  shape: rectangle
+  label: "Source Server 1"
+  style.fill: "#e8f5e9"
+}
+SourceServer2: {
+  shape: rectangle
+  label: "Source Server 2"
+  style.fill: "#e8f5e9"
+}
+RiverMeadow: {
+  shape: rectangle
+  label: "RiverMeadow Server"
+  style.fill: "#fff9c4"
+}
+Database: {
+  shape: cylinder
+  style.fill: "#f3e5f5"
+}
+Cloud1: {
+  shape: cloud
+  label: "Cloud Provider 1"
+  style.fill: "#e3f2fd"
+}
+Cloud2: {
+  shape: cloud
+  label: "Cloud Provider 2"
+  style.fill: "#e3f2fd"
+}
+
+Internet -> Firewall -> LoadBalancer
+LoadBalancer -> SourceServer1
+LoadBalancer -> SourceServer2
+SourceServer1 -> RiverMeadow
+SourceServer2 -> RiverMeadow
+RiverMeadow -> Database
+RiverMeadow -> Cloud1
+RiverMeadow -> Cloud2`;
       } else {
         // Process diagram fallback
-        cleanMermaidCode = `flowchart TD
-    A[RiverMeadow Migration Start] --> B[Deploy Migration Appliance]
-    B --> C[Configure Source and Target]
-    C --> D[Perform Preflight Checks]
-    D --> E[Execute Migration]
-    E --> F[Verify Results]
-    F --> G[Migration Complete]`;
+        cleanD2Code = `direction: down
+Start: {
+  label: "RiverMeadow Migration Start"
+  style.fill: "#e3f2fd"
+}
+DeployAppliance: {
+  label: "Deploy Migration Appliance"
+  style.fill: "#e8f5e9"
+}
+Configure: {
+  label: "Configure Source and Target"
+  style.fill: "#e8f5e9"
+}
+PreflightChecks: {
+  label: "Perform Preflight Checks"
+  style.fill: "#fff9c4"
+}
+ExecuteMigration: {
+  label: "Execute Migration"
+  style.fill: "#fff9c4"
+}
+VerifyResults: {
+  label: "Verify Results"
+  style.fill: "#fff9c4"
+}
+Complete: {
+  label: "Migration Complete"
+  style.fill: "#e3f2fd"
+}
+
+Start -> DeployAppliance -> Configure -> PreflightChecks -> ExecuteMigration -> VerifyResults -> Complete`;
       }
     }
     
-    // Create an HTML file with the mermaid diagram
+    // Create an HTML file with the d2 diagram using the web renderer
     const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RiverMeadow Diagram</title>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://unpkg.com/@d2lang/d2@latest/dist/d2.js"></script>
   <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'neutral',
-      flowchart: { useMaxWidth: true },
-      securityLevel: 'loose' // This allows for downloading the SVG properly
-    });
+    // Setup d2 diagram configuration 
+    const config = {
+      theme: 'default',
+      darkMode: false,
+      pad: 20,
+      layout: {
+        rankDir: '${isNetworkDiagram ? 'LR' : 'TB'}',
+        nodesep: 70,
+        ranksep: 70, 
+      }
+    };
+    
+    // Store the diagram code
+    const d2Code = \`${cleanD2Code.replace(/\\/g, '\\\\').replace(/`/g, '\\`')}\`;
     
     // Notify parent when loaded
     window.addEventListener('load', function() {
       if (window.parent) {
         window.parent.postMessage('diagramLoaded', '*');
       }
+      
+      // Render the D2 diagram once loaded
+      renderD2Diagram();
     });
+    
+    // Function to render D2 diagram
+    function renderD2Diagram() {
+      try {
+        const container = document.getElementById('diagram-container');
+        
+        // Wait a moment to make sure all dependencies are loaded
+        setTimeout(() => {
+          try {
+            // Fallback to displaying the code in case the d2 library isn't available
+            if (typeof d2 === 'undefined' || !d2.Diagram) {
+              container.innerHTML = '<div class="fallback-message">Interactive diagram rendering is unavailable, showing the diagram code below:</div><pre>' + d2Code + '</pre>';
+              return;
+            }
+            
+            // Create a new diagram instance
+            const diagram = new d2.Diagram(d2Code);
+            
+            // Render as SVG
+            diagram.render('svg')
+              .then(svg => {
+                // Insert the generated SVG into the container
+                container.innerHTML = '';
+                container.appendChild(svg);
+                
+                // Set SVG attributes for better display
+                if (svg) {
+                  svg.setAttribute('width', '100%');
+                  svg.setAttribute('height', 'auto');
+                  svg.style.maxWidth = '100%';
+                }
+                
+                // Notify parent that diagram is fully rendered
+                if (window.parent) {
+                  window.parent.postMessage('diagramRendered', '*');
+                }
+              })
+              .catch(error => {
+                console.error('Error rendering D2 diagram:', error);
+                // Fallback to displaying the code if rendering fails
+                container.innerHTML = '<div class="error">Error rendering diagram</div><pre>' + d2Code + '</pre>';
+              });
+          } catch (error) {
+            console.error('Error in D2 rendering process:', error);
+            container.innerHTML = '<div class="error">Error in diagram rendering process</div><pre>' + d2Code + '</pre>';
+          }
+        }, 1000); // Longer timeout to ensure library loads
+      } catch (error) {
+        console.error('Error initializing D2 diagram:', error);
+        document.getElementById('diagram-container').innerHTML = '<div class="error">Error initializing diagram</div><pre>' + d2Code + '</pre>';
+      }
+    }
     
     // Make diagram fit better in iframe when embedded
     window.addEventListener('message', function(event) {
       // Handle zoom-in, zoom-out, and reset messages from parent
       if (event.data && typeof event.data === 'object') {
         if (event.data.action === 'zoom') {
-          const diagram = document.querySelector('.diagram-container');
+          const diagram = document.querySelector('#diagram-container');
           if (diagram) {
-            // Apply zoom to the actual diagram
-            const mermaidDiv = document.querySelector('.mermaid svg');
-            if (mermaidDiv) {
-              // Apply zoom to the SVG element
-              mermaidDiv.style.transform = 'scale(' + event.data.scale + ')';
-              mermaidDiv.style.transformOrigin = '50% 0';
-              mermaidDiv.style.transition = 'transform 0.2s ease';
+            // Apply zoom to the SVG element
+            const svgElement = diagram.querySelector('svg');
+            if (svgElement) {
+              svgElement.style.transform = 'scale(' + event.data.scale + ')';
+              svgElement.style.transformOrigin = '50% 0';
+              svgElement.style.transition = 'transform 0.2s ease';
             }
           }
         }
@@ -208,7 +329,7 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       padding: 20px;
       background: #f5f5f5;
     }
-    .diagram-container {
+    #diagram-container {
       background: white;
       padding: 20px;
       border-radius: 8px;
@@ -216,13 +337,12 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       max-width: 1000px;
       margin: 0 auto;
       overflow: hidden;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .mermaid {
-      text-align: center;
-      width: 100%;
-      overflow: auto;
-    }
-    .mermaid svg {
+    svg {
       max-width: 100%;
       height: auto !important;
     }
@@ -231,14 +351,26 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       color: #0078d4;
       margin-bottom: 20px;
     }
+    .error {
+      color: #d32f2f;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    pre {
+      white-space: pre-wrap;
+      font-size: 12px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      overflow: auto;
+    }
   </style>
 </head>
 <body>
-  <div class="diagram-container">
-    <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
-    <div class="mermaid">
-${cleanMermaidCode}
-    </div>
+  <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
+  <div id="diagram-container">
+    <div style="text-align: center;">Loading diagram...</div>
   </div>
 </body>
 </html>`;
