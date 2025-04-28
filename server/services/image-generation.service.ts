@@ -252,6 +252,26 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
             }
           }
         }
+        // Handle forceRedraw message for screenshots
+        if (event.data.action === 'forceRedraw') {
+          console.log('Forcing diagram redraw...');
+          try {
+            // Get the mermaid element and re-render
+            const mermaidElement = document.querySelector('.mermaid');
+            if (mermaidElement) {
+              const code = mermaidElement.textContent || '';
+              // Clear the element
+              mermaidElement.innerHTML = '';
+              // Force redraw
+              setTimeout(function() {
+                mermaidElement.textContent = code;
+                mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+              }, 50);
+            }
+          } catch (e) {
+            console.error('Error redrawing diagram:', e);
+          }
+        }
       }
     });
   </script>
@@ -267,20 +287,25 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-      max-width: 1400px;
-      width: 90%;
+      max-width: 2400px;
+      width: 100%;
       margin: 0 auto;
       overflow: visible;
+      position: relative;
     }
     .mermaid {
       text-align: center;
       width: 100%;
-      overflow: auto;
+      overflow: visible;
+      min-height: 500px;
     }
     .mermaid svg {
       max-width: 100%;
+      width: auto !important;
       height: auto !important;
       font-family: Arial, sans-serif !important;
+      display: block;
+      margin: 0 auto;
     }
     /* Force basic fonts on all text elements in the SVG */
     .mermaid svg text, .mermaid svg tspan {
