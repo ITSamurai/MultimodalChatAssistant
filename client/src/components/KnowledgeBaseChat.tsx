@@ -219,11 +219,43 @@ export function KnowledgeBaseChat() {
   }, [isLoading, messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Use both approaches for more reliable scrolling
+    // 1. Scroll the messages container
+    const chatContainer = document.querySelector('.flex-1.p-4.overflow-auto');
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    
+    // 2. Scroll the reference into view as fallback
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end' 
+      });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Use a small delay to ensure DOM is fully updated before scrolling
+    const scrollTimer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    
+    return () => clearTimeout(scrollTimer);
+  }, [messages]);
+  
+  // Force scroll on new assistant messages
+  useEffect(() => {
+    // Only scroll when a new assistant message is added
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.role === 'assistant') {
+      // Use a slightly longer delay for assistant messages to ensure images are loaded
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
   }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -265,6 +297,13 @@ export function KnowledgeBaseChat() {
         content: response.content,
         references: response.references
       }]);
+      
+      // Additional scroll after message is added and refs are available
+      setTimeout(() => {
+        scrollToBottom();
+        // Try one more time after images and diagrams have loaded
+        setTimeout(scrollToBottom, 1000);
+      }, 100);
     } catch (error) {
       console.error('Error sending message:', error);
       let errorMessage = "Failed to get a response. Please try again.";
