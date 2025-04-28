@@ -32,41 +32,115 @@ export function KnowledgeBaseChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Function to download diagrams with server-side PNG conversion
+  // Function to download diagrams using direct SVG export
   const downloadDiagram = async (imagePath: string, index: number) => {
     try {
       setIsLoading(true);
       
       toast({
         title: "Processing",
-        description: "Preparing your PNG download...",
+        description: "Preparing your download...",
       });
       
       // Check if it's an HTML diagram
       if (imagePath.endsWith('.html')) {
-        // Use the server-side screenshot API for HTML diagrams
-        // Extract the filename from the path
-        const fileName = imagePath.split('/').pop();
+        // Get the iframe containing the diagram
+        const iframes = document.querySelectorAll('iframe');
+        let targetIframe: HTMLIFrameElement | null = null;
         
-        if (!fileName) {
-          throw new Error("Invalid file path");
+        // Find the iframe with the matching src
+        for (let i = 0; i < iframes.length; i++) {
+          if (iframes[i].src.includes(imagePath)) {
+            targetIframe = iframes[i] as HTMLIFrameElement;
+            break;
+          }
         }
         
-        // Get a PNG screenshot from the server
-        const pngPath = await getDiagramScreenshot(fileName);
+        if (!targetIframe) {
+          throw new Error("Could not find the diagram iframe");
+        }
         
-        // Download the PNG
-        const link = document.createElement('a');
-        link.href = pngPath;
-        link.download = `rivermeadow_diagram_${Date.now()}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        toast({
-          title: "Success",
-          description: "Diagram downloaded as PNG successfully",
+        // Wait for iframe to be fully loaded
+        await new Promise<void>((resolve) => {
+          if (targetIframe!.contentDocument?.readyState === 'complete') {
+            resolve();
+          } else {
+            targetIframe!.onload = () => resolve();
+          }
         });
+        
+        // Extract the mermaid code from the iframe's HTML content
+        const iframeDocument = targetIframe.contentDocument;
+        if (!iframeDocument) {
+          throw new Error("Cannot access iframe content");
+        }
+        
+        // First try to get the SVG directly
+        const svgElement = iframeDocument.querySelector('.mermaid svg');
+        
+        if (svgElement) {
+          // Clone SVG to avoid modifying the display
+          const svgClone = svgElement.cloneNode(true) as SVGElement;
+          
+          // Add necessary attributes for standalone SVG
+          svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          
+          // Add width and height based on actual size
+          const bbox = svgElement.getBoundingClientRect();
+          svgClone.setAttribute('width', `${bbox.width}`);
+          svgClone.setAttribute('height', `${bbox.height}`);
+          
+          // Set explicit background
+          const rectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rectElement.setAttribute('width', '100%');
+          rectElement.setAttribute('height', '100%');
+          rectElement.setAttribute('fill', 'white');
+          svgClone.insertBefore(rectElement, svgClone.firstChild);
+          
+          // Convert SVG to string
+          const svgString = new XMLSerializer().serializeToString(svgClone);
+          
+          // Create a Blob with the SVG content
+          const blob = new Blob([svgString], { type: 'image/svg+xml' });
+          const url = URL.createObjectURL(blob);
+          
+          // Create a download link
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `rivermeadow_diagram_${Date.now()}.svg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          
+          toast({
+            title: "Success",
+            description: "Diagram downloaded as SVG successfully",
+          });
+        } else {
+          // If SVG is not available, download the mermaid code
+          const mermaidElement = iframeDocument.querySelector('.mermaid');
+          if (mermaidElement) {
+            const mermaidCode = mermaidElement.textContent || '';
+            const blob = new Blob([mermaidCode], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `rivermeadow_diagram_${Date.now()}.mmd`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            toast({
+              title: "Success",
+              description: "Diagram code downloaded successfully",
+            });
+          } else {
+            throw new Error("Could not find diagram content");
+          }
+        }
       } else {
         // For regular images, just create a download link
         const link = document.createElement('a');
