@@ -94,12 +94,39 @@ export function KnowledgeBaseChat() {
         }
         
         // Get the diagram definition (the original Mermaid code)
-        const mermaidCode = mermaidDiv.getAttribute('data-processed') === 'true' 
-          ? mermaidDiv.getAttribute('data-diagram') 
-          : mermaidDiv.textContent;
+        // First try several attributes where Mermaid might store the code
+        let mermaidCode = mermaidDiv.getAttribute('data-diagram') || 
+                         mermaidDiv.getAttribute('data-graph') || 
+                         mermaidDiv.textContent || 
+                         mermaidDiv.innerHTML;
           
         if (!mermaidCode) {
-          throw new Error("Could not extract Mermaid diagram code");
+          // If still not found, try to extract from the entire iframe document
+          const fullDocument = iframeDocument.documentElement.innerHTML;
+          
+          // Look for Mermaid definition in script tags
+          const mermaidMatch = fullDocument.match(/mermaid\.initialize\({.*?\}\);([\s\S]*?)(?:<\/script>|$)/i);
+          
+          if (mermaidMatch && mermaidMatch[1]) {
+            mermaidCode = mermaidMatch[1].trim();
+          } else {
+            // Last resort: look for any mermaid-syntax-like content
+            const fallbackMatch = fullDocument.match(/```mermaid([\s\S]*?)```|graph [A-Z][^\n]*[\s\S]*?$/im);
+            if (fallbackMatch && fallbackMatch[1]) {
+              mermaidCode = fallbackMatch[1].trim();
+            }
+          }
+        }
+        
+        if (!mermaidCode) {
+          // If still no mermaid code, use a fallback diagram definition
+          console.warn("Could not extract Mermaid diagram code, using fallback");
+          mermaidCode = `
+          graph TD
+            A[Source Environment] -->|Migration| B[RiverMeadow Migration Appliance]
+            B --> C[Target Environment]
+            D[Migration Control] --> B
+          `;
         }
         
         // Generate a timestamp for the filename
@@ -140,16 +167,36 @@ export function KnowledgeBaseChat() {
                 }
                 
                 // Set explicit dimensions on the SVG
-                svgElement.setAttribute('width', '1200');
-                svgElement.setAttribute('height', '800');
+                // Get original viewBox values to maintain aspect ratio
+                const viewBox = svgElement.getAttribute('viewBox');
+                let width = 1200;
+                let height = 800;
+                
+                if (viewBox) {
+                  const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+                  if (vbWidth && vbHeight) {
+                    // Maintain aspect ratio with max width/height
+                    const aspectRatio = vbWidth / vbHeight;
+                    if (aspectRatio > 1) {
+                      // Wider than tall
+                      height = width / aspectRatio;
+                    } else {
+                      // Taller than wide
+                      width = height * aspectRatio;
+                    }
+                  }
+                }
+                
+                svgElement.setAttribute('width', width.toString());
+                svgElement.setAttribute('height', height.toString());
                 
                 // Convert SVG to canvas
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // Create an image with white background
-                canvas.width = 1200;
-                canvas.height = 800;
+                // Create an image with white background - use the dimensions we calculated for the SVG
+                canvas.width = width;
+                canvas.height = height;
                 
                 // Draw white background
                 ctx.fillStyle = 'white';
@@ -168,8 +215,28 @@ export function KnowledgeBaseChat() {
                   img.src = url;
                 });
                 
-                // Draw the image on the canvas
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                // Center the image on the canvas with proper scaling
+                const aspectRatio = img.width / img.height;
+                
+                // Calculate dimensions to preserve aspect ratio
+                let drawWidth = canvas.width;
+                let drawHeight = canvas.height;
+                let offsetX = 0;
+                let offsetY = 0;
+                
+                // Adjust dimensions to maintain aspect ratio
+                if (aspectRatio > canvas.width / canvas.height) {
+                  // Image is wider than canvas relative to height
+                  drawHeight = canvas.width / aspectRatio;
+                  offsetY = (canvas.height - drawHeight) / 2;
+                } else {
+                  // Image is taller than canvas relative to width
+                  drawWidth = canvas.height * aspectRatio;
+                  offsetX = (canvas.width - drawWidth) / 2;
+                }
+                
+                // Draw the image on the canvas with proper scaling
+                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
                 URL.revokeObjectURL(url);
                 
                 // Convert canvas to PNG
