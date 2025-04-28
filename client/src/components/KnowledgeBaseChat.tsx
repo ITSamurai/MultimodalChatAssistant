@@ -8,6 +8,15 @@ import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
 import * as htmlToImage from 'html-to-image';
 
+// Add TypeScript interface for mermaid API in Window
+declare global {
+  interface Window {
+    mermaid?: {
+      render: (id: string, text: string) => Promise<{ svg: string }>;
+    };
+  }
+}
+
 interface MessageReference {
   type: 'image' | 'text';
   imagePath?: string;
@@ -33,7 +42,7 @@ export function KnowledgeBaseChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Function to download diagrams using Mermaid's built-in PNG export
+  // Function to download diagrams using direct Mermaid API call
   const downloadDiagram = async (imagePath: string, index: number) => {
     try {
       setIsLoading(true);
@@ -78,140 +87,176 @@ export function KnowledgeBaseChat() {
           throw new Error("Cannot access iframe content");
         }
         
-        // Check if Mermaid is available in the iframe
-        if (typeof iframeWindow.mermaid === 'undefined') {
-          throw new Error("Mermaid is not initialized in the diagram");
-        }
-        
-        // Find the diagram container
+        // Find the diagram content
         const mermaidDiv = iframeDocument.querySelector('.mermaid');
         if (!mermaidDiv) {
           throw new Error("Could not find diagram in the iframe");
         }
         
+        // Get the diagram definition (the original Mermaid code)
+        const mermaidCode = mermaidDiv.getAttribute('data-processed') === 'true' 
+          ? mermaidDiv.getAttribute('data-diagram') 
+          : mermaidDiv.textContent;
+          
+        if (!mermaidCode) {
+          throw new Error("Could not extract Mermaid diagram code");
+        }
+        
         // Generate a timestamp for the filename
         const timestamp = Date.now();
         const filename = `rivermeadow_diagram_${timestamp}.png`;
-        
-        // Look for the SVG element which is the actual rendered diagram
-        const svgElement = mermaidDiv.querySelector('svg');
-        if (!svgElement) {
-          throw new Error("Could not find rendered SVG in diagram");
-        }
-        
-        // Create a function that communicates with the iframe to export the diagram as PNG
-        const exportPng = () => {
-          // Execute this in the iframe context
-          iframeWindow.postMessage({
-            action: 'exportPNG',
-            elementId: mermaidDiv.id || 'mermaid-diagram'
-          }, '*');
-        };
-        
-        // Set up a message listener to receive the exported PNG
-        const messageListener = (event: MessageEvent) => {
-          if (event.data && event.data.action === 'pngExport' && event.data.dataUrl) {
-            // We've received the PNG data URL from the iframe
-            const link = document.createElement('a');
-            link.href = event.data.dataUrl;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Clean up listener
-            window.removeEventListener('message', messageListener);
-            
-            toast({
-              title: "Success",
-              description: "Diagram downloaded as PNG with text preserved",
-            });
-            
-            setIsLoading(false);
-          }
-        };
-        
-        // Add the listener
-        window.addEventListener('message', messageListener);
-        
-        // Inject a script into the iframe that will handle the export
+
+        // Create script to add Mermaid's API direct PNG export
         const script = iframeDocument.createElement('script');
         script.textContent = `
-          window.addEventListener('message', function(event) {
-            if (event.data && event.data.action === 'exportPNG') {
+          // Function to download the diagram using mermaid.render
+          async function downloadAsPng() {
+            try {
+              if (!window.mermaid) {
+                throw new Error("Mermaid not found in window");
+              }
+
+              // Get the definition of the current diagram
+              const mermaidDef = \`${mermaidCode.replace(/`/g, '\\`')}\`;
+              
+              // Clean up any existing content and create a container
+              const container = document.createElement('div');
+              container.id = 'mermaid-png-container';
+              container.style.position = 'absolute';
+              container.style.left = '-9999px';
+              document.body.appendChild(container);
+              
               try {
-                const svg = document.querySelector('svg');
-                if (!svg) {
-                  window.parent.postMessage({
-                    action: 'pngExport',
-                    error: 'SVG not found'
-                  }, '*');
-                  return;
+                // Use mermaid to render the diagram
+                const { svg } = await window.mermaid.render('mermaid-png-export', mermaidDef);
+                
+                // Insert the SVG into the container
+                container.innerHTML = svg;
+                
+                // Get the SVG element
+                const svgElement = container.querySelector('svg');
+                if (!svgElement) {
+                  throw new Error('SVG rendering failed');
                 }
                 
-                // Create a canvas element
+                // Set explicit dimensions on the SVG
+                svgElement.setAttribute('width', '1200');
+                svgElement.setAttribute('height', '800');
+                
+                // Convert SVG to canvas
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // Get SVG dimensions
-                const rect = svg.getBoundingClientRect();
-                
-                // Set canvas dimensions (multiply by 2 for higher resolution)
-                canvas.width = rect.width * 2;
-                canvas.height = rect.height * 2;
+                // Create an image with white background
+                canvas.width = 1200;
+                canvas.height = 800;
                 
                 // Draw white background
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // Create a blob from the SVG
-                const svgData = new XMLSerializer().serializeToString(svg);
-                const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                // Create an image from the SVG
+                const img = new Image();
+                const svgText = new XMLSerializer().serializeToString(svgElement);
+                const svgBlob = new Blob([svgText], {type: 'image/svg+xml'});
                 const url = URL.createObjectURL(svgBlob);
                 
-                // Create image and draw to canvas
-                const img = new Image();
-                img.onload = function() {
-                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                  URL.revokeObjectURL(url);
-                  
-                  // Get the PNG data URL
-                  const pngDataUrl = canvas.toDataURL('image/png');
-                  
-                  // Send the PNG data back to the parent
-                  window.parent.postMessage({
-                    action: 'pngExport',
-                    dataUrl: pngDataUrl
-                  }, '*');
-                };
+                // Wait for image to load before drawing to canvas
+                await new Promise((resolve, reject) => {
+                  img.onload = resolve;
+                  img.onerror = reject;
+                  img.src = url;
+                });
                 
-                img.src = url;
+                // Draw the image on the canvas
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(url);
+                
+                // Convert canvas to PNG
+                const pngUrl = canvas.toDataURL('image/png');
+                
+                // Clean up
+                document.body.removeChild(container);
+                
+                // Return the PNG data URL
+                return pngUrl;
               } catch (error) {
-                window.parent.postMessage({
-                  action: 'pngExport',
-                  error: error.message || 'Error generating PNG'
-                }, '*');
+                // Clean up on error
+                if (document.body.contains(container)) {
+                  document.body.removeChild(container);
+                }
+                throw error;
               }
+            } catch (error) {
+              console.error('Error generating PNG:', error);
+              return null;
+            }
+          }
+          
+          // Execute the download
+          downloadAsPng().then(dataUrl => {
+            if (dataUrl) {
+              window.parent.postMessage({
+                action: 'mermaidPngExport',
+                dataUrl: dataUrl,
+                success: true
+              }, '*');
+            } else {
+              window.parent.postMessage({
+                action: 'mermaidPngExport',
+                success: false,
+                error: 'Failed to generate PNG'
+              }, '*');
             }
           });
         `;
+        
+        // Set up a listener for the PNG data URL
+        const messageHandler = (event: MessageEvent) => {
+          if (event.data && event.data.action === 'mermaidPngExport') {
+            window.removeEventListener('message', messageHandler);
+            
+            if (event.data.success && event.data.dataUrl) {
+              // Create a download link
+              const link = document.createElement('a');
+              link.href = event.data.dataUrl;
+              link.download = filename;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              toast({
+                title: "Success",
+                description: "Diagram downloaded as PNG successfully",
+              });
+            } else {
+              toast({
+                title: "Error",
+                description: event.data.error || "Failed to generate PNG from diagram",
+                variant: "destructive",
+              });
+            }
+            
+            setIsLoading(false);
+          }
+        };
+        
+        // Add the message listener
+        window.addEventListener('message', messageHandler);
+        
+        // Add the script to the iframe to execute the PNG export
         iframeDocument.head.appendChild(script);
         
-        // Start the export process
-        exportPng();
-        
-        // Set a timeout to handle cases where the export doesn't complete
+        // Set a timeout in case the export doesn't complete
         setTimeout(() => {
-          window.removeEventListener('message', messageListener);
-          if (setIsLoading) { // Check if the component is still mounted
-            setIsLoading(false);
-            toast({
-              title: "Error",
-              description: "Diagram export timed out. Please try again.",
-              variant: "destructive",
-            });
-          }
-        }, 10000); // 10 second timeout
+          window.removeEventListener('message', messageHandler);
+          setIsLoading(false);
+          toast({
+            title: "Error",
+            description: "Diagram export timed out. Please try again.",
+            variant: "destructive",
+          });
+        }, 10000);
       } else {
         // For regular images, just create a download link
         const link = document.createElement('a');
