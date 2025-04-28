@@ -384,7 +384,7 @@ Start -> DeployAppliance -> Configure -> PreflightChecks -> ExecuteMigration -> 
     // Save HTML file to disk
     await writeFile(imagePath, htmlContent);
     
-    console.log(`Successfully generated and saved mermaid diagram: ${filename}`);
+    console.log(`Successfully generated and saved d2 diagram: ${filename}`);
     
     return {
       imagePath: `/uploads/generated/${filename}`,
