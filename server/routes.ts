@@ -394,7 +394,7 @@ Noindex: /`);
       
       // Use Puppeteer for better screenshot quality
       const browser = await puppeteer.launch({
-        headless: 'new',
+        headless: true, // Use boolean instead of 'new' string
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
       
@@ -417,28 +417,29 @@ Noindex: /`);
         // Wait a bit for Mermaid to fully render
         await page.waitForSelector('.mermaid svg', { timeout: 5000 });
         
-        // Modify the diagram container to make sure it's fully visible
-        await page.evaluate(() => {
-          document.body.style.margin = '0';
-          document.body.style.padding = '0';
-          document.body.style.overflow = 'visible';
-          
-          const container = document.querySelector('.diagram-container');
-          if (container) {
-            container.style.maxWidth = 'none';
-            container.style.width = '1600px';
-            container.style.overflow = 'visible';
-            container.style.margin = '0';
-            container.style.padding = '40px';
-            container.style.boxShadow = 'none';
-          }
-          
-          const svg = document.querySelector('.mermaid svg');
-          if (svg) {
-            svg.style.maxWidth = 'none';
-            svg.style.width = '100%';
-            svg.style.height = 'auto';
-          }
+        // Add inline CSS instead of modifying DOM elements directly
+        // This avoids TypeScript errors with DOM manipulation
+        await page.addStyleTag({
+          content: `
+            body {
+              margin: 0;
+              padding: 0;
+              overflow: visible;
+            }
+            .diagram-container {
+              max-width: none !important;
+              width: 2400px !important;
+              overflow: visible !important;
+              margin: 0 !important;
+              padding: 40px !important;
+              box-shadow: none !important;
+            }
+            .mermaid svg {
+              max-width: none !important;
+              width: 100% !important;
+              height: auto !important;
+            }
+          `
         });
         
         // Wait a moment for style changes to take effect

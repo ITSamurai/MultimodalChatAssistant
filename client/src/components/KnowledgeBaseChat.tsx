@@ -94,20 +94,28 @@ export function KnowledgeBaseChat() {
             const originalWidth = targetIframe.style.width;
             
             // Set a larger size to ensure the entire diagram is visible
-            // Make the iframe much larger to ensure we capture the entire diagram
-            targetIframe.style.width = '2400px';
-            targetIframe.style.height = '2400px';
+            // Make the iframe extremely large to ensure we capture the entire diagram
+            targetIframe.style.width = '3200px';
+            targetIframe.style.height = '3200px';
             
             // Also adjust the parent container
-            iframeContainer.style.width = '2000px';
-            iframeContainer.style.height = '2000px';
+            iframeContainer.style.width = '3000px';
+            iframeContainer.style.height = '3000px';
             iframeContainer.style.overflow = 'hidden';
             
             // Give time for resize to apply
-            await new Promise(r => setTimeout(r, 200));
-            
-            // Wait a bit longer for any resize to fully apply
             await new Promise(r => setTimeout(r, 500));
+            
+            // Try to render or reinitialize mermaid diagrams if needed
+            try {
+              // Post a message to the iframe to force redraw
+              targetIframe.contentWindow?.postMessage({ action: 'forceRedraw' }, '*');
+            } catch (e) {
+              console.warn('Could not send redraw message', e);
+            }
+            
+            // Wait longer for the diagram to fully render in the new size
+            await new Promise(r => setTimeout(r, 1000));
             
             // Take screenshot of the diagram container with full dimensions
             const dataUrl = await htmlToImage.toPng(iframeContainer, {
@@ -116,8 +124,8 @@ export function KnowledgeBaseChat() {
               backgroundColor: 'white',
               fontEmbedCSS: '',
               quality: 1.0,
-              width: 2400,          // Much larger width to fit the whole diagram
-              height: 2000          // Much larger height to fit the whole diagram
+              width: 3200,          // Extremely large width to fit the whole diagram
+              height: 3000          // Extremely large height to fit the whole diagram
             });
             
             // Restore iframe and container styles
