@@ -136,6 +136,16 @@ export function KnowledgeBaseChat() {
     } finally {
       setIsLoading(false);
     }
+    } catch (error) {
+      console.error("Error with diagram:", error);
+      toast({
+        title: "Failed to open diagram",
+        description: "Please try again. If the issue persists, you can always take a screenshot of the diagram in the chat",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // Simulated progress for DALL-E image generation
@@ -410,56 +420,66 @@ export function KnowledgeBaseChat() {
                                     window.open(ref.imagePath, '_blank');
                                   }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
-                                  title="View full screen"
+                                  title="Open in new tab"
                                 >
                                   <Maximize size={16} />
                                 </button>
                                 
                                 <button
-                                  onClick={() => downloadDiagram(ref.imagePath!, index)}
-                                  className="p-1 hover:bg-gray-100 text-gray-700 ml-1 border-l border-gray-200"
-                                  title="Download diagram"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    
+                                    // Download the diagram
+                                    downloadDiagram(ref.imagePath!, index);
+                                  }}
+                                  className="p-1 hover:bg-gray-100 text-gray-700"
+                                  title="Download as PNG"
                                 >
                                   <Download size={16} />
                                 </button>
                               </div>
-                              
-                              {/* Caption if available */}
-                              {ref.caption && (
-                                <div className="p-2 text-sm text-gray-500">
-                                  {ref.caption}
-                                </div>
-                              )}
                             </div>
                           ) : (
-                            // Regular image
+                            // Render regular image
                             <div className="relative">
                               <img 
                                 src={ref.imagePath} 
-                                alt={ref.caption || "Generated Image"} 
-                                className="w-full h-auto" 
-                                loading="lazy"
+                                alt={ref.caption || 'AI generated image'} 
+                                className="w-full h-auto max-h-[500px] object-contain"
                               />
-                              <div className="absolute bottom-2 right-2 bg-white rounded shadow-md">
+                              {/* Image controls */}
+                              <div className="absolute bottom-2 right-2 bg-white rounded shadow-md flex">
                                 <button
-                                  onClick={() => downloadDiagram(ref.imagePath!, index)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    window.open(ref.imagePath, '_blank');
+                                  }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
-                                  title="Download image"
+                                  title="Open in new tab"
+                                >
+                                  <Maximize size={16} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    downloadDiagram(ref.imagePath!, index);
+                                  }}
+                                  className="p-1 hover:bg-gray-100 text-gray-700"
+                                  title="Download"
                                 >
                                   <Download size={16} />
                                 </button>
                               </div>
-                              {ref.caption && (
-                                <div className="p-2 text-sm text-gray-500">
-                                  {ref.caption}
-                                </div>
-                              )}
+                            </div>
+                          )}
+                          {ref.caption && (
+                            <div className="p-2 bg-gray-50 text-sm text-gray-700 border-t">
+                              <span className="font-medium">Caption:</span> {ref.caption}
                             </div>
                           )}
                         </div>
                       );
-                    })
-                  }
+                    })}
                 </div>
               )}
             </CardContent>
@@ -471,39 +491,44 @@ export function KnowledgeBaseChat() {
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="border-b p-4">
-        <h2 className="text-lg font-medium">RiverMeadow Knowledge Base Chat</h2>
-        <p className="text-sm text-gray-500">Ask questions about RiverMeadow documentation</p>
+    <div className="flex flex-col h-screen">
+      <div className="flex justify-center items-center p-4 border-b">
+        <h1 className="text-2xl font-bold">RiverMeadow AI Chat</h1>
       </div>
       
-      <div className="flex-1 p-4 overflow-auto">
+      <div className="flex-1 p-4 overflow-auto pb-20 md:pb-32" style={{ maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' }}>
         {renderMessages()}
       </div>
       
-      {isImageGenerating && (
-        <div className="p-4 pt-0">
-          <div className="flex items-center mb-2">
-            <ImageIcon className="h-4 w-4 mr-2 animate-pulse" />
-            <span className="text-sm">
-              Generating diagram{loadingProgress < 100 ? '...' : ' complete!'}
-            </span>
+      <div className="p-4 border-t fixed bottom-0 left-0 right-0 z-10 bg-background">
+        {isImageGenerating && (
+          <div className="mb-2 mx-auto max-w-screen-lg">
+            <div className="flex justify-between mb-1 text-xs">
+              <span>Generating diagram...</span>
+              <span>{loadingProgress}%</span>
+            </div>
+            <Progress value={loadingProgress} className="h-1" />
           </div>
-          <Progress value={loadingProgress} className="w-full h-2" />
-        </div>
-      )}
-      
-      <div className="p-4 border-t">
-        <form onSubmit={handleSubmit} className="flex space-x-2">
+        )}
+        
+        <form onSubmit={handleSubmit} className="flex space-x-2 mx-auto max-w-screen-lg">
           <Input
+            placeholder="Ask about RiverMeadow documentation..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your question here..."
-            disabled={isLoading}
             className="flex-1"
+            disabled={isLoading}
           />
-          <Button type="submit" disabled={isLoading || !input.trim()}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}
+          <Button 
+            type="submit" 
+            disabled={isLoading || !input.trim()}
+            className="w-24"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              'Send'
+            )}
           </Button>
         </form>
       </div>

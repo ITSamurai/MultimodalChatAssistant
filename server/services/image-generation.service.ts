@@ -36,7 +36,7 @@ const ensureDirectoriesExist = async () => {
 export const generateDiagram = async (
   prompt: string, 
   context?: string
-): Promise<{ imagePath: string, altText: string }> => {
+): Promise<{ imagePath: string, mmdPath: string, mmdFilename: string, altText: string }> => {
   try {
     console.log('Starting diagram generation process');
     await ensureDirectoriesExist();

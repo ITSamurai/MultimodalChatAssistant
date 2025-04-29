@@ -114,3 +114,17 @@ export async function getDiagramScreenshot(htmlFileName: string): Promise<Respon
     credentials: "include"
   });
 }
+
+// Convert mermaid file to PNG using server-side mmdc command
+export async function convertMermaidToPng(mmdFileName: string): Promise<Response> {
+  // Extract just the filename from a full path if needed
+  const fileName = mmdFileName.includes('/') 
+    ? mmdFileName.split('/').pop() 
+    : mmdFileName;
+  
+  // Use the mmdc conversion endpoint
+  return fetch(getFullUrl(`/api/convert-mermaid-to-png/${fileName}`), {
+    method: "GET",
+    credentials: "include"
+  });
+}
