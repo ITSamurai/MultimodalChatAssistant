@@ -12,7 +12,8 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import { v4 as uuidv4 } from 'uuid';
 
-// No need for mermaid interface declaration anymore since we aren't using Puppeteer
+// Adding imports for mmdc command execution
+import { exec } from 'child_process';
 import { 
   initializePineconeIndex, 
   indexDocumentInPinecone,

@@ -368,19 +368,28 @@ ${cleanMermaidCode}
 </body>
 </html>`;
 
-    // Create timestamp & unique filename
+    // Create timestamp & unique filename with a common base
     const timestamp = Date.now();
     const uuid = uuidv4().substring(0, 8);
-    const filename = `generated_diagram_${timestamp}_${uuid}.html`;
-    const imagePath = path.join(GENERATED_IMAGES_DIR, filename);
+    const baseFilename = `generated_diagram_${timestamp}_${uuid}`;
+    const htmlFilename = `${baseFilename}.html`;
+    const mmdFilename = `${baseFilename}.mmd`;
+    
+    const htmlPath = path.join(GENERATED_IMAGES_DIR, htmlFilename);
+    const mmdPath = path.join(GENERATED_IMAGES_DIR, mmdFilename);
     
     // Save HTML file to disk
-    await writeFile(imagePath, htmlContent);
+    await writeFile(htmlPath, htmlContent);
     
-    console.log(`Successfully generated and saved d2 diagram: ${filename}`);
+    // Save mermaid code to a separate .mmd file for mmdc conversion
+    await writeFile(mmdPath, cleanMermaidCode);
+    
+    console.log(`Successfully generated and saved diagram: ${htmlFilename} and ${mmdFilename}`);
     
     return {
-      imagePath: `/uploads/generated/${filename}`,
+      imagePath: `/uploads/generated/${htmlFilename}`,
+      mmdPath: `/uploads/generated/${mmdFilename}`,
+      mmdFilename,
       altText: prompt.substring(0, 255) // Limit alt text length
     };
   } catch (e: unknown) {
