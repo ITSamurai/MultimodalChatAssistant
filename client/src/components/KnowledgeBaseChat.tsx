@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { chatWithKnowledgeBase, KnowledgeBaseChatMessage, convertSvgToPng, getDiagramScreenshot, convertMermaidToPng } from '../lib/api';
+import { apiRequest } from '../lib/queryClient';
 import { Loader2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
 import * as htmlToImage from 'html-to-image';
+import { AppConfig, defaultConfig } from "@/lib/config-types";
 
 // Add TypeScript interface for mermaid API in Window
 declare global {
@@ -235,23 +237,14 @@ export function KnowledgeBaseChat() {
       console.log('Sending chat request with messages:', JSON.stringify(apiMessages));
       
       // Fetch configuration
-      interface ConfigData {
-        model?: string;
-        temperature?: number;
-        max_tokens?: number;
-        system_prompt?: string;
-        vector_search_top_k?: number;
-      }
-      
-      let config: ConfigData = {};
+      let config: AppConfig = { ...defaultConfig };
       try {
-        const configResponse = await fetch('/api/config', {
-          method: 'GET',
-          credentials: 'include'
-        });
+        // Use apiRequest which automatically adds the auth token
+        const configResponse = await apiRequest('GET', '/api/config');
         
         if (configResponse.ok) {
-          config = await configResponse.json();
+          const serverConfig = await configResponse.json();
+          config = { ...defaultConfig, ...serverConfig };
           console.log('Using configuration from server:', config);
         }
       } catch (error) {
