@@ -69,47 +69,26 @@ export function KnowledgeBaseChat() {
         try {
           console.log(`Converting mermaid diagram to PNG using mmdc: ${mmdFileName}`);
           
-          // This will trigger the server-side mmdc conversion and download the PNG
-          const response = await convertMermaidToPng(mmdFileName);
+          // This will trigger the server-side mmdc conversion with fallback
+          const conversionUrl = `${currentOrigin}/api/convert-mermaid-to-png/${mmdFileName}`;
           
-          if (response.ok) {
-            // Since this returns the file directly with Content-Disposition: attachment,
-            // the browser will automatically download it
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `rivermeadow_diagram_${Date.now()}.png`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            toast({
-              title: "Success",
-              description: "Diagram downloaded as PNG using server-side conversion",
-            });
-          } else {
-            // If the mmdc conversion fails, fall back to the HTML version
-            console.error("Server-side diagram conversion failed, falling back to HTML");
-            const diagramUrl = `${currentOrigin}/api/diagram-png/${fileName}`;
-            window.open(diagramUrl, '_blank');
-            
-            toast({
-              title: "PNG conversion failed",
-              description: "Falling back to HTML version. Please use the Save buttons there to download.",
-            });
-          }
-        } catch (conversionError) {
-          console.error("Error during server-side conversion:", conversionError);
-          // Fall back to opening the HTML version
-          const diagramUrl = `${currentOrigin}/api/diagram-png/${fileName}`;
-          window.open(diagramUrl, '_blank');
+          // Since our server route now handles redirects and graceful fallbacks,
+          // we'll open this in a new window/tab to let the server handle the appropriate response
+          window.open(conversionUrl, '_blank');
           
           toast({
-            title: "PNG conversion failed",
-            description: "Falling back to HTML version. Please use the Save buttons there to download.",
-            variant: "destructive"
+            title: "Diagram Ready",
+            description: "The server is processing your diagram. If PNG conversion succeeds, it will download automatically. Otherwise, you'll see the HTML version with save options.",
+          });
+        } catch (conversionError) {
+          console.error("Error accessing conversion endpoint:", conversionError);
+          // Fall back to just opening the HTML version directly
+          window.open(imagePath, '_blank');
+          
+          toast({
+            title: "Diagram available in new tab",
+            description: "Please use the save options in the new tab to save the diagram.",
+            variant: "default"
           });
         }
       } else {
