@@ -47,6 +47,11 @@ export function KnowledgeBaseChat() {
     try {
       setIsLoading(true);
       
+      toast({
+        title: "Processing",
+        description: "Preparing diagram for download...",
+      });
+      
       // Extract the filename from the path for server request
       const pathParts = imagePath.split('/');
       const fileName = pathParts[pathParts.length - 1];
@@ -54,15 +59,56 @@ export function KnowledgeBaseChat() {
       
       // Check if it's an HTML diagram
       if (imagePath.endsWith('.html')) {
-        console.log(`Opening HTML diagram directly: ${fileName}`);
+        console.log(`Processing HTML diagram: ${fileName}`);
         
-        // Simply open the HTML version directly in a new tab
-        window.open(imagePath, '_blank');
+        // Try to use the server-side mmdc conversion first, since we now have Chromium installed
+        // Extract the base filename (without .html) and create an .mmd filename
+        const baseFileName = fileName.replace('.html', '');
+        const mmdFileName = `${baseFileName}.mmd`;
         
-        toast({
-          title: "Diagram opened in new tab",
-          description: "Please use the save or print options in the new tab to save a copy of the diagram.",
-        });
+        try {
+          console.log(`Converting mermaid diagram to PNG using mmdc: ${mmdFileName}`);
+          
+          // Call the server endpoint to convert the mermaid diagram to PNG
+          const conversionUrl = `${currentOrigin}/api/convert-mermaid-to-png/${mmdFileName}`;
+          const response = await fetch(conversionUrl);
+          
+          if (response.ok) {
+            // If successful, this should return the PNG file directly as a download
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rivermeadow_diagram_${Date.now()}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            toast({
+              title: "Success",
+              description: "Diagram downloaded as PNG successfully",
+            });
+          } else {
+            // If server-side conversion failed, fall back to opening the HTML version
+            console.log("Server-side PNG conversion failed, falling back to HTML version");
+            window.open(imagePath, '_blank');
+            
+            toast({
+              title: "PNG conversion failed",
+              description: "Opening HTML version instead. You can use the download buttons there to save the diagram.",
+            });
+          }
+        } catch (error) {
+          console.error("Error during server-side conversion:", error);
+          // Fall back to opening the HTML version
+          window.open(imagePath, '_blank');
+          
+          toast({
+            title: "Diagram available in new tab",
+            description: "Please use the download buttons in the new tab to save a copy of the diagram.",
+          });
+        }
       } else {
         // For regular images, just create a download link
         const link = document.createElement('a');
