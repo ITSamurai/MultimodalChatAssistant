@@ -137,14 +137,15 @@ export default function ConfigPage() {
               <div className="space-y-2">
                 <Label htmlFor="model">Model</Label>
                 <Select 
-                  value={config.model} 
+                  value={config.model ?? "gpt-4o"} 
                   onValueChange={(value) => updateConfig('model', value)}
                 >
                   <SelectTrigger id="model">
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gpt-4o">GPT-4o (Latest)</SelectItem>
+                    <SelectItem value="gpt-4o">GPT-4o (Recommended)</SelectItem>
+                    <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
                     <SelectItem value="gpt-4">GPT-4</SelectItem>
                     <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
                   </SelectContent>
@@ -250,7 +251,7 @@ export default function ConfigPage() {
                 <Label htmlFor="system_prompt">System Prompt</Label>
                 <textarea 
                   id="system_prompt"
-                  value={config.system_prompt}
+                  value={config.system_prompt ?? "You are a helpful assistant. Use the context below to answer the question. If the answer is unclear or not directly provided, give your best interpretation based on the information.\n\nContext: {context}\n\nQuestion: {question}"}
                   onChange={(e) => updateConfig('system_prompt', e.target.value)}
                   className="w-full min-h-[200px] p-3 rounded-md border border-input bg-background"
                 />
@@ -309,19 +310,19 @@ export default function ConfigPage() {
                 </div>
                 <Switch 
                   id="enable_diagram_auto_zoom"
-                  checked={config.enable_diagram_auto_zoom}
+                  checked={config.enable_diagram_auto_zoom ?? true}
                   onCheckedChange={(checked) => updateConfig('enable_diagram_auto_zoom', checked)}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="diagram_default_zoom">Default Diagram Zoom: {(config.diagram_default_zoom * 100).toFixed(0)}%</Label>
+                <Label htmlFor="diagram_default_zoom">Default Diagram Zoom: {((config.diagram_default_zoom ?? 0.7) * 100).toFixed(0)}%</Label>
                 <Slider 
                   id="diagram_default_zoom"
                   min={0.3} 
                   max={1} 
                   step={0.05}
-                  value={[config.diagram_default_zoom]}
+                  value={[config.diagram_default_zoom ?? 0.7]}
                   onValueChange={(value) => updateConfig('diagram_default_zoom', value[0])}
                 />
               </div>
@@ -337,7 +338,7 @@ export default function ConfigPage() {
                 </div>
                 <Switch 
                   id="enable_debug_logs"
-                  checked={config.enable_debug_logs}
+                  checked={config.enable_debug_logs ?? false}
                   onCheckedChange={(checked) => updateConfig('enable_debug_logs', checked)}
                 />
               </div>
@@ -351,7 +352,7 @@ export default function ConfigPage() {
                 </div>
                 <Switch 
                   id="response_streaming"
-                  checked={config.response_streaming}
+                  checked={config.response_streaming ?? true}
                   onCheckedChange={(checked) => updateConfig('response_streaming', checked)}
                 />
               </div>
