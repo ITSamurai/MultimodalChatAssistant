@@ -459,7 +459,7 @@ export function KnowledgeBaseChat() {
         <h1 className="text-2xl font-bold">RiverMeadow AI Chat</h1>
       </div>
       
-      <div className="flex-1 p-4 overflow-auto pb-20 md:pb-32">
+      <div className="flex-1 p-4 overflow-auto pb-20 md:pb-32" style={{ maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' }}>
         {renderMessages()}
       </div>
       

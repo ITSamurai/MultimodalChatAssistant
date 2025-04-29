@@ -448,6 +448,12 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
   // Convert to lowercase for case-insensitive matching
   const lowercasePrompt = prompt.toLowerCase();
   
+  // Special case: if prompt directly asks for an OS migration diagram, always return true
+  if (/\bos\s*(?:based|-)?\s*migration\s*diagram\b/i.test(lowercasePrompt)) {
+    console.log('Direct OS migration diagram request detected');
+    return true;
+  }
+
   // First, check if this is a question - if it starts with what, how, why, when, etc.
   // If so, we DON'T want to generate a diagram for it unless it explicitly asks
   const isQuestion = /^(?:what|how|why|when|where|who|can|is|are|do|does|which|could|would|should|will)\b/i.test(lowercasePrompt);
