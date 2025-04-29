@@ -527,7 +527,7 @@ Noindex: /`);
     }
   });
   
-  // Endpoint for downloading diagram HTML file directly
+  // Endpoint for viewing diagram HTML file directly
   app.get('/api/diagram-png/:fileName', async (req: Request, res: Response) => {
     try {
       const fileName = req.params.fileName;
@@ -547,6 +547,10 @@ Noindex: /`);
       // with instructions for download
       const htmlContent = await fs.promises.readFile(htmlFilePath, 'utf-8');
       
+      // Try to extract SVG from the HTML content (assuming it's a Mermaid diagram)
+      const svgMatch = htmlContent.match(/<svg[^>]*>[\s\S]*?<\/svg>/i);
+      const hasSvg = svgMatch && svgMatch[0];
+      
       // Add download script to the HTML content to automatically save as HTML
       // The client can then open this HTML file locally to view the diagram
       const downloadScript = `
@@ -565,26 +569,24 @@ Noindex: /`);
             messageDiv.style.position = 'sticky';
             messageDiv.style.top = '0';
             messageDiv.style.zIndex = '1000';
-            messageDiv.innerHTML = 'This is your RiverMeadow diagram. Save this file to your computer to keep a local copy.';
+            messageDiv.innerHTML = 'This is your RiverMeadow diagram. Choose from the options below:';
             document.body.insertBefore(messageDiv, document.body.firstChild);
             
-            // Create a download button
-            const downloadButton = document.createElement('button');
-            downloadButton.innerHTML = 'Save Diagram';
-            downloadButton.style.background = '#0078d4';
-            downloadButton.style.color = 'white';
-            downloadButton.style.border = 'none';
-            downloadButton.style.padding = '10px 20px';
-            downloadButton.style.borderRadius = '5px';
-            downloadButton.style.cursor = 'pointer';
-            downloadButton.style.fontSize = '16px';
-            downloadButton.style.fontWeight = 'bold';
-            downloadButton.style.margin = '10px';
-            downloadButton.style.display = 'block';
-            downloadButton.style.marginLeft = 'auto';
-            downloadButton.style.marginRight = 'auto';
+            // Create a download HTML button
+            const downloadHtmlButton = document.createElement('button');
+            downloadHtmlButton.innerHTML = 'Save as HTML';
+            downloadHtmlButton.style.background = '#0078d4';
+            downloadHtmlButton.style.color = 'white';
+            downloadHtmlButton.style.border = 'none';
+            downloadHtmlButton.style.padding = '10px 20px';
+            downloadHtmlButton.style.borderRadius = '5px';
+            downloadHtmlButton.style.cursor = 'pointer';
+            downloadHtmlButton.style.fontSize = '16px';
+            downloadHtmlButton.style.fontWeight = 'bold';
+            downloadHtmlButton.style.margin = '10px';
+            downloadHtmlButton.style.display = 'inline-block';
             
-            downloadButton.onclick = function() {
+            downloadHtmlButton.onclick = function() {
               const timestamp = Date.now();
               const a = document.createElement('a');
               a.href = window.location.href;
@@ -592,7 +594,72 @@ Noindex: /`);
               a.click();
             };
             
-            messageDiv.appendChild(downloadButton);
+            messageDiv.appendChild(downloadHtmlButton);
+            
+            // Create a download PNG button if SVG is available
+            ${hasSvg ? `
+            const downloadPngButton = document.createElement('button');
+            downloadPngButton.innerHTML = 'Save as PNG';
+            downloadPngButton.style.background = '#9a309a';
+            downloadPngButton.style.color = 'white';
+            downloadPngButton.style.border = 'none';
+            downloadPngButton.style.padding = '10px 20px';
+            downloadPngButton.style.borderRadius = '5px';
+            downloadPngButton.style.cursor = 'pointer';
+            downloadPngButton.style.fontSize = '16px';
+            downloadPngButton.style.fontWeight = 'bold';
+            downloadPngButton.style.margin = '10px';
+            downloadPngButton.style.display = 'inline-block';
+            
+            downloadPngButton.onclick = function() {
+              // Create a canvas to convert SVG to PNG
+              const svgElement = document.querySelector('svg');
+              if (svgElement) {
+                try {
+                  // Use html-to-image library which is more reliable than direct canvas
+                  // We'll use toBlob which works better across browsers
+                  const tempImg = document.createElement('img');
+                  const svgData = new XMLSerializer().serializeToString(svgElement);
+                  const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                  const url = URL.createObjectURL(svgBlob);
+                  
+                  tempImg.onload = function() {
+                    // Create canvas with improved quality
+                    const canvas = document.createElement('canvas');
+                    // Use 2x the SVG size for better quality
+                    canvas.width = svgElement.viewBox.baseVal.width * 2 || tempImg.width * 2;
+                    canvas.height = svgElement.viewBox.baseVal.height * 2 || tempImg.height * 2;
+                    
+                    const ctx = canvas.getContext('2d');
+                    // Use higher quality settings
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = "high";
+                    ctx.scale(2, 2); // Scale up for better quality
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(tempImg, 0, 0);
+                    
+                    // Create download link
+                    canvas.toBlob(function(blob) {
+                      const imgUrl = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = imgUrl;
+                      a.download = 'rivermeadow_diagram_' + Date.now() + '.png';
+                      a.click();
+                      URL.revokeObjectURL(imgUrl);
+                    }, 'image/png');
+                  };
+                  
+                  tempImg.src = url;
+                } catch (e) {
+                  console.error('Error saving as PNG:', e);
+                  alert('Could not save as PNG. Please try the HTML option instead.');
+                }
+              }
+            };
+            
+            messageDiv.appendChild(downloadPngButton);
+            ` : ''}
             
             // Add print button
             const printButton = document.createElement('button');
@@ -606,9 +673,7 @@ Noindex: /`);
             printButton.style.fontSize = '16px';
             printButton.style.fontWeight = 'bold';
             printButton.style.margin = '10px';
-            printButton.style.display = 'block';
-            printButton.style.marginLeft = 'auto';
-            printButton.style.marginRight = 'auto';
+            printButton.style.display = 'inline-block';
             
             printButton.onclick = function() {
               window.print();
@@ -631,6 +696,15 @@ Noindex: /`);
             document.body.style.padding = '20px';
             document.body.style.margin = '0';
             document.body.style.fontFamily = 'Arial, sans-serif';
+            
+            // Add credits
+            const creditsDiv = document.createElement('div');
+            creditsDiv.style.marginTop = '30px';
+            creditsDiv.style.textAlign = 'center';
+            creditsDiv.style.color = '#666';
+            creditsDiv.style.fontSize = '14px';
+            creditsDiv.innerHTML = 'Generated by RiverMeadow AI Assistant';
+            document.body.appendChild(creditsDiv);
           };
         </script>
       `;
