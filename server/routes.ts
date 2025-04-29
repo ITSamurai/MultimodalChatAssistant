@@ -109,6 +109,32 @@ Noindex: /`);
     next();
   };
 
+  // Configuration endpoints
+  app.get('/api/config', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const config = await storage.getConfig();
+      return res.status(200).json(config);
+    } catch (error: any) {
+      console.error('Error getting configuration:', error);
+      return res.status(500).json({ message: error.message || 'Failed to retrieve configuration' });
+    }
+  });
+
+  app.post('/api/config', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      // Basic validation
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: 'Invalid configuration data' });
+      }
+
+      const config = await storage.saveConfig(req.body);
+      return res.status(200).json(config);
+    } catch (error: any) {
+      console.error('Error saving configuration:', error);
+      return res.status(500).json({ message: error.message || 'Failed to save configuration' });
+    }
+  });
+
   // API routes
   // Upload document
   app.post('/api/documents/upload', upload.single('document'), async (req: Request, res: Response) => {

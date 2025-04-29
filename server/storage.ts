@@ -29,6 +29,10 @@ export interface IStorage {
   // Message methods
   getMessages(documentId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  
+  // Configuration methods
+  getConfig(): Promise<Record<string, any>>;
+  saveConfig(config: Record<string, any>): Promise<Record<string, any>>;
 }
 
 // In-memory implementation of the storage interface
@@ -37,6 +41,7 @@ export class MemStorage implements IStorage {
   private documents: Map<number, Document>;
   private documentImages: Map<number, DocumentImage>;
   private messages: Map<number, Message>;
+  private config: Record<string, any>;
   
   private userId: number;
   private documentId: number;
@@ -48,6 +53,7 @@ export class MemStorage implements IStorage {
     this.documents = new Map();
     this.documentImages = new Map();
     this.messages = new Map();
+    this.config = {};
     
     this.userId = 1;
     this.documentId = 1;
@@ -68,7 +74,12 @@ export class MemStorage implements IStorage {
   
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      email: insertUser.email || null,
+      name: insertUser.name || null 
+    };
     this.users.set(id, user);
     return user;
   }
@@ -107,7 +118,13 @@ export class MemStorage implements IStorage {
   
   async createDocumentImage(insertImage: InsertDocumentImage): Promise<DocumentImage> {
     const id = this.documentImageId++;
-    const image: DocumentImage = { ...insertImage, id };
+    const image: DocumentImage = { 
+      ...insertImage, 
+      id,
+      altText: insertImage.altText || null,
+      caption: insertImage.caption || null,
+      pageNumber: insertImage.pageNumber || null
+    };
     this.documentImages.set(id, image);
     return image;
   }
@@ -129,10 +146,21 @@ export class MemStorage implements IStorage {
     const message: Message = { 
       ...insertMessage, 
       id, 
-      timestamp: now
+      timestamp: now,
+      references: insertMessage.references || null
     };
     this.messages.set(id, message);
     return message;
+  }
+  
+  // Configuration methods
+  async getConfig(): Promise<Record<string, any>> {
+    return { ...this.config };
+  }
+  
+  async saveConfig(config: Record<string, any>): Promise<Record<string, any>> {
+    this.config = { ...config };
+    return this.config;
   }
 }
 
