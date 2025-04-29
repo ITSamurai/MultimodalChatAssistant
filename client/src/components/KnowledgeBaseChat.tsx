@@ -47,11 +47,6 @@ export function KnowledgeBaseChat() {
     try {
       setIsLoading(true);
       
-      toast({
-        title: "Processing",
-        description: "Preparing diagram for download...",
-      });
-      
       // Extract the filename from the path for server request
       const pathParts = imagePath.split('/');
       const fileName = pathParts[pathParts.length - 1];
@@ -59,38 +54,15 @@ export function KnowledgeBaseChat() {
       
       // Check if it's an HTML diagram
       if (imagePath.endsWith('.html')) {
-        console.log(`Processing HTML diagram: ${fileName}`);
+        console.log(`Opening HTML diagram directly: ${fileName}`);
         
-        // Try to use the server-side mmdc conversion first
-        // Extract the base filename (without .html) and create an .mmd filename
-        const baseFileName = fileName.replace('.html', '');
-        const mmdFileName = `${baseFileName}.mmd`;
+        // Simply open the HTML version directly in a new tab
+        window.open(imagePath, '_blank');
         
-        try {
-          console.log(`Converting mermaid diagram to PNG using mmdc: ${mmdFileName}`);
-          
-          // This will trigger the server-side mmdc conversion with fallback
-          const conversionUrl = `${currentOrigin}/api/convert-mermaid-to-png/${mmdFileName}`;
-          
-          // Since our server route now handles redirects and graceful fallbacks,
-          // we'll open this in a new window/tab to let the server handle the appropriate response
-          window.open(conversionUrl, '_blank');
-          
-          toast({
-            title: "Diagram Ready",
-            description: "The server is processing your diagram. If PNG conversion succeeds, it will download automatically. Otherwise, you'll see the HTML version with save options.",
-          });
-        } catch (conversionError) {
-          console.error("Error accessing conversion endpoint:", conversionError);
-          // Fall back to just opening the HTML version directly
-          window.open(imagePath, '_blank');
-          
-          toast({
-            title: "Diagram available in new tab",
-            description: "Please use the save options in the new tab to save the diagram.",
-            variant: "default"
-          });
-        }
+        toast({
+          title: "Diagram opened in new tab",
+          description: "Please use the save or print options in the new tab to save a copy of the diagram.",
+        });
       } else {
         // For regular images, just create a download link
         const link = document.createElement('a');

@@ -1,0 +1,32 @@
+graph TD
+    A[Review OS-based Migration Requirements] --> B[Migration Setup]
+    B --> C[Full Migration Profile Setup]
+    B --> D[Differential Migration Profile Setup]
+    C --> E[Source Server 1]
+    C --> F[Source Server 2]
+    D --> G[Source Server 1]
+    D --> H[Source Server 2]
+    E --> I[Target Setup]
+    F --> J[Target Setup]
+    G --> K[Target Setup]
+    H --> L[Target Setup]
+    I --> M[Migration Summary]
+    J --> M
+    K --> M
+    L --> M
+    M --> N[Deployment Plan]
+    
+    style A fill:#e3f2fd,stroke:#2196f3
+    style B fill:#e3f2fd,stroke:#2196f3
+    style C fill:#e8f5e9,stroke:#43a047
+    style D fill:#e8f5e9,stroke:#43a047
+    style E fill:#f3e5f5,stroke:#9c27b0
+    style F fill:#f3e5f5,stroke:#9c27b0
+    style G fill:#f3e5f5,stroke:#9c27b0
+    style H fill:#f3e5f5,stroke:#9c27b0
+    style I fill:#fff3e0,stroke:#ff9800
+    style J fill:#fff3e0,stroke:#ff9800
+    style K fill:#fff3e0,stroke:#ff9800
+    style L fill:#fff3e0,stroke:#ff9800
+    style M fill:#fafafa,stroke:#607d8b
+    style N fill:#fafafa,stroke:#607d8b

@@ -336,11 +336,46 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       font-weight: bold;
       display: none; /* Hide by default */
     }
+    
+    /* Print styles */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+        margin: 0;
+      }
+      .diagram-container {
+        box-shadow: none;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      .action-buttons {
+        display: none !important;
+      }
+      .mermaid svg {
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="diagram-container">
     <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
+    <div class="action-buttons" style="text-align: right; margin-bottom: 15px;">
+      <button id="download-svg-btn" class="action-button" style="background: #2196f3; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 8px;">
+        Download as SVG
+      </button>
+      <button id="download-png-btn" class="action-button" style="background: #2196f3; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 8px;">
+        Download as PNG
+      </button>
+      <button id="print-btn" class="action-button" style="background: #333; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+        Print Diagram
+      </button>
+    </div>
     <div class="mermaid">
 ${cleanMermaidCode}
     </div>
@@ -355,15 +390,96 @@ ${cleanMermaidCode}
       document.querySelector('.code-fallback').style.display = 'block';
     };
     
-    // Force render mermaid diagram with a delay to ensure DOM is ready
-    setTimeout(function() {
-      try {
-        console.log('Attempting to reinitialize mermaid diagrams...');
-        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
-      } catch (e) {
-        console.error('Error reinitializing mermaid:', e);
+    // Wait for mermaid to render the diagram
+    document.addEventListener('DOMContentLoaded', function() {
+      // Force render mermaid diagram with a delay to ensure DOM is ready
+      setTimeout(function() {
+        try {
+          console.log('Attempting to reinitialize mermaid diagrams...');
+          mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+          
+          // Setup download buttons after diagram is rendered
+          setupDownloadButtons();
+        } catch (e) {
+          console.error('Error reinitializing mermaid:', e);
+        }
+      }, 1000);
+    });
+    
+    // Set up the download and print buttons
+    function setupDownloadButtons() {
+      // Get SVG element
+      const svgElement = document.querySelector('.mermaid svg');
+      
+      if (!svgElement) {
+        console.error('SVG element not found');
+        return;
       }
-    }, 1000);
+      
+      // Download as SVG function
+      document.getElementById('download-svg-btn').addEventListener('click', function() {
+        const svgContent = new XMLSerializer().serializeToString(svgElement);
+        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'rivermeadow_diagram_' + Date.now() + '.svg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+      
+      // Download as PNG function
+      document.getElementById('download-png-btn').addEventListener('click', function() {
+        // Create a canvas element
+        const canvas = document.createElement('canvas');
+        const svgWidth = svgElement.viewBox.baseVal.width || svgElement.getBoundingClientRect().width;
+        const svgHeight = svgElement.viewBox.baseVal.height || svgElement.getBoundingClientRect().height;
+        
+        // Set canvas dimensions
+        canvas.width = svgWidth * 2; // Higher resolution
+        canvas.height = svgHeight * 2; // Higher resolution
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          alert('Unable to create canvas context for PNG conversion');
+          return;
+        }
+        
+        // Set white background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Create an image from the SVG - handle Unicode properly
+        const img = new Image();
+        const svgString = new XMLSerializer().serializeToString(svgElement);
+        const encodedSvg = window.btoa(unescape(encodeURIComponent(svgString)));
+        img.src = 'data:image/svg+xml;base64,' + encodedSvg;
+        
+        img.onload = function() {
+          // Draw the image onto the canvas
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          // Get the data URL of the canvas
+          const dataUrl = canvas.toDataURL('image/png');
+          
+          // Create a download link
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = 'rivermeadow_diagram_' + Date.now() + '.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        };
+      });
+      
+      // Print button
+      document.getElementById('print-btn').addEventListener('click', function() {
+        window.print();
+      });
+    }
   </script>
 </body>
 </html>`;
