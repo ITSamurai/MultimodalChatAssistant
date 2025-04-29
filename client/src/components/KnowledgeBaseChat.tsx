@@ -103,7 +103,7 @@ export function KnowledgeBaseChat() {
       console.error("Error downloading diagram:", error);
       toast({
         title: "Download failed",
-        description: error instanceof Error ? error.message : "Could not download the diagram",
+        description: "Please try again. If the issue persists, you can always take a screenshot of the diagram",
         variant: "destructive",
       });
     } finally {

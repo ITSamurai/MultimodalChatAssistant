@@ -12,15 +12,7 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import { v4 as uuidv4 } from 'uuid';
 
-// Define mermaid interface for typescript
-declare global {
-  interface Window {
-    mermaid?: {
-      render: (id: string, text: string) => Promise<{ svg: string }>;
-      init?: (config: any, nodes: NodeListOf<Element>) => void;
-    };
-  }
-}
+// No need for mermaid interface declaration anymore since we aren't using Puppeteer
 import { 
   initializePineconeIndex, 
   indexDocumentInPinecone,
@@ -535,7 +527,7 @@ Noindex: /`);
     }
   });
   
-  // Endpoint for taking a screenshot of a diagram HTML file
+  // Endpoint for downloading diagram HTML file directly
   app.get('/api/diagram-png/:fileName', async (req: Request, res: Response) => {
     try {
       const fileName = req.params.fileName;
@@ -551,117 +543,110 @@ Noindex: /`);
         return res.status(404).json({ error: 'Diagram file not found' });
       }
       
-      // Create the png directory if it doesn't exist
-      const pngDir = path.join(process.cwd(), 'uploads', 'png');
-      if (!fs.existsSync(pngDir)) {
-        await fs.promises.mkdir(pngDir, { recursive: true });
-      }
+      // Since puppeteer isn't working in this environment, we'll send the HTML file directly
+      // with instructions for download
+      const htmlContent = await fs.promises.readFile(htmlFilePath, 'utf-8');
       
-      // Generate PNG filename
-      const timestamp = Date.now();
-      const pngFileName = `diagram_${timestamp}.png`;
-      const outputPath = path.join(pngDir, pngFileName);
-      
-      console.log(`Taking screenshot of ${htmlFilePath} to ${outputPath}`);
-      
-      // Use Puppeteer to take a screenshot
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
-      
-      try {
-        const page = await browser.newPage();
-        
-        // Use a much larger viewport
-        await page.setViewport({ 
-          width: 3000, 
-          height: 3000,
-          deviceScaleFactor: 2
-        });
-        
-        // Load the HTML file directly
-        const fullHtmlPath = path.resolve(htmlFilePath);
-        await page.goto(`file://${fullHtmlPath}`, { 
-          waitUntil: ['load', 'networkidle0']
-        });
-        
-        // Wait for mermaid to render
-        await page.waitForSelector('.mermaid svg', { timeout: 5000 })
-          .catch(() => console.log('Timeout waiting for .mermaid svg, proceeding anyway'));
-        
-        // Add styles to ensure everything is visible
-        await page.addStyleTag({
-          content: `
-            body { margin: 0; padding: 0; overflow: visible; }
-            .diagram-container { 
-              max-width: none !important; 
-              width: 2400px !important; 
-              overflow: visible !important;
-              margin: 0 !important;
-              padding: 40px !important;
-              box-shadow: none !important;
+      // Add download script to the HTML content to automatically save as HTML
+      // The client can then open this HTML file locally to view the diagram
+      const downloadScript = `
+        <script>
+          // Auto-download functionality
+          window.onload = function() {
+            // Add a prominent message at the top of the page
+            const messageDiv = document.createElement('div');
+            messageDiv.style.background = 'cornflowerblue';
+            messageDiv.style.color = 'white';
+            messageDiv.style.padding = '15px';
+            messageDiv.style.textAlign = 'center';
+            messageDiv.style.fontSize = '18px';
+            messageDiv.style.fontWeight = 'bold';
+            messageDiv.style.marginBottom = '20px';
+            messageDiv.style.position = 'sticky';
+            messageDiv.style.top = '0';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.innerHTML = 'This is your RiverMeadow diagram. Save this file to your computer to keep a local copy.';
+            document.body.insertBefore(messageDiv, document.body.firstChild);
+            
+            // Create a download button
+            const downloadButton = document.createElement('button');
+            downloadButton.innerHTML = 'Save Diagram';
+            downloadButton.style.background = '#0078d4';
+            downloadButton.style.color = 'white';
+            downloadButton.style.border = 'none';
+            downloadButton.style.padding = '10px 20px';
+            downloadButton.style.borderRadius = '5px';
+            downloadButton.style.cursor = 'pointer';
+            downloadButton.style.fontSize = '16px';
+            downloadButton.style.fontWeight = 'bold';
+            downloadButton.style.margin = '10px';
+            downloadButton.style.display = 'block';
+            downloadButton.style.marginLeft = 'auto';
+            downloadButton.style.marginRight = 'auto';
+            
+            downloadButton.onclick = function() {
+              const timestamp = Date.now();
+              const a = document.createElement('a');
+              a.href = window.location.href;
+              a.download = 'rivermeadow_diagram_' + timestamp + '.html';
+              a.click();
+            };
+            
+            messageDiv.appendChild(downloadButton);
+            
+            // Add print button
+            const printButton = document.createElement('button');
+            printButton.innerHTML = 'Print Diagram';
+            printButton.style.background = '#107c10';
+            printButton.style.color = 'white';
+            printButton.style.border = 'none';
+            printButton.style.padding = '10px 20px';
+            printButton.style.borderRadius = '5px';
+            printButton.style.cursor = 'pointer';
+            printButton.style.fontSize = '16px';
+            printButton.style.fontWeight = 'bold';
+            printButton.style.margin = '10px';
+            printButton.style.display = 'block';
+            printButton.style.marginLeft = 'auto';
+            printButton.style.marginRight = 'auto';
+            
+            printButton.onclick = function() {
+              window.print();
+            };
+            
+            messageDiv.appendChild(printButton);
+            
+            // Make diagram container white for better printing
+            const container = document.querySelector('.diagram-container');
+            if (container) {
+              container.style.background = 'white';
+              container.style.maxWidth = 'none';
+              container.style.width = '100%';
+              container.style.boxShadow = 'none';
+              container.style.marginTop = '20px';
             }
-            .mermaid svg {
-              max-width: none !important;
-              width: 100% !important;
-              height: auto !important;
-              display: block !important;
-            }
-          `
-        });
-        
-        // Wait for styles to apply
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Force diagram rerender if needed
-        await page.evaluate(() => {
-          try {
-            // Execute script to rerender the mermaid diagram
-            const script = document.createElement('script');
-            script.textContent = `
-              try {
-                console.log('Attempting to reinitialize mermaid diagrams...');
-                // Safely check if mermaid object exists and has the appropriate methods
-                if (window.mermaid && typeof window.mermaid.init === 'function') {
-                  window.mermaid.init(undefined, document.querySelectorAll('.mermaid'));
-                }
-              } catch (e) {
-                console.error('Error in mermaid reinitialization:', e);
-              }
-            `;
-            document.head.appendChild(script);
-          } catch (e) {
-            console.error('Error executing diagram rerender script:', e);
-          }
-        });
-        
-        // Wait longer for rendering to complete
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Take screenshot of the entire page
-        await page.screenshot({
-          path: outputPath,
-          fullPage: true,
-          omitBackground: false,
-          type: 'png'
-        });
-        
-        console.log(`Successfully saved screenshot to ${outputPath}`);
-        
-        // Set headers for file download
-        res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Content-Disposition', `attachment; filename="${pngFileName}"`);
-        
-        // Send the file
-        const fileStream = fs.createReadStream(outputPath);
-        fileStream.pipe(res);
-      } finally {
-        await browser.close();
-      }
+            
+            // Make overall body style more suitable for diagram viewing
+            document.body.style.background = '#f5f5f5';
+            document.body.style.padding = '20px';
+            document.body.style.margin = '0';
+            document.body.style.fontFamily = 'Arial, sans-serif';
+          };
+        </script>
+      `;
+      
+      // Insert the download script right before the </body> tag
+      const modifiedHtml = htmlContent.replace('</body>', `${downloadScript}</body>`);
+      
+      // Set headers to make the browser download the HTML file
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.html"`);
+      
+      // Send the modified HTML with download functionality
+      res.send(modifiedHtml);
     } catch (error) {
-      console.error('Error generating diagram PNG:', error);
-      res.status(500).json({ error: 'Failed to generate diagram PNG' });
+      console.error('Error generating diagram HTML for download:', error);
+      res.status(500).json({ error: 'Failed to generate diagram HTML' });
     }
   });
 
