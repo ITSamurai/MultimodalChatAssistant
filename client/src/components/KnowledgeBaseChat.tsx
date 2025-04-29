@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { chatWithKnowledgeBase, KnowledgeBaseChatMessage, convertSvgToPng, getDiagramScreenshot, convertMermaidToPng } from '../lib/api';
-import { apiRequest } from '../lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
 import { Loader2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";

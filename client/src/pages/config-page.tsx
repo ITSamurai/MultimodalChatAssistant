@@ -157,13 +157,13 @@ export default function ConfigPage() {
               <Separator />
               
               <div className="space-y-2">
-                <Label htmlFor="temperature">Temperature: {config.temperature.toFixed(1)}</Label>
+                <Label htmlFor="temperature">Temperature: {(config.temperature || 0.5).toFixed(1)}</Label>
                 <Slider 
                   id="temperature"
                   min={0} 
                   max={2} 
                   step={0.1}
-                  value={[config.temperature]}
+                  value={[config.temperature ?? 0.5]}
                   onValueChange={(value) => updateConfig('temperature', value[0])}
                 />
                 <p className="text-sm text-muted-foreground">
@@ -172,13 +172,13 @@ export default function ConfigPage() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="max_tokens">Max Tokens: {config.max_tokens}</Label>
+                <Label htmlFor="max_tokens">Max Tokens: {config.max_tokens ?? 2048}</Label>
                 <Slider 
                   id="max_tokens"
                   min={256} 
                   max={4096} 
                   step={256}
-                  value={[config.max_tokens]}
+                  value={[config.max_tokens ?? 2048]}
                   onValueChange={(value) => updateConfig('max_tokens', value[0])}
                 />
                 <p className="text-sm text-muted-foreground">
@@ -187,13 +187,13 @@ export default function ConfigPage() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="top_p">Top P: {config.top_p.toFixed(2)}</Label>
+                <Label htmlFor="top_p">Top P: {(config.top_p ?? 1).toFixed(2)}</Label>
                 <Slider 
                   id="top_p"
                   min={0.1} 
                   max={1} 
                   step={0.05}
-                  value={[config.top_p]}
+                  value={[config.top_p ?? 1]}
                   onValueChange={(value) => updateConfig('top_p', value[0])}
                 />
                 <p className="text-sm text-muted-foreground">
@@ -203,13 +203,13 @@ export default function ConfigPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="frequency_penalty">Frequency Penalty: {config.frequency_penalty.toFixed(2)}</Label>
+                  <Label htmlFor="frequency_penalty">Frequency Penalty: {(config.frequency_penalty ?? 0).toFixed(2)}</Label>
                   <Slider 
                     id="frequency_penalty"
                     min={-2} 
                     max={2} 
                     step={0.1}
-                    value={[config.frequency_penalty]}
+                    value={[config.frequency_penalty ?? 0]}
                     onValueChange={(value) => updateConfig('frequency_penalty', value[0])}
                   />
                   <p className="text-sm text-muted-foreground">
@@ -218,13 +218,13 @@ export default function ConfigPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="presence_penalty">Presence Penalty: {config.presence_penalty.toFixed(2)}</Label>
+                  <Label htmlFor="presence_penalty">Presence Penalty: {(config.presence_penalty ?? 0).toFixed(2)}</Label>
                   <Slider 
                     id="presence_penalty"
                     min={-2} 
                     max={2} 
                     step={0.1}
-                    value={[config.presence_penalty]}
+                    value={[config.presence_penalty ?? 0]}
                     onValueChange={(value) => updateConfig('presence_penalty', value[0])}
                   />
                   <p className="text-sm text-muted-foreground">
@@ -273,13 +273,13 @@ export default function ConfigPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="vector_search_top_k">Vector Search Results: {config.vector_search_top_k}</Label>
+                <Label htmlFor="vector_search_top_k">Vector Search Results: {config.vector_search_top_k ?? 50}</Label>
                 <Slider 
                   id="vector_search_top_k"
                   min={5} 
                   max={100} 
                   step={5}
-                  value={[config.vector_search_top_k]}
+                  value={[config.vector_search_top_k ?? 50]}
                   onValueChange={(value) => updateConfig('vector_search_top_k', value[0])}
                 />
                 <p className="text-sm text-muted-foreground">
