@@ -312,9 +312,20 @@ export async function createChatWithKnowledgeBase(messages: Array<{
     const shouldGenerateImage = isImageGenerationRequest(latestUserMessage);
     console.log(`Image generation requested? ${shouldGenerateImage ? 'YES' : 'NO'} for prompt: "${latestUserMessage}"`);
     
+    // Get configuration for vector search
+    let topK = 50; // Default value
+    try {
+      const config = await storage.getConfig();
+      if (config && typeof config.vector_search_top_k === 'number') {
+        topK = config.vector_search_top_k;
+      }
+    } catch (error) {
+      console.warn('Could not load configuration for vector search, using default topK:', topK);
+    }
+    
     // Query Pinecone for relevant knowledge
-    console.log('Querying Pinecone for knowledge...');
-    const similarVectors = await querySimilarVectors(latestUserMessage, 50); // Increased topK to 50 as requested
+    console.log(`Querying Pinecone for knowledge with topK=${topK}...`);
+    const similarVectors = await querySimilarVectors(latestUserMessage, topK);
     console.log(`Found ${similarVectors.length} relevant vectors from knowledge base`);
     
     // Extract and format the knowledge
@@ -385,13 +396,46 @@ ${latestUserMessage}`;
     
     console.log('Calling OpenAI with enhanced messages...');
     
+    // Get configuration for OpenAI
+    let model = options?.model || "gpt-4o";
+    let temperature = options?.temperature || 0.5;
+    let max_tokens = options?.maxTokens || 1000;
+    let systemPrompt = null;
+    
+    try {
+      const config = await storage.getConfig();
+      if (config) {
+        if (config.model) model = config.model;
+        if (typeof config.temperature === 'number') temperature = config.temperature;
+        if (typeof config.max_tokens === 'number') max_tokens = config.max_tokens;
+        if (config.system_prompt) systemPrompt = config.system_prompt;
+      }
+    } catch (error) {
+      console.warn('Could not load OpenAI configuration, using defaults');
+    }
+    
+    // Override system message with custom system prompt if available
+    if (systemPrompt && systemMessageIndex >= 0) {
+      // Replace placeholders in the system prompt
+      const customPrompt = systemPrompt
+        .replace('{context}', knowledgeContext)
+        .replace('{question}', latestUserMessage);
+        
+      // Update system message with custom prompt
+      enhancedMessages[systemMessageIndex].content = customPrompt;
+      
+      console.log('Using custom system prompt from configuration');
+    }
+    
+    console.log(`Using model: ${model}, temp: ${temperature}, max_tokens: ${max_tokens}`);
+    
     // Call OpenAI with the enhanced messages
     try {
       const response = await openai.chat.completions.create({
-        model: options?.model || "gpt-4o",
+        model: model,
         messages: enhancedMessages,
-        max_tokens: options?.maxTokens || 1000,
-        temperature: options?.temperature || 0.3,
+        max_tokens: max_tokens,
+        temperature: temperature,
       });
       
       if (!response || !response.choices || response.choices.length === 0) {

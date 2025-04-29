@@ -234,9 +234,28 @@ export function KnowledgeBaseChat() {
       
       console.log('Sending chat request with messages:', JSON.stringify(apiMessages));
       
-      // Get AI response
+      // Fetch configuration
+      let config = {};
+      try {
+        const configResponse = await fetch('/api/config', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        
+        if (configResponse.ok) {
+          config = await configResponse.json();
+          console.log('Using configuration from server:', config);
+        }
+      } catch (error) {
+        console.warn('Could not fetch configuration, using defaults', error);
+      }
+      
+      // Get AI response using configuration
       const response = await chatWithKnowledgeBase(apiMessages, {
-        temperature: 0.5,
+        // Use config values if available, otherwise use defaults
+        model: config.model || 'gpt-4o',
+        temperature: typeof config.temperature === 'number' ? config.temperature : 0.5,
+        maxTokens: typeof config.max_tokens === 'number' ? config.max_tokens : 2048
       });
       
       console.log('Received response:', response);
