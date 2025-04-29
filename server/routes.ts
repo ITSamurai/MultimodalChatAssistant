@@ -638,12 +638,25 @@ Noindex: /`);
       // Insert the download script right before the </body> tag
       const modifiedHtml = htmlContent.replace('</body>', `${downloadScript}</body>`);
       
-      // Set headers to make the browser download the HTML file
-      res.setHeader('Content-Type', 'text/html');
-      res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.html"`);
+      // Create a public URL for the diagram instead of direct download
+      // User can view the diagram in browser and save it manually
       
-      // Send the modified HTML with download functionality
-      res.send(modifiedHtml);
+      // Copy the modified HTML to a public folder with a unique name
+      const publicDiagramsDir = path.join(process.cwd(), 'public', 'diagrams');
+      if (!fs.existsSync(publicDiagramsDir)) {
+        await fs.promises.mkdir(publicDiagramsDir, { recursive: true });
+      }
+      
+      const timestamp = Date.now();
+      const publicFileName = `rivermeadow_diagram_${timestamp}.html`;
+      const publicFilePath = path.join(publicDiagramsDir, publicFileName);
+      
+      // Write the modified HTML to the public folder
+      await fs.promises.writeFile(publicFilePath, modifiedHtml);
+      
+      // Redirect to the public URL
+      const publicUrl = `/diagrams/${publicFileName}`;
+      res.redirect(publicUrl);
     } catch (error) {
       console.error('Error generating diagram HTML for download:', error);
       res.status(500).json({ error: 'Failed to generate diagram HTML' });

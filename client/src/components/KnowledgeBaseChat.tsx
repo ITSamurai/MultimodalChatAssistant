@@ -42,14 +42,14 @@ export function KnowledgeBaseChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Function to download diagrams using server-side screenshot functionality
+  // Function to open diagrams in a new tab with download options
   const downloadDiagram = async (imagePath: string, index: number) => {
     try {
       setIsLoading(true);
       
       toast({
         title: "Processing",
-        description: "Preparing your download...",
+        description: "Opening diagram in new tab...",
       });
       
       // Check if it's an HTML diagram
@@ -58,32 +58,17 @@ export function KnowledgeBaseChat() {
         const pathParts = imagePath.split('/');
         const fileName = pathParts[pathParts.length - 1];
         
-        console.log(`Requesting server-side screenshot for ${fileName}`);
+        console.log(`Opening diagram in new tab: ${fileName}`);
         
-        // Request screenshot from server - this method now uses puppeteer on the server
-        // to properly render and screenshot the entire diagram
-        const response = await getDiagramScreenshot(fileName);
+        // Get the diagram URL that will open in a new tab
+        const diagramUrl = getFullUrl(`/api/diagram-png/${fileName}`);
         
-        if (!response.ok) {
-          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-        }
-        
-        // Convert response to blob
-        const imageBlob = await response.blob();
-        const url = URL.createObjectURL(imageBlob);
-        
-        // Trigger download
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `rivermeadow_diagram_${Date.now()}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        // Open the diagram in a new tab
+        window.open(diagramUrl, '_blank');
         
         toast({
           title: "Success",
-          description: "Diagram downloaded successfully",
+          description: "Diagram opened in new tab. Use the Save buttons there to download it.",
         });
       } else {
         // For regular images, just create a download link
@@ -100,10 +85,10 @@ export function KnowledgeBaseChat() {
         });
       }
     } catch (error) {
-      console.error("Error downloading diagram:", error);
+      console.error("Error with diagram:", error);
       toast({
-        title: "Download failed",
-        description: "Please try again. If the issue persists, you can always take a screenshot of the diagram",
+        title: "Failed to open diagram",
+        description: "Please try again. If the issue persists, you can always take a screenshot of the diagram in the chat",
         variant: "destructive",
       });
     } finally {

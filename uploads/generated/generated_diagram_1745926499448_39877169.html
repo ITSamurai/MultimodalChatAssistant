@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RiverMeadow Diagram</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      flowchart: { 
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: 'basis' 
+      },
+      securityLevel: 'loose', // This allows for downloading the SVG properly
+      fontFamily: 'Arial, sans-serif', // Use basic, widely supported font
+      themeVariables: {
+        fontFamily: 'Arial, sans-serif',
+        primaryTextColor: '#333333',
+        primaryColor: '#2196f3',
+        primaryBorderColor: '#2196f3',
+        lineColor: '#333333',
+        fontSize: '16px'
+      }
+    });
+    
+    // Notify parent when loaded
+    window.addEventListener('load', function() {
+      if (window.parent) {
+        window.parent.postMessage('diagramLoaded', '*');
+      }
+    });
+    
+    // Make diagram fit better in iframe when embedded
+    window.addEventListener('message', function(event) {
+      // Handle zoom-in, zoom-out, and reset messages from parent
+      if (event.data && typeof event.data === 'object') {
+        if (event.data.action === 'zoom') {
+          const diagram = document.querySelector('.diagram-container');
+          if (diagram) {
+            // Apply zoom to the actual diagram
+            const mermaidDiv = document.querySelector('.mermaid svg');
+            if (mermaidDiv) {
+              // Apply zoom to the SVG element
+              mermaidDiv.style.transform = 'scale(' + event.data.scale + ')';
+              mermaidDiv.style.transformOrigin = '50% 0';
+              mermaidDiv.style.transition = 'transform 0.2s ease';
+            }
+          }
+        }
+        // Handle forceRedraw message for screenshots
+        if (event.data.action === 'forceRedraw') {
+          console.log('Forcing diagram redraw...');
+          try {
+            // Get the mermaid element and re-render
+            const mermaidElement = document.querySelector('.mermaid');
+            if (mermaidElement) {
+              const code = mermaidElement.textContent || '';
+              // Clear the element
+              mermaidElement.innerHTML = '';
+              // Force redraw
+              setTimeout(function() {
+                mermaidElement.textContent = code;
+                mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+              }, 50);
+            }
+          } catch (e) {
+            console.error('Error redrawing diagram:', e);
+          }
+        }
+      }
+    });
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .diagram-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      max-width: 2400px;
+      width: 100%;
+      margin: 0 auto;
+      overflow: visible;
+      position: relative;
+    }
+    .mermaid {
+      text-align: center;
+      width: 100%;
+      overflow: visible;
+      min-height: 500px;
+    }
+    .mermaid svg {
+      max-width: 100%;
+      width: auto !important;
+      height: auto !important;
+      font-family: Arial, sans-serif !important;
+      display: block;
+      margin: 0 auto;
+    }
+    /* Force basic fonts on all text elements in the SVG */
+    .mermaid svg text, .mermaid svg tspan {
+      font-family: Arial, sans-serif !important;
+      font-weight: normal;
+    }
+    h1 {
+      text-align: center;
+      color: #0078d4;
+      margin-bottom: 20px;
+    }
+    /* Add styles for the code view in case mermaid fails */
+    pre.code-fallback {
+      white-space: pre-wrap;
+      font-size: 12px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      margin-top: 20px;
+      overflow: auto;
+      max-height: 300px;
+      display: none; /* Hide by default */
+    }
+    .error-message {
+      color: #d32f2f;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      display: none; /* Hide by default */
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram-container">
+    <h1>RiverMeadow Migration Diagram</h1>
+    <div class="mermaid">
+graph TD
+    A[Review OS-based Migration Requirements] --> B[Migration Setup]
+    B --> C[Full Migration Profile Setup]
+    B --> D[Differential Migration Profile Setup]
+    C --> E[Source Server 1]
+    C --> F[Source Server 2]
+    D --> G[Source Server 1]
+    D --> H[Source Server 2]
+    E --> I[Target Setup]
+    F --> J[Target Setup]
+    G --> K[Target Setup]
+    H --> L[Target Setup]
+    I --> M[Migration Summary]
+    J --> M
+    K --> M
+    L --> M
+    M --> N[Deployment Plan]
+    
+    style A fill:#e3f2fd,stroke:#2196f3
+    style B fill:#e3f2fd,stroke:#2196f3
+    style C fill:#e8f5e9,stroke:#43a047
+    style D fill:#e8f5e9,stroke:#43a047
+    style E fill:#f3e5f5,stroke:#9c27b0
+    style F fill:#f3e5f5,stroke:#9c27b0
+    style G fill:#f3e5f5,stroke:#9c27b0
+    style H fill:#f3e5f5,stroke:#9c27b0
+    style I fill:#fff3e0,stroke:#ff9800
+    style J fill:#fff3e0,stroke:#ff9800
+    style K fill:#fff3e0,stroke:#ff9800
+    style L fill:#fff3e0,stroke:#ff9800
+    style M fill:#fafafa,stroke:#607d8b
+    style N fill:#fafafa,stroke:#607d8b
+    </div>
+    <div class="error-message">Failed to render diagram</div>
+    <pre class="code-fallback">graph TD
+    A[Review OS-based Migration Requirements] --> B[Migration Setup]
+    B --> C[Full Migration Profile Setup]
+    B --> D[Differential Migration Profile Setup]
+    C --> E[Source Server 1]
+    C --> F[Source Server 2]
+    D --> G[Source Server 1]
+    D --> H[Source Server 2]
+    E --> I[Target Setup]
+    F --> J[Target Setup]
+    G --> K[Target Setup]
+    H --> L[Target Setup]
+    I --> M[Migration Summary]
+    J --> M
+    K --> M
+    L --> M
+    M --> N[Deployment Plan]
+    
+    style A fill:#e3f2fd,stroke:#2196f3
+    style B fill:#e3f2fd,stroke:#2196f3
+    style C fill:#e8f5e9,stroke:#43a047
+    style D fill:#e8f5e9,stroke:#43a047
+    style E fill:#f3e5f5,stroke:#9c27b0
+    style F fill:#f3e5f5,stroke:#9c27b0
+    style G fill:#f3e5f5,stroke:#9c27b0
+    style H fill:#f3e5f5,stroke:#9c27b0
+    style I fill:#fff3e0,stroke:#ff9800
+    style J fill:#fff3e0,stroke:#ff9800
+    style K fill:#fff3e0,stroke:#ff9800
+    style L fill:#fff3e0,stroke:#ff9800
+    style M fill:#fafafa,stroke:#607d8b
+    style N fill:#fafafa,stroke:#607d8b</pre>
+  </div>
+  <script>
+    // Add error handling in case mermaid fails to parse
+    mermaid.parseError = function(err, hash) {
+      console.error('Mermaid error:', err);
+      document.querySelector('.error-message').style.display = 'block';
+      document.querySelector('.code-fallback').style.display = 'block';
+    };
+    
+    // Force render mermaid diagram with a delay to ensure DOM is ready
+    setTimeout(function() {
+      try {
+        console.log('Attempting to reinitialize mermaid diagrams...');
+        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+      } catch (e) {
+        console.error('Error reinitializing mermaid:', e);
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
