@@ -235,7 +235,15 @@ export function KnowledgeBaseChat() {
       console.log('Sending chat request with messages:', JSON.stringify(apiMessages));
       
       // Fetch configuration
-      let config = {};
+      interface ConfigData {
+        model?: string;
+        temperature?: number;
+        max_tokens?: number;
+        system_prompt?: string;
+        vector_search_top_k?: number;
+      }
+      
+      let config: ConfigData = {};
       try {
         const configResponse = await fetch('/api/config', {
           method: 'GET',
