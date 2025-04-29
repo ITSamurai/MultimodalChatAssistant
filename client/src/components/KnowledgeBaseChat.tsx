@@ -60,8 +60,11 @@ export function KnowledgeBaseChat() {
         
         console.log(`Opening diagram in new tab: ${fileName}`);
         
-        // Get the diagram URL that will open in a new tab
-        const diagramUrl = getFullUrl(`/api/diagram-png/${fileName}`);
+        // Get the diagram URL with absolute path to avoid issues with getFullUrl
+        const currentOrigin = window.location.origin;
+        const diagramUrl = `${currentOrigin}/api/diagram-png/${fileName}`;
+        
+        console.log("Opening URL:", diagramUrl);
         
         // Open the diagram in a new tab
         window.open(diagramUrl, '_blank');
