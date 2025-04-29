@@ -737,6 +737,73 @@ Noindex: /`);
       res.status(500).json({ error: 'Failed to generate diagram HTML' });
     }
   });
+  
+  // Convert mermaid file to PNG using mmdc
+  app.get('/api/convert-mermaid-to-png/:fileName', async (req: Request, res: Response) => {
+    try {
+      const mmdFileName = req.params.fileName;
+      
+      // Verify the file exists and has .mmd extension
+      if (!mmdFileName.endsWith('.mmd')) {
+        return res.status(400).json({ error: 'Only .mmd files are supported' });
+      }
+      
+      const mmdFilePath = path.join(process.cwd(), 'uploads', 'generated', mmdFileName);
+      
+      if (!fs.existsSync(mmdFilePath)) {
+        return res.status(404).json({ error: 'Mermaid file not found' });
+      }
+      
+      console.log(`Converting mermaid file to PNG: ${mmdFileName}`);
+      
+      // Create directory for PNG outputs if it doesn't exist
+      const pngDir = path.join(process.cwd(), 'uploads', 'png');
+      if (!fs.existsSync(pngDir)) {
+        await fs.promises.mkdir(pngDir, { recursive: true });
+      }
+      
+      // Generate output PNG filename
+      const timestamp = Date.now();
+      const pngFileName = `diagram_${timestamp}.png`;
+      const pngFilePath = path.join(pngDir, pngFileName);
+      
+      // Execute mmdc command to convert mermaid to PNG
+      console.log(`Executing mmdc to convert ${mmdFilePath} to ${pngFilePath}`);
+      
+      await new Promise<void>((resolve, reject) => {
+        const cmd = `./node_modules/.bin/mmdc -i ${mmdFilePath} -o ${pngFilePath} -b white -w 1024`;
+        console.log(`Running command: ${cmd}`);
+        
+        exec(cmd, (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error executing mmdc: ${error.message}`);
+            console.error(`stderr: ${stderr}`);
+            reject(error);
+            return;
+          }
+          
+          console.log(`mmdc output: ${stdout}`);
+          resolve();
+        });
+      });
+      
+      // Check if PNG was created
+      if (!fs.existsSync(pngFilePath)) {
+        throw new Error('Failed to generate PNG from mermaid file');
+      }
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `attachment; filename="${pngFileName}"`);
+      
+      // Stream the file to client
+      fs.createReadStream(pngFilePath).pipe(res);
+      
+    } catch (error) {
+      console.error('Error converting mermaid to PNG:', error);
+      return res.status(500).json({ error: 'Failed to convert mermaid diagram to PNG' });
+    }
+  });
 
   const httpServer = createServer(app);
 
