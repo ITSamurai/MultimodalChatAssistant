@@ -762,46 +762,85 @@ Noindex: /`);
         await fs.promises.mkdir(pngDir, { recursive: true });
       }
       
-      // Generate output PNG filename
-      const timestamp = Date.now();
-      const pngFileName = `diagram_${timestamp}.png`;
-      const pngFilePath = path.join(pngDir, pngFileName);
+      // Find the matching HTML file for this diagram
+      // The MMD file should have a matching HTML file with same base name but .html extension
+      const baseFileName = mmdFileName.replace('.mmd', '');
+      const htmlFileName = baseFileName + '.html';
+      const htmlFilePath = path.join(process.cwd(), 'uploads', 'generated', htmlFileName);
       
-      // Execute mmdc command to convert mermaid to PNG
-      console.log(`Executing mmdc to convert ${mmdFilePath} to ${pngFilePath}`);
-      
-      await new Promise<void>((resolve, reject) => {
-        const cmd = `./node_modules/.bin/mmdc -i ${mmdFilePath} -o ${pngFilePath} -b white -w 1024`;
-        console.log(`Running command: ${cmd}`);
+      // Check if HTML file exists
+      if (fs.existsSync(htmlFilePath)) {
+        console.log(`Found matching HTML file: ${htmlFileName}`);
         
-        exec(cmd, (error, stdout, stderr) => {
-          if (error) {
-            console.error(`Error executing mmdc: ${error.message}`);
-            console.error(`stderr: ${stderr}`);
-            reject(error);
-            return;
+        try {
+          // Try to use mmdc command to convert mermaid to PNG
+          console.log(`Attempting to convert using mmdc...`);
+          
+          // Generate output PNG filename
+          const timestamp = Date.now();
+          const pngFileName = `diagram_${timestamp}.png`;
+          const pngFilePath = path.join(pngDir, pngFileName);
+          
+          let pngGenerated = false;
+          
+          try {
+            // Attempt to execute mmdc command with a timeout of 10 seconds
+            await new Promise<void>((resolve, reject) => {
+              const cmd = `./node_modules/.bin/mmdc -i ${mmdFilePath} -o ${pngFilePath} -b white -w 1024 --puppeteerConfigFile puppeteer-config.json`;
+              console.log(`Running command: ${cmd}`);
+              
+              const execProcess = exec(cmd, { timeout: 10000 }, (error, stdout, stderr) => {
+                if (error) {
+                  console.error(`Error executing mmdc: ${error.message}`);
+                  console.error(`stderr: ${stderr}`);
+                  reject(error);
+                  return;
+                }
+                
+                console.log(`mmdc output: ${stdout}`);
+                resolve();
+              });
+            });
+            
+            // Check if PNG was created successfully
+            if (fs.existsSync(pngFilePath)) {
+              pngGenerated = true;
+              // Set headers for file download
+              res.setHeader('Content-Type', 'image/png');
+              res.setHeader('Content-Disposition', `attachment; filename="${pngFileName}"`);
+              
+              // Stream the file to client
+              fs.createReadStream(pngFilePath).pipe(res);
+            }
+          } catch (mmcdError) {
+            console.error('mmdc conversion failed, will redirect to HTML version:', mmcdError);
+            pngGenerated = false;
           }
           
-          console.log(`mmdc output: ${stdout}`);
-          resolve();
+          if (!pngGenerated) {
+            // Redirect to the HTML version if PNG generation failed
+            console.log('PNG generation failed, redirecting to HTML version');
+            return res.redirect(`/uploads/generated/${htmlFileName}`);
+          }
+        } catch (error) {
+          console.error('Error in PNG conversion process:', error);
+          // Redirect to the HTML version if any part of the process failed
+          return res.redirect(`/uploads/generated/${htmlFileName}`);
+        }
+      } else {
+        // If HTML file doesn't exist, return an error
+        console.error(`No matching HTML file found for ${mmdFileName}`);
+        return res.status(404).json({ 
+          error: 'No matching HTML file found for this mermaid diagram',
+          htmlPath: `/uploads/generated/${htmlFileName}`
         });
-      });
-      
-      // Check if PNG was created
-      if (!fs.existsSync(pngFilePath)) {
-        throw new Error('Failed to generate PNG from mermaid file');
       }
-      
-      // Set headers for file download
-      res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Content-Disposition', `attachment; filename="${pngFileName}"`);
-      
-      // Stream the file to client
-      fs.createReadStream(pngFilePath).pipe(res);
-      
     } catch (error) {
       console.error('Error converting mermaid to PNG:', error);
-      return res.status(500).json({ error: 'Failed to convert mermaid diagram to PNG' });
+      return res.status(500).json({ 
+        error: 'Failed to convert mermaid diagram to PNG',
+        message: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
