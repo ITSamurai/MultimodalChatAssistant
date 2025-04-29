@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ChevronLeftIcon, SaveIcon, RefreshCwIcon, SlidersIcon, MessageSquareTextIcon, SettingsIcon, BrainCircuitIcon } from "lucide-react";
+import { ChevronLeftIcon, SaveIcon, RefreshCwIcon, SlidersIcon, MessageSquareTextIcon, SettingsIcon, BrainCircuitIcon, Image } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { AppConfig, defaultConfig } from "@/lib/config-types";
 
@@ -109,7 +109,7 @@ export default function ConfigPage() {
       </div>
       
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-8">
+        <TabsList className="grid grid-cols-5 mb-8">
           <TabsTrigger value="model">
             <BrainCircuitIcon className="h-4 w-4 mr-2" /> AI Model
           </TabsTrigger>
@@ -118,6 +118,9 @@ export default function ConfigPage() {
           </TabsTrigger>
           <TabsTrigger value="retrieval">
             <SlidersIcon className="h-4 w-4 mr-2" /> Retrieval
+          </TabsTrigger>
+          <TabsTrigger value="diagrams">
+            <Image className="h-4 w-4 mr-2" /> Diagrams
           </TabsTrigger>
           <TabsTrigger value="interface">
             <SettingsIcon className="h-4 w-4 mr-2" /> Interface
@@ -286,6 +289,97 @@ export default function ConfigPage() {
                 <p className="text-sm text-muted-foreground">
                   Number of most relevant documents to retrieve from the knowledge base (higher values provide more context but may be slower)
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Diagrams Tab */}
+        <TabsContent value="diagrams">
+          <Card>
+            <CardHeader>
+              <CardTitle>Diagram Generation Settings</CardTitle>
+              <CardDescription>
+                Configure how diagrams are generated and displayed
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="diagram_style">Diagram Style</Label>
+                <Select 
+                  value={config.diagram_style ?? "modern"} 
+                  onValueChange={(value) => updateConfig('diagram_style', value)}
+                >
+                  <SelectTrigger id="diagram_style">
+                    <SelectValue placeholder="Select style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="modern">Modern (Clean with subtle gradients)</SelectItem>
+                    <SelectItem value="technical">Technical (Precise, professional)</SelectItem>
+                    <SelectItem value="minimal">Minimal (Simple, high contrast)</SelectItem>
+                    <SelectItem value="colorful">Colorful (Vibrant, high emphasis)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Visual style for generated diagrams
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="diagram_quality">Diagram Quality</Label>
+                  <Select 
+                    value={config.diagram_quality ?? "standard"} 
+                    onValueChange={(value) => updateConfig('diagram_quality', value)}
+                  >
+                    <SelectTrigger id="diagram_quality">
+                      <SelectValue placeholder="Select quality" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard (Faster generation)</SelectItem>
+                      <SelectItem value="hd">HD (Higher resolution)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Resolution quality for diagrams
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="diagram_size">Diagram Size</Label>
+                  <Select 
+                    value={config.diagram_size ?? "medium"} 
+                    onValueChange={(value) => updateConfig('diagram_size', value)}
+                  >
+                    <SelectTrigger id="diagram_size">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small (1024×1024)</SelectItem>
+                      <SelectItem value="medium">Medium (1280×1280)</SelectItem>
+                      <SelectItem value="large">Large (1536×1536)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Canvas size for generated diagrams
+                  </p>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="enable_network_diagram_detection">Network Diagram Detection</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically detect and optimize network diagram requests
+                  </p>
+                </div>
+                <Switch 
+                  id="enable_network_diagram_detection"
+                  checked={config.enable_network_diagram_detection ?? true}
+                  onCheckedChange={(checked) => updateConfig('enable_network_diagram_detection', checked)}
+                />
               </div>
             </CardContent>
           </Card>

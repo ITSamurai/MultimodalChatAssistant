@@ -22,6 +22,12 @@ export interface AppConfig {
   enable_diagram_auto_zoom?: boolean;
   diagram_default_zoom?: number;
   
+  // Diagram generation settings
+  diagram_style?: 'modern' | 'technical' | 'minimal' | 'colorful';
+  diagram_quality?: 'standard' | 'hd';
+  diagram_size?: 'small' | 'medium' | 'large';
+  enable_network_diagram_detection?: boolean;
+  
   // Advanced settings
   enable_debug_logs?: boolean;
   response_streaming?: boolean;
@@ -48,6 +54,12 @@ export const defaultConfig: AppConfig = {
   // Interface settings
   enable_diagram_auto_zoom: true,
   diagram_default_zoom: 0.7,
+  
+  // Diagram generation settings
+  diagram_style: "modern",
+  diagram_quality: "standard",
+  diagram_size: "medium",
+  enable_network_diagram_detection: true,
   
   // Advanced settings
   enable_debug_logs: false,
