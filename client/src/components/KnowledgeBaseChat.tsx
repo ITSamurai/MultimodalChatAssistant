@@ -344,6 +344,11 @@ export function KnowledgeBaseChat() {
                                   className="w-full border border-gray-200 rounded h-[400px]"
                                   loading="lazy"
                                   sandbox="allow-scripts allow-same-origin"
+                                  onError={(e) => {
+                                    console.error("Failed to load diagram in iframe:", e);
+                                    // Fall back to direct link
+                                    e.currentTarget.src = ref.imagePath || '';
+                                  }}
                                 />
                               </div>
                               

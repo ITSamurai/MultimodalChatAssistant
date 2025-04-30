@@ -61,44 +61,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/diagram-svg/:fileName', async (req: Request, res: Response) => {
     try {
       const fileName = req.params.fileName;
-      const filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
+      let filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
       
       console.log(`Rendering diagram as SVG: ${filePath}`);
       
-      if (!fs.existsSync(filePath)) {
-        console.error(`File not found: ${filePath}`);
-        return res.status(404).json({ error: 'File not found' });
+      // If fileName ends with .xml but .xml doesn't exist, try without .xml extension
+      if (fileName.endsWith('.xml') && !fs.existsSync(filePath)) {
+        const baseFileName = fileName.slice(0, -4);
+        const alternateFilePath = path.join(process.cwd(), 'uploads', 'generated', baseFileName);
+        
+        if (fs.existsSync(alternateFilePath)) {
+          console.log(`File not found at ${filePath}, using alternate path: ${alternateFilePath}`);
+          filePath = alternateFilePath;
+        }
       }
       
+      // If file doesn't exist, try looking for the HTML version
+      if (!fs.existsSync(filePath) && !fileName.endsWith('.html')) {
+        const htmlFilePath = path.join(process.cwd(), 'uploads', 'generated', fileName + '.html');
+        
+        if (fs.existsSync(htmlFilePath)) {
+          console.log(`File not found at ${filePath}, using HTML version: ${htmlFilePath}`);
+          filePath = htmlFilePath;
+        }
+      }
+      
+      // Final check if file exists
+      if (!fs.existsSync(filePath)) {
+        console.error(`File not found: ${filePath}`);
+        
+        // Return a simple placeholder SVG that indicates the diagram is missing
+        const placeholderSvg = `
+          <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100%" height="100%" fill="#f8f9fa" />
+            <text x="50%" y="50%" font-family="Arial" font-size="20" text-anchor="middle">
+              Diagram Not Found
+            </text>
+            <text x="50%" y="60%" font-family="Arial" font-size="14" text-anchor="middle">
+              Please regenerate the diagram
+            </text>
+          </svg>
+        `;
+        
+        res.setHeader('Content-Type', 'image/svg+xml');
+        return res.status(200).send(placeholderSvg);
+      }
+      
+      // Read file content and check if it's an HTML file
       const fileContent = fs.readFileSync(filePath, 'utf8');
+      
+      // If this is already an HTML file with embedded viewer, just serve it
+      if (fileContent.includes('<!DOCTYPE html') || fileContent.includes('<html')) {
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(200).send(fileContent);
+      }
       
       // Create a simple HTML page with the Draw.IO viewer
       const svgHtml = `<!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8">
-        <title>Draw.IO Diagram</title>
+        <title>RiverMeadow Diagram</title>
         <style>
           body { margin: 0; padding: 0; overflow: hidden; }
           svg { width: 100%; height: 100%; }
+          #error-message { 
+            display: none; 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            background: #fff; 
+            padding: 20px; 
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+          }
         </style>
         <script src="https://viewer.diagrams.net/js/viewer.min.js"></script>
       </head>
       <body>
         <div id="diagram" style="width:100%;height:100%;"></div>
+        <div id="error-message">
+          <h3>Error Loading Diagram</h3>
+          <p>The diagram could not be loaded.</p>
+        </div>
         <script>
           const graphXml = \`${fileContent.replace(/`/g, '\\`')}\`;
-          // Initialize the Draw.IO viewer with the XML
-          new GraphViewer({
-            highlight: '#0000ff',
-            nav: true,
-            lightbox: false,
-            edit: false,
-            resize: false,
-            toolbar: false,
-            zoom: 1
-          }, document.getElementById('diagram'));
-          GraphViewer.processElements();
+          
+          try {
+            // Initialize the Draw.IO viewer with the XML
+            new GraphViewer({
+              highlight: '#0000ff',
+              nav: true,
+              lightbox: false,
+              edit: false,
+              resize: false,
+              toolbar: false,
+              zoom: 1
+            }, document.getElementById('diagram'));
+            
+            GraphViewer.processElements();
+            
+            // Handle messages from parent window (for zoom)
+            window.addEventListener('message', function(event) {
+              if (event.data && event.data.action === 'zoom') {
+                // Handle zoom action if needed
+                console.log('Zoom request received:', event.data.scale);
+              }
+            });
+          } catch (e) {
+            console.error('Error initializing diagram viewer:', e);
+            document.getElementById('error-message').style.display = 'block';
+          }
         </script>
       </body>
       </html>`;
@@ -108,7 +183,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).send(svgHtml);
     } catch (error) {
       console.error('Error rendering diagram as SVG:', error);
-      return res.status(500).json({ error: 'Failed to render diagram as SVG' });
+      
+      // Return a simple error SVG
+      const errorSvg = `
+        <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#fff0f0" />
+          <text x="50%" y="50%" font-family="Arial" font-size="20" text-anchor="middle" fill="#d32f2f">
+            Error Loading Diagram
+          </text>
+          <text x="50%" y="60%" font-family="Arial" font-size="14" text-anchor="middle" fill="#d32f2f">
+            Please try regenerating the diagram
+          </text>
+        </svg>
+      `;
+      
+      res.setHeader('Content-Type', 'image/svg+xml');
+      return res.status(200).send(errorSvg);
     }
   });
   
