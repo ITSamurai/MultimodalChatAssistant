@@ -34,7 +34,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static('uploads'));
   app.use(express.static('public'));
   
-  // API endpoint to get Draw.IO XML files
+  // API endpoint to get Draw.IO XML files - no authentication required
   app.get('/api/diagram-xml/:fileName', async (req: Request, res: Response) => {
     try {
       const fileName = req.params.fileName;
@@ -57,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // API endpoint to render Draw.IO XML directly as an SVG
+  // API endpoint to render Draw.IO XML directly as an SVG - no authentication required
   app.get('/api/diagram-svg/:fileName', async (req: Request, res: Response) => {
     try {
       const fileName = req.params.fileName;
@@ -112,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // API endpoint to render Draw.IO XML as PNG
+  // API endpoint to render Draw.IO XML as PNG - no authentication required
   app.get('/api/diagram-png/:fileName', async (req: Request, res: Response) => {
     try {
       const fileName = req.params.fileName;
