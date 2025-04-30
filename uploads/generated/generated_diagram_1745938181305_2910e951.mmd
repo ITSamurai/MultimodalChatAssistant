@@ -1,0 +1,19 @@
+flowchart TD
+    A[Start Migration] --> B[Setup Migration Profile]
+    B --> C[Select Source OS]
+    C --> D[Configure Migration Details]
+    D --> E[Execute Full Migration]
+    E --> F[Execute Differential Migration]
+    F --> G[Verify Migration Success]
+    G --> H[Complete Migration]
+
+    subgraph RiverMeadow OS-based Migration
+        A
+        B
+        C
+        D
+        E
+        F
+        G
+        H
+    end

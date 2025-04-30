@@ -27,6 +27,8 @@ export interface AppConfig {
   diagram_quality?: 'standard' | 'hd';
   diagram_size?: 'small' | 'medium' | 'large';
   enable_network_diagram_detection?: boolean;
+  diagram_engine?: 'drawio' | 'mermaid';
+  drawio_theme?: 'default' | 'dark' | 'kennedy' | 'minimal' | 'sketch';
   
   // Advanced settings
   enable_debug_logs?: boolean;
@@ -60,6 +62,8 @@ export const defaultConfig: AppConfig = {
   diagram_quality: "standard",
   diagram_size: "medium",
   enable_network_diagram_detection: true,
+  diagram_engine: "drawio",
+  drawio_theme: "default",
   
   // Advanced settings
   enable_debug_logs: false,

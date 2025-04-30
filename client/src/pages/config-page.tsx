@@ -305,6 +305,50 @@ export default function ConfigPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
+                <Label htmlFor="diagram_engine">Diagram Engine</Label>
+                <Select 
+                  value={config.diagram_engine ?? "drawio"} 
+                  onValueChange={(value) => updateConfig('diagram_engine', value)}
+                >
+                  <SelectTrigger id="diagram_engine">
+                    <SelectValue placeholder="Select engine" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="drawio">Draw.IO (Recommended)</SelectItem>
+                    <SelectItem value="mermaid">Mermaid</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground mt-1">
+                  The underlying technology used to render diagrams
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="drawio_theme">Draw.IO Theme</Label>
+                <Select 
+                  value={config.drawio_theme ?? "default"} 
+                  onValueChange={(value) => updateConfig('drawio_theme', value)}
+                  disabled={config.diagram_engine !== "drawio"}
+                >
+                  <SelectTrigger id="drawio_theme">
+                    <SelectValue placeholder="Select theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
+                    <SelectItem value="kennedy">Kennedy (Blue theme)</SelectItem>
+                    <SelectItem value="minimal">Minimal</SelectItem>
+                    <SelectItem value="sketch">Sketch (Hand-drawn style)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Visual theme for Draw.IO diagrams
+                </p>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-2">
                 <Label htmlFor="diagram_style">Diagram Style</Label>
                 <Select 
                   value={config.diagram_style ?? "modern"} 
