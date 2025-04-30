@@ -737,8 +737,8 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
   // Convert to lowercase for case-insensitive matching
   const lowercasePrompt = prompt.toLowerCase();
   
-  // Special case: if prompt directly asks for an OS migration diagram, always return true
-  if (/\bos\s*(?:based|-)?\s*migration\s*diagram\b/i.test(lowercasePrompt)) {
+  // Special case: if prompt is related to OS migration, consider it a diagram request
+  if (/\bos\s*(?:based|-)?\s*migration\b/i.test(lowercasePrompt)) {
     console.log('Direct OS migration diagram request detected');
     return true;
   }
@@ -816,7 +816,10 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
     /infrastructure\s+(?:diagram|architecture|map)/i,
     
     // Very specific rivermeadow diagram requests
-    /(?:rivermeadow|migration)\s+(?:diagram|architecture|flow|process)/i
+    /(?:rivermeadow|migration)\s+(?:diagram|architecture|flow|process)/i,
+    
+    // Special case for OS-based migration tool - consider it a diagram request
+    /(?:create|make|generate|build)?\s*(?:os|operating system)?\s*(?:based|-)?\s*migration\s*(?:tool|solution|application|process)/i
   ];
 
   const regexMatch = imageRequestPatterns.some(pattern => pattern.test(prompt));
