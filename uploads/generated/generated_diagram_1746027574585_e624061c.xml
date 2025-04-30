@@ -1,0 +1,80 @@
+<mxfile host="app.diagrams.net" modified="2025-04-30T15:39:34.585Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-ded758f6-c035-4306-9b8c-31a131215adb" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1"/>
+<mxCell id="1" value="" style="group" vertex="1" connectable="0" parent="0">
+  <mxGeometry x="0" y="0" width="800" height="600" as="geometry"/>
+</mxCell>
+<mxCell id="2" value="Migrate" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="40" y="20" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="3" value="Migration Setup" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="40" y="80" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="4" value="Step 6: Summary" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="40" y="140" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="5" value="Configured Migrations" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="200" y="80" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="6" value="OS" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="200" y="140" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="7" value="Source" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="200" y="200" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="8" value="Full Migration" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="400" y="80" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="9" value="Differential Migrations" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="400" y="140" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="10" value="Migration Details" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="40" y="260" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="11" value="View Migrations" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="40" y="320" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="12" value="Migration Summary" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="40" y="380" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="13" value="Review OS-based Migration Requirements" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+  <mxGeometry x="200" y="320" width="200" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="2" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="3" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="3" target="5">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="5" target="6">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="6" target="7">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="5" target="8">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="5" target="9">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="10" target="11">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="11" target="12">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="11" target="13">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

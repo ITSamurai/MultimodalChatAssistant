@@ -88,6 +88,69 @@ async function generateDrawIODiagram(
       .replace(/<\/?root[^>]*>/g, '')
       .trim();
     
+    // Fix IDs to ensure uniqueness - replace any id="0" or id="1" with unique IDs
+    // This prevents conflicts with the standard root cells
+    const baseId = Date.now().toString().slice(-6); // Use timestamp as base for unique IDs
+    
+    // Replace ID attributes (both id="X" and parent="X") with unique values
+    // Avoid replacing ID 0 and 1 in parent attributes first by temporarily marking them
+    cellsXml = cellsXml
+      .replace(/parent="0"/g, 'parent="ROOT_PLACEHOLDER"')
+      .replace(/parent="1"/g, 'parent="CANVAS_PLACEHOLDER"');
+      
+    // Now replace all cell IDs to ensure uniqueness
+    cellsXml = cellsXml
+      .replace(/id="0"/g, `id="cell_${baseId}_0"`)
+      .replace(/id="1"/g, `id="cell_${baseId}_1"`)
+      .replace(/id="2"/g, `id="cell_${baseId}_2"`)
+      .replace(/id="3"/g, `id="cell_${baseId}_3"`)
+      .replace(/id="4"/g, `id="cell_${baseId}_4"`)
+      .replace(/id="5"/g, `id="cell_${baseId}_5"`)
+      .replace(/id="6"/g, `id="cell_${baseId}_6"`)
+      .replace(/id="7"/g, `id="cell_${baseId}_7"`)
+      .replace(/id="8"/g, `id="cell_${baseId}_8"`)
+      .replace(/id="9"/g, `id="cell_${baseId}_9"`);
+      
+    // For IDs 10 and above, use a more general regex
+    cellsXml = cellsXml.replace(/id="(\d+)"/g, (match, id) => {
+      // Only replace IDs that are pure numbers and above 9
+      if (!isNaN(id) && parseInt(id) > 9) {
+        return `id="cell_${baseId}_${id}"`;
+      }
+      return match;
+    });
+    
+    // Now update all parent references to match the new IDs
+    cellsXml = cellsXml
+      .replace(/parent="ROOT_PLACEHOLDER"/g, 'parent="0"') // Root cell reference
+      .replace(/parent="CANVAS_PLACEHOLDER"/g, 'parent="1"') // Canvas cell reference
+      .replace(/parent="2"/g, `parent="cell_${baseId}_2"`)
+      .replace(/parent="3"/g, `parent="cell_${baseId}_3"`)
+      .replace(/parent="4"/g, `parent="cell_${baseId}_4"`)
+      .replace(/parent="5"/g, `parent="cell_${baseId}_5"`)
+      .replace(/parent="6"/g, `parent="cell_${baseId}_6"`)
+      .replace(/parent="7"/g, `parent="cell_${baseId}_7"`)
+      .replace(/parent="8"/g, `parent="cell_${baseId}_8"`)
+      .replace(/parent="9"/g, `parent="cell_${baseId}_9"`);
+      
+    // For parents 10 and above, use a general regex
+    cellsXml = cellsXml.replace(/parent="(\d+)"/g, (match, id) => {
+      // Only replace parents that are pure numbers and above 9
+      if (!isNaN(id) && parseInt(id) > 9) {
+        return `parent="cell_${baseId}_${id}"`;
+      }
+      return match;
+    });
+    
+    // Force all remaining cells to be children of the canvas cell (id="1")
+    // Replace any mxCell that doesn't have a parent attribute with parent="1"
+    cellsXml = cellsXml.replace(/<mxCell\s+([^>]*?)\s*(?:\/?>|><\/mxCell>)/g, (match, attrs) => {
+      if (!attrs.includes('parent=')) {
+        return match.replace('<mxCell', '<mxCell parent="1"');
+      }
+      return match;
+    });
+    
     // Create proper Draw.IO XML structure with the cells
     // Add a unique diagram ID and ensure cells have proper parent references
     const diagramId = `diagram-${uuidv4()}`;
