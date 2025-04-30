@@ -93,7 +93,7 @@ export function KnowledgeBaseChat() {
             });
           } else {
             // If we can't get the XML, open the HTML page which has the download button
-            window.open(imagePath, '_blank');
+            window.open(getFullUrl(imagePath), '_blank');
             
             toast({
               title: "Opening diagram page",
@@ -103,7 +103,7 @@ export function KnowledgeBaseChat() {
         } catch (error) {
           console.error("Error downloading diagram:", error);
           // Fall back to opening the HTML version
-          window.open(imagePath, '_blank');
+          window.open(getFullUrl(imagePath), '_blank');
           
           toast({
             title: "Diagram opened in new tab",
@@ -420,7 +420,7 @@ export function KnowledgeBaseChat() {
                                     e.preventDefault();
                                     
                                     // Open diagram in new tab for full view
-                                    window.open(ref.imagePath, '_blank');
+                                    window.open(getFullUrl(ref.imagePath || ''), '_blank');
                                   }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
                                   title="View full screen"
@@ -448,7 +448,7 @@ export function KnowledgeBaseChat() {
                             // Regular image
                             <div className="relative">
                               <img 
-                                src={ref.imagePath} 
+                                src={getFullUrl(ref.imagePath || '')} 
                                 alt={ref.caption || "Generated Image"} 
                                 className="w-full h-auto" 
                                 loading="lazy"
