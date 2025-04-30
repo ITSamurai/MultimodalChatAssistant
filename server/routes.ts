@@ -116,6 +116,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).send(fileContent);
       }
       
+      // Clean up XML content if it has duplicate XML declarations or nested mxfile elements
+      let cleanedContent = fileContent;
+      
+      // Remove duplicate XML declarations (keep only the first one)
+      const xmlDeclMatches = fileContent.match(/<\?xml[^>]*\?>/g);
+      if (xmlDeclMatches && xmlDeclMatches.length > 1) {
+        console.log('Cleaning up duplicate XML declarations');
+        // Keep only the first XML declaration
+        const firstXmlDecl = xmlDeclMatches[0];
+        cleanedContent = fileContent.replace(/<\?xml[^>]*\?>/g, '');
+        cleanedContent = firstXmlDecl + cleanedContent;
+      }
+      
+      // Fix nested mxfile elements by keeping only the outermost one
+      const mxfileMatches = cleanedContent.match(/<mxfile[^>]*>/g);
+      if (mxfileMatches && mxfileMatches.length > 1) {
+        console.log('Fixing nested mxfile elements');
+        let fixedContent = '';
+        let depth = 0;
+        let inMxFile = false;
+        
+        // Simple fix: just keep the outer mxfile and remove other nested ones
+        const outerMxfile = mxfileMatches[0];
+        cleanedContent = cleanedContent.replace(/<mxfile[^>]*>/g, (match, offset) => {
+          return offset === cleanedContent.indexOf(outerMxfile) ? match : '';
+        });
+      }
+      
       // Create a simple HTML page with the Draw.IO viewer
       const svgHtml = `<!DOCTYPE html>
       <html>
@@ -147,9 +175,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           <p>The diagram could not be loaded.</p>
         </div>
         <script>
-          const graphXml = \`${fileContent.replace(/`/g, '\\`')}\`;
+          // Function to parse and clean XML
+          function parseAndCleanXML(xml) {
+            // Remove any nested XML declarations
+            xml = xml.replace(/<\\?xml[^>]*\\?>/g, '');
+            
+            // Handle nested mxGraphModel elements
+            const regex = /<mxGraphModel[^>]*>([\\s\\S]*?)<\\/mxGraphModel>/g;
+            const matches = [...xml.matchAll(regex)];
+            
+            if (matches.length > 1) {
+              // If there are multiple mxGraphModel elements, keep only the first one
+              const firstMatch = matches[0];
+              xml = xml.replace(regex, '');
+              xml = xml.replace('<root>', '<root>' + firstMatch[0]);
+            }
+            
+            return xml;
+          }
           
           try {
+            // Get the XML content and clean it
+            let graphXml = \`${cleanedContent.replace(/`/g, '\\`')}\`;
+            
+            // Parse and clean the XML
+            graphXml = parseAndCleanXML(graphXml);
+            
             // Initialize the Draw.IO viewer with the XML
             new GraphViewer({
               highlight: '#0000ff',
