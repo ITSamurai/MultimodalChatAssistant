@@ -47,50 +47,61 @@ async function generateDrawIODiagram(
     const config = await storage.getConfig();
     const drawioTheme = config?.drawio_theme || 'default';
     
-    // Prompt for Draw.IO diagram
+    // Prompt for Draw.IO diagram - requesting only the CELLS not the full XML
     const drawioPrompt = isNetworkDiagram 
-      ? `Create an XML diagram for Draw.IO (diagrams.net) that shows a network diagram for: ${enhancedPrompt}
+      ? `Create cell elements for a Draw.IO (diagrams.net) diagram that shows a network diagram for: ${enhancedPrompt}
          Include proper network components like routers, firewalls, servers, load balancers, and cloud services.
-         The diagram should use the ${drawioTheme} theme style.
-         Only respond with valid Draw.IO XML that can be imported directly into diagrams.net.`
-      : `Create an XML diagram for Draw.IO (diagrams.net) that shows a flowchart for: ${enhancedPrompt}
-         The diagram should be clean, professional, and use the ${drawioTheme} theme style.
-         Only respond with valid Draw.IO XML that can be imported directly into diagrams.net.`;
+         IMPORTANT: Do NOT include <mxfile>, <diagram>, <mxGraphModel>, or <root> tags. ONLY return the individual <mxCell> elements.
+         The diagram should use the ${drawioTheme} theme style and be properly connected with edges.`
+      : `Create cell elements for a Draw.IO (diagrams.net) diagram that shows a flowchart for: ${enhancedPrompt}
+         IMPORTANT: Do NOT include <mxfile>, <diagram>, <mxGraphModel>, or <root> tags. ONLY return the individual <mxCell> elements.
+         The diagram should be clean, professional, use the ${drawioTheme} theme style, and have proper flow connections.`;
          
     // Use OpenAI to generate Draw.IO XML
     const diagramResponse = await openai.chat.completions.create({
       model: "gpt-4o", 
       messages: [
-        {role: "system", content: "You are a diagram creation assistant that generates valid Draw.IO (diagrams.net) XML. Respond ONLY with the XML content that can be imported directly into Draw.IO, with no explanations or markdown."},
+        {role: "system", content: "You are a diagram creation assistant that generates Draw.IO (diagrams.net) XML cell elements. Respond ONLY with <mxCell> elements without any outer container tags like <mxfile>, <diagram>, <mxGraphModel>, or <root>. Do not include markdown formatting or explanations."},
         {role: "user", content: drawioPrompt}
       ],
       max_tokens: 2500,
       temperature: 0.5,
     });
     
-    // Extract the Draw.IO XML
+    // Extract the Draw.IO XML cells
     const messageContent = diagramResponse.choices[0].message.content || "";
     
     // Clean the XML (remove any markdown code block formatting)
-    let drawioXml = messageContent.trim()
+    let cellsXml = messageContent.trim()
       .replace(/```xml/g, '')
       .replace(/```/g, '')
       .trim();
       
-    // If the XML doesn't start with <mxfile>, wrap it in basic Draw.IO structure
-    if (!drawioXml.startsWith('<mxfile')) {
-      drawioXml = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="RiverMeadow AI" version="21.3.7">
-  <diagram id="diagram-${uuidv4()}" name="RiverMeadow Diagram">
-    <mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1">
+    // Remove any xml declarations if they exist
+    cellsXml = cellsXml.replace(/<\?xml[^>]*\?>/g, '');
+    
+    // Remove any mxfile, diagram, mxGraphModel or root tags if they exist
+    cellsXml = cellsXml
+      .replace(/<\/?mxfile[^>]*>/g, '')
+      .replace(/<\/?diagram[^>]*>/g, '')
+      .replace(/<\/?mxGraphModel[^>]*>/g, '')
+      .replace(/<\/?root[^>]*>/g, '')
+      .trim();
+    
+    // Create proper Draw.IO XML structure with the cells
+    // Add a unique diagram ID and ensure cells have proper parent references
+    const diagramId = `diagram-${uuidv4()}`;
+    const drawioXml = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="${diagramId}" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        ${drawioXml}
+        ${cellsXml}
       </root>
     </mxGraphModel>
   </diagram>
 </mxfile>`;
-    }
     
     return drawioXml;
   } catch (error) {
