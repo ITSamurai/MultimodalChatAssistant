@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { chatWithKnowledgeBase, KnowledgeBaseChatMessage, convertSvgToPng, getDiagramScreenshot, convertMermaidToPng } from '../lib/api';
 import { apiRequest } from '@/lib/queryClient';
+import { getFullUrl } from '@/lib/config';
 import { Loader2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
@@ -66,7 +67,8 @@ export function KnowledgeBaseChat() {
         // If it's a Draw.IO diagram, get the corresponding XML file through the API
         const baseFileName = fileName.replace('.html', '');
         const xmlFileName = `${baseFileName}.xml`;
-        const apiPath = `/api/diagram-xml/${xmlFileName}`;
+        // Use getFullUrl helper to construct proper absolute URL
+        const apiPath = getFullUrl(`/api/diagram-xml/${xmlFileName}`);
         
         try {
           console.log(`Fetching diagram XML from API: ${apiPath}`);
@@ -339,7 +341,7 @@ export function KnowledgeBaseChat() {
                                 
                                 {/* Use iframe for SVG rendering instead of image */}
                                 <iframe 
-                                  src={`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`}
+                                  src={getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`)}
                                   title="RiverMeadow Diagram" 
                                   className="w-full border border-gray-200 rounded h-[400px]"
                                   loading="lazy"
@@ -347,7 +349,7 @@ export function KnowledgeBaseChat() {
                                   onError={(e) => {
                                     console.error("Failed to load diagram in iframe:", e);
                                     // Fall back to direct link
-                                    e.currentTarget.src = ref.imagePath || '';
+                                    e.currentTarget.src = getFullUrl(ref.imagePath || '');
                                   }}
                                 />
                               </div>
