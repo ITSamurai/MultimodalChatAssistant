@@ -331,21 +331,21 @@ export function KnowledgeBaseChat() {
                           {isHtmlDiagram ? (
                             // Render Draw.IO diagram directly in the chat with embedded viewer
                             <div className="relative w-full bg-white p-4">
-                              <div className="text-center mb-4 p-2 bg-blue-50 rounded text-sm text-gray-700">
-                                <strong>Draw.IO Diagram</strong> - Click the Download button to edit in diagrams.net
+                              {/* Show the diagram directly as an image */}
+                              <div className="relative">
+                                <div className="text-center mb-4 p-2 bg-blue-50 rounded text-sm text-gray-700">
+                                  <strong>Draw.IO Diagram</strong> - Click the Download button to edit in diagrams.net
+                                </div>
+                                
+                                {/* Use iframe for SVG rendering instead of image */}
+                                <iframe 
+                                  src={`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`}
+                                  title="RiverMeadow Diagram" 
+                                  className="w-full border border-gray-200 rounded h-[400px]"
+                                  loading="lazy"
+                                  sandbox="allow-scripts allow-same-origin"
+                                />
                               </div>
-                              <iframe 
-                                src={ref.imagePath}
-                                title="RiverMeadow Diagram" 
-                                className="w-full border border-gray-200 rounded"
-                                loading="lazy"
-                                sandbox="allow-scripts allow-same-origin"
-                                style={{ 
-                                  height: "380px",
-                                  overflow: "hidden",
-                                  backgroundColor: "white"
-                                }}
-                              />
                               
                               {/* Diagram controls */}
                               <div className="absolute bottom-2 right-2 bg-white rounded shadow-md flex items-center">

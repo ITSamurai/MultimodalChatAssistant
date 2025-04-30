@@ -57,6 +57,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API endpoint to render Draw.IO XML directly as an SVG
+  app.get('/api/diagram-svg/:fileName', async (req: Request, res: Response) => {
+    try {
+      const fileName = req.params.fileName;
+      const filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
+      
+      console.log(`Rendering diagram as SVG: ${filePath}`);
+      
+      if (!fs.existsSync(filePath)) {
+        console.error(`File not found: ${filePath}`);
+        return res.status(404).json({ error: 'File not found' });
+      }
+      
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      
+      // Create a simple HTML page with the Draw.IO viewer
+      const svgHtml = `<!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Draw.IO Diagram</title>
+        <style>
+          body { margin: 0; padding: 0; overflow: hidden; }
+          svg { width: 100%; height: 100%; }
+        </style>
+        <script src="https://viewer.diagrams.net/js/viewer.min.js"></script>
+      </head>
+      <body>
+        <div id="diagram" style="width:100%;height:100%;"></div>
+        <script>
+          const graphXml = \`${fileContent.replace(/`/g, '\\`')}\`;
+          // Initialize the Draw.IO viewer with the XML
+          new GraphViewer({
+            highlight: '#0000ff',
+            nav: true,
+            lightbox: false,
+            edit: false,
+            resize: false,
+            toolbar: false,
+            zoom: 1
+          }, document.getElementById('diagram'));
+          GraphViewer.processElements();
+        </script>
+      </body>
+      </html>`;
+      
+      // Set the content type to HTML
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(200).send(svgHtml);
+    } catch (error) {
+      console.error('Error rendering diagram as SVG:', error);
+      return res.status(500).json({ error: 'Failed to render diagram as SVG' });
+    }
+  });
+  
+  // API endpoint to render Draw.IO XML as PNG
+  app.get('/api/diagram-png/:fileName', async (req: Request, res: Response) => {
+    try {
+      const fileName = req.params.fileName;
+      const filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
+      
+      console.log(`Rendering diagram as PNG: ${filePath}`);
+      
+      if (!fs.existsSync(filePath)) {
+        console.error(`File not found: ${filePath}`);
+        return res.status(404).json({ error: 'File not found' });
+      }
+      
+      // Create a SVG directly from the XML content using the mxgraph library
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      
+      // Create simple SVG placeholder until we can render properly
+      const svgPlaceholder = `
+      <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#f8f9fa" />
+        <text x="50%" y="50%" font-family="Arial" font-size="20" text-anchor="middle">
+          Draw.IO Diagram
+        </text>
+        <text x="50%" y="60%" font-family="Arial" font-size="14" text-anchor="middle">
+          Click to download and view in diagrams.net
+        </text>
+      </svg>
+      `;
+      
+      // Set the content type
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+      return res.status(200).send(svgPlaceholder);
+    } catch (error) {
+      console.error('Error rendering diagram as PNG:', error);
+      return res.status(500).json({ error: 'Failed to render diagram as PNG' });
+    }
+  });
+  
   // Very simple robots.txt with explicit headers - guaranteed to work
   app.get('/robots.txt', (req, res) => {
     console.log('Serving robots.txt from explicit handler');

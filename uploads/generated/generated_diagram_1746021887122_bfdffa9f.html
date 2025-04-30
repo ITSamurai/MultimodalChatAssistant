@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RiverMeadow Diagram</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .diagram-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      max-width: 100%;
+      margin: 0 auto;
+      overflow: hidden;
+      position: relative;
+    }
+    h1 {
+      text-align: center;
+      color: #0078d4;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    .diagram-view {
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: #fff;
+      margin-bottom: 20px;
+      overflow: auto;
+      max-height: 600px;
+    }
+    .diagram-preview {
+      width: 100%;
+      height: 280px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: #fafafa;
+      margin: 15px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      overflow: hidden;
+    }
+    .diagram-preview h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      color: #444;
+    }
+    .diagram-preview-content {
+      font-size: 13px;
+      color: #666;
+      margin: 0 20px;
+    }
+    .download-container {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .download-button {
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .download-button:hover {
+      background-color: #005a9e;
+    }
+    .api-download-button {
+      background-color: #28a745;
+      margin-left: 5px;
+    }
+    .api-download-button:hover {
+      background-color: #218838;
+    }
+    .xml-display {
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      overflow: auto;
+      max-height: 300px;
+      margin-top: 20px;
+    }
+    .note {
+      font-size: 14px;
+      color: #666;
+      margin: 15px 0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram-container">
+    <h1>RiverMeadow Migration Diagram</h1>
+    
+    <div class="note">
+      This diagram is in Draw.IO format. You can download it to edit in diagrams.net
+    </div>
+    
+    <div class="diagram-preview">
+      <h2>Preview of Diagram Content</h2>
+      <div class="diagram-preview-content">
+        Diagram name: OS Based Migration
+        <br><br>
+        This diagram contains 25 elements
+        <br><br>
+        The diagram is created with Draw.IO and can be edited at diagrams.net
+      </div>
+    </div>
+    
+    <div class="download-container">
+      <a href="data:application/xml;charset=utf-8,%3Cmxfile%20host%3D%22app.diagrams.net%22%3E%0A%20%20%3Cdiagram%20name%3D%22OS%20Based%20Migration%22%20id%3D%22OsBasedMigration%22%3E%0A%20%20%20%20%3CmxGraphModel%20dx%3D%221080%22%20dy%3D%22680%22%20grid%3D%221%22%20gridSize%3D%2210%22%20guides%3D%221%22%20tooltips%3D%221%22%20connect%3D%221%22%20arrows%3D%221%22%20fold%3D%221%22%20page%3D%221%22%20pageScale%3D%221%22%20pageWidth%3D%22827%22%20pageHeight%3D%221169%22%20math%3D%220%22%20shadow%3D%220%22%3E%0A%20%20%20%20%20%20%3Croot%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%220%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%221%22%20parent%3D%220%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%222%22%20value%3D%22Migrate%22%20style%3D%22shape%3Dellipse%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%2280%22%20y%3D%2240%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%223%22%20value%3D%22Migration%20Setup%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%2280%22%20y%3D%22140%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%224%22%20value%3D%22Step%206%3A%20Summary%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%2280%22%20y%3D%22240%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%225%22%20value%3D%22Configured%20Migrations%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%2280%22%20y%3D%22340%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%226%22%20value%3D%22OS%20Source%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%2280%22%20y%3D%22440%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%227%22%20value%3D%22Full%20Migration%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%22260%22%20y%3D%22140%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%228%22%20value%3D%22Differential%20Migrations%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%22260%22%20y%3D%22240%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%229%22%20value%3D%22Target%20Setup%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%22260%22%20y%3D%22340%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2210%22%20value%3D%22Migration%20Details%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%22440%22%20y%3D%22140%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2211%22%20value%3D%22View%20Migrations%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%22440%22%20y%3D%22240%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2212%22%20value%3D%22Migration%20Summary%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%22440%22%20y%3D%22340%22%20width%3D%22120%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2213%22%20value%3D%22Review%20OS-based%20Migration%20Requirements%22%20style%3D%22shape%3Drectangle%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20x%3D%22260%22%20y%3D%22440%22%20width%3D%22300%22%20height%3D%2260%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2214%22%20edge%3D%221%22%20source%3D%222%22%20target%3D%223%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2215%22%20edge%3D%221%22%20source%3D%223%22%20target%3D%224%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2216%22%20edge%3D%221%22%20source%3D%224%22%20target%3D%225%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2217%22%20edge%3D%221%22%20source%3D%225%22%20target%3D%226%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2218%22%20edge%3D%221%22%20source%3D%223%22%20target%3D%227%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2219%22%20edge%3D%221%22%20source%3D%224%22%20target%3D%228%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2220%22%20edge%3D%221%22%20source%3D%225%22%20target%3D%229%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2221%22%20edge%3D%221%22%20source%3D%227%22%20target%3D%2210%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2222%22%20edge%3D%221%22%20source%3D%228%22%20target%3D%2211%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2223%22%20edge%3D%221%22%20source%3D%229%22%20target%3D%2212%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%20%20%3CmxCell%20id%3D%2224%22%20edge%3D%221%22%20source%3D%226%22%20target%3D%2213%22%20parent%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FmxCell%3E%0A%20%20%20%20%20%20%3C%2Froot%3E%0A%20%20%20%20%3C%2FmxGraphModel%3E%0A%20%20%3C%2Fdiagram%3E%0A%3C%2Fmxfile%3E" 
+         download="rivermeadow_diagram.drawio" 
+         class="download-button">Download Draw.IO Diagram</a>
+         
+      <a href="/api/diagram-xml/generated_diagram_1746021887122_bfdffa9f.xml" 
+         class="download-button api-download-button">API Download</a>
+    </div>
+    
+    <div class="note">
+      After downloading, you can open this file at <a href="https://app.diagrams.net/" target="_blank">diagrams.net</a>
+    </div>
+    
+    <details>
+      <summary>View XML Content</summary>
+      <div class="xml-display">&lt;mxfile host="app.diagrams.net"&gt;
+  &lt;diagram name="OS Based Migration" id="OsBasedMigration"&gt;
+    &lt;mxGraphModel dx="1080" dy="680" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0"&gt;
+      &lt;root&gt;
+        &lt;mxCell id="0" /&gt;
+        &lt;mxCell id="1" parent="0" /&gt;
+        &lt;mxCell id="2" value="Migrate" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="80" y="40" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="3" value="Migration Setup" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="80" y="140" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="4" value="Step 6: Summary" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="80" y="240" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="5" value="Configured Migrations" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="80" y="340" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="6" value="OS Source" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="80" y="440" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="7" value="Full Migration" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="260" y="140" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="8" value="Differential Migrations" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="260" y="240" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="9" value="Target Setup" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="260" y="340" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="10" value="Migration Details" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="440" y="140" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="11" value="View Migrations" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="440" y="240" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="12" value="Migration Summary" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="440" y="340" width="120" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="13" value="Review OS-based Migration Requirements" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="1"&gt;
+          &lt;mxGeometry x="260" y="440" width="300" height="60" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="14" edge="1" source="2" target="3" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="15" edge="1" source="3" target="4" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="16" edge="1" source="4" target="5" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="17" edge="1" source="5" target="6" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="18" edge="1" source="3" target="7" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="19" edge="1" source="4" target="8" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="20" edge="1" source="5" target="9" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="21" edge="1" source="7" target="10" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="22" edge="1" source="8" target="11" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="23" edge="1" source="9" target="12" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id="24" edge="1" source="6" target="13" parent="1"&gt;
+          &lt;mxGeometry relative="1" as="geometry" /&gt;
+        &lt;/mxCell&gt;
+      &lt;/root&gt;
+    &lt;/mxGraphModel&gt;
+  &lt;/diagram&gt;
+&lt;/mxfile&gt;</div>
+    </details>
+  </div>
+</body>
+</html>

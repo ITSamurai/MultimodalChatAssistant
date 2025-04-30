@@ -281,16 +281,9 @@ export const generateDiagram = async (
     </div>
     
     <div class="diagram-preview">
-      <h2>Preview of Diagram Content</h2>
-      <div class="diagram-preview-content">
-        ${drawioXml.includes('diagram name=') ? 
-          'Diagram name: ' + drawioXml.match(/diagram name="([^"]+)"/)?.[1] : 'RiverMeadow Diagram'
-        }
-        <br><br>
-        This diagram contains ${(drawioXml.match(/<mxCell/g) || []).length} elements
-        <br><br>
-        The diagram is created with Draw.IO and can be edited at diagrams.net
-      </div>
+      <h2>Diagram Preview</h2>
+      <img src="/api/diagram-png/${xmlFilename}" alt="Diagram Preview" 
+           style="max-width: 100%; max-height: 500px; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0;" />
     </div>
     
     <div class="download-container">
