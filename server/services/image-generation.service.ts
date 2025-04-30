@@ -192,6 +192,7 @@ export const generateDiagram = async (
       text-align: center;
       color: #0078d4;
       margin-bottom: 20px;
+      font-size: 18px;
     }
     .diagram-view {
       padding: 10px;
@@ -202,9 +203,34 @@ export const generateDiagram = async (
       overflow: auto;
       max-height: 600px;
     }
+    .diagram-preview {
+      width: 100%;
+      height: 280px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: #fafafa;
+      margin: 15px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      overflow: hidden;
+    }
+    .diagram-preview h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      color: #444;
+    }
+    .diagram-preview-content {
+      font-size: 13px;
+      color: #666;
+      margin: 0 20px;
+    }
     .download-container {
       text-align: center;
-      margin: 20px 0;
+      margin: 15px 0;
     }
     .download-button {
       background-color: #0078d4;
@@ -220,6 +246,13 @@ export const generateDiagram = async (
     .download-button:hover {
       background-color: #005a9e;
     }
+    .api-download-button {
+      background-color: #28a745;
+      margin-left: 5px;
+    }
+    .api-download-button:hover {
+      background-color: #218838;
+    }
     .xml-display {
       white-space: pre-wrap;
       font-family: monospace;
@@ -234,7 +267,7 @@ export const generateDiagram = async (
     .note {
       font-size: 14px;
       color: #666;
-      margin: 20px 0;
+      margin: 15px 0;
       text-align: center;
     }
   </style>
@@ -244,13 +277,29 @@ export const generateDiagram = async (
     <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
     
     <div class="note">
-      This diagram is in Draw.IO format. Please use the button below to download and open it in diagrams.net
+      This diagram is in Draw.IO format. You can download it to edit in diagrams.net
+    </div>
+    
+    <div class="diagram-preview">
+      <h2>Preview of Diagram Content</h2>
+      <div class="diagram-preview-content">
+        ${drawioXml.includes('diagram name=') ? 
+          'Diagram name: ' + drawioXml.match(/diagram name="([^"]+)"/)?.[1] : 'RiverMeadow Diagram'
+        }
+        <br><br>
+        This diagram contains ${(drawioXml.match(/<mxCell/g) || []).length} elements
+        <br><br>
+        The diagram is created with Draw.IO and can be edited at diagrams.net
+      </div>
     </div>
     
     <div class="download-container">
       <a href="data:application/xml;charset=utf-8,${encodeURIComponent(drawioXml)}" 
          download="rivermeadow_diagram.drawio" 
          class="download-button">Download Draw.IO Diagram</a>
+         
+      <a href="/api/diagram-xml/${xmlFilename}" 
+         class="download-button api-download-button">API Download</a>
     </div>
     
     <div class="note">
