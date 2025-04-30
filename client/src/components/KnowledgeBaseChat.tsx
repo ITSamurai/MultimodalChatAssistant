@@ -59,56 +59,55 @@ export function KnowledgeBaseChat() {
       const fileName = pathParts[pathParts.length - 1];
       const currentOrigin = window.location.origin;
       
-      // Check if it's an HTML diagram
+      // Check if it's an HTML diagram for Draw.IO
       if (imagePath.endsWith('.html')) {
         console.log(`Processing HTML diagram: ${fileName}`);
         
-        // Try to use the server-side mmdc conversion first, since we now have Chromium installed
-        // Extract the base filename (without .html) and create an .mmd filename
+        // If it's a Draw.IO diagram, get the corresponding XML file
         const baseFileName = fileName.replace('.html', '');
-        const mmdFileName = `${baseFileName}.mmd`;
+        const xmlFileName = `${baseFileName}.xml`;
+        const xmlPath = `/uploads/generated/${xmlFileName}`;
         
         try {
-          console.log(`Converting mermaid diagram to PNG using mmdc: ${mmdFileName}`);
-          
-          // Call the server endpoint to convert the mermaid diagram to PNG
-          const conversionUrl = `${currentOrigin}/api/convert-mermaid-to-png/${mmdFileName}`;
-          const response = await fetch(conversionUrl);
+          // Fetch the XML content directly
+          const response = await fetch(xmlPath);
           
           if (response.ok) {
-            // If successful, this should return the PNG file directly as a download
-            const blob = await response.blob();
+            // Get the XML content as text
+            const xmlContent = await response.text();
+            
+            // Create a download link for the Draw.IO XML file
+            const blob = new Blob([xmlContent], { type: 'application/xml' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `rivermeadow_diagram_${Date.now()}.png`;
+            a.download = `rivermeadow_diagram_${Date.now()}.drawio`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             
             toast({
-              title: "Success",
-              description: "Diagram downloaded as PNG successfully",
+              title: "Success", 
+              description: "Diagram downloaded successfully. Open it with diagrams.net",
             });
           } else {
-            // If server-side conversion failed, fall back to opening the HTML version
-            console.log("Server-side PNG conversion failed, falling back to HTML version");
+            // If we can't get the XML, open the HTML page which has the download button
             window.open(imagePath, '_blank');
             
             toast({
-              title: "PNG conversion failed",
-              description: "Opening HTML version instead. You can use the download buttons there to save the diagram.",
+              title: "Opening diagram page",
+              description: "Please use the download button on the page to save the diagram.",
             });
           }
         } catch (error) {
-          console.error("Error during server-side conversion:", error);
+          console.error("Error downloading diagram:", error);
           // Fall back to opening the HTML version
           window.open(imagePath, '_blank');
           
           toast({
-            title: "Diagram available in new tab",
-            description: "Please use the download buttons in the new tab to save a copy of the diagram.",
+            title: "Diagram opened in new tab",
+            description: "Please use the download button on the page to save the diagram.",
           });
         }
       } else {
@@ -128,7 +127,7 @@ export function KnowledgeBaseChat() {
     } catch (error) {
       console.error("Error with diagram:", error);
       toast({
-        title: "Failed to open diagram",
+        title: "Failed to download diagram",
         description: "Please try again. If the issue persists, you can always take a screenshot of the diagram in the chat",
         variant: "destructive",
       });
@@ -332,29 +331,21 @@ export function KnowledgeBaseChat() {
                       return (
                         <div key={index} className="rounded-lg overflow-hidden border border-gray-200">
                           {isHtmlDiagram ? (
-                            // Render iframe for HTML-based Mermaid diagram
-                            <div className="relative w-full">
+                            // Render Draw.IO diagram directly in the chat with embedded viewer
+                            <div className="relative w-full bg-white p-4">
+                              <div className="text-center mb-4 p-2 bg-blue-50 rounded text-sm text-gray-700">
+                                <strong>Draw.IO Diagram</strong> - Click the Download button to edit in diagrams.net
+                              </div>
                               <iframe 
-                                ref={(iframe) => {
-                                  if (iframe) {
-                                    // When iframe loads, try to resize the diagram
-                                    iframe.onload = () => {
-                                      try {
-                                        iframe.contentWindow?.postMessage('resize', '*');
-                                      } catch (e) {
-                                        console.error('Failed to send resize message to iframe', e);
-                                      }
-                                    };
-                                  }
-                                }}
                                 src={ref.imagePath}
                                 title="RiverMeadow Diagram" 
-                                className="w-full border-none"
+                                className="w-full border border-gray-200 rounded"
                                 loading="lazy"
                                 sandbox="allow-scripts allow-same-origin"
                                 style={{ 
                                   height: "380px",
-                                  overflow: "hidden" 
+                                  overflow: "hidden",
+                                  backgroundColor: "white"
                                 }}
                               />
                               
