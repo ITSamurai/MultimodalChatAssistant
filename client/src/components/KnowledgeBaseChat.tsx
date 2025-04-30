@@ -63,21 +63,19 @@ export function KnowledgeBaseChat() {
       if (imagePath.endsWith('.html')) {
         console.log(`Processing HTML diagram: ${fileName}`);
         
-        // If it's a Draw.IO diagram, get the corresponding XML file
+        // If it's a Draw.IO diagram, get the corresponding XML file through the API
         const baseFileName = fileName.replace('.html', '');
         const xmlFileName = `${baseFileName}.xml`;
-        const xmlPath = `/uploads/generated/${xmlFileName}`;
+        const apiPath = `/api/diagram-xml/${xmlFileName}`;
         
         try {
-          // Fetch the XML content directly
-          const response = await fetch(xmlPath);
+          console.log(`Fetching diagram XML from API: ${apiPath}`);
+          // Fetch the XML content through our API endpoint
+          const response = await fetch(apiPath);
           
           if (response.ok) {
-            // Get the XML content as text
-            const xmlContent = await response.text();
-            
-            // Create a download link for the Draw.IO XML file
-            const blob = new Blob([xmlContent], { type: 'application/xml' });
+            // This should trigger a download automatically due to Content-Disposition header
+            const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;

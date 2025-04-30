@@ -34,6 +34,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static('uploads'));
   app.use(express.static('public'));
   
+  // API endpoint to get Draw.IO XML files
+  app.get('/api/diagram-xml/:fileName', async (req: Request, res: Response) => {
+    try {
+      const fileName = req.params.fileName;
+      const filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
+      
+      console.log(`Serving diagram XML file: ${filePath}`);
+      
+      if (!fs.existsSync(filePath)) {
+        console.error(`File not found: ${filePath}`);
+        return res.status(404).json({ error: 'File not found' });
+      }
+      
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      res.setHeader('Content-Type', 'application/xml');
+      res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.drawio"`);
+      return res.status(200).send(fileContent);
+    } catch (error) {
+      console.error('Error serving diagram XML:', error);
+      return res.status(500).json({ error: 'Failed to retrieve diagram' });
+    }
+  });
+  
   // Very simple robots.txt with explicit headers - guaranteed to work
   app.get('/robots.txt', (req, res) => {
     console.log('Serving robots.txt from explicit handler');
