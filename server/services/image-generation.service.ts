@@ -238,7 +238,7 @@ export const generateDiagram = async (
         // Save the Draw.IO XML to a file
         await writeFile(xmlPath, drawioXml);
         
-        // Create an HTML wrapper for the Draw.IO diagram using the embeddable component
+        // Create a direct SVG viewer that is more reliable - NO iframe approach
         const drawioHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -246,18 +246,17 @@ export const generateDiagram = async (
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RiverMeadow Diagram</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    body, html {
+      height: 100%;
       margin: 0;
       padding: 0;
-      background: #f5f5f5;
-      height: 100vh;
-      overflow: hidden;
+      overflow: auto;
+      font-family: Arial, sans-serif;
     }
     .diagram-container {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      height: 100vh;
     }
     .header {
       background: white;
@@ -266,16 +265,32 @@ export const generateDiagram = async (
       display: flex;
       justify-content: space-between;
       align-items: center;
+      z-index: 10;
     }
     h1 {
       color: #0078d4;
       margin: 0;
       font-size: 18px;
     }
-    .editor-frame {
+    .content-area {
       flex: 1;
-      border: none;
-      width: 100%;
+      padding: 20px;
+      overflow: auto;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    #svg-container {
+      max-width: 100%;
+      transition: transform 0.3s;
+      transform-origin: center top;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 4px;
+      padding: 16px;
     }
     .actions {
       display: flex;
@@ -309,6 +324,11 @@ export const generateDiagram = async (
       transform: translate(-50%, -50%);
       text-align: center;
       color: #666;
+      background: rgba(255,255,255,0.9);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 100;
     }
     .spinner {
       border: 4px solid #f3f3f3;
@@ -319,12 +339,37 @@ export const generateDiagram = async (
       animation: spin 1s linear infinite;
       margin: 0 auto 15px;
     }
+    .hidden {
+      display: none;
+    }
+    .zoom-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: flex;
+      overflow: hidden;
+      z-index: 100;
+    }
+    .zoom-button {
+      background: none;
+      border: none;
+      border-right: 1px solid #eee;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .zoom-button:last-child {
+      border-right: none;
+    }
+    .zoom-button:hover {
+      background: #f5f5f5;
+    }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
-    }
-    .hidden {
-      display: none;
     }
   </style>
 </head>
@@ -339,38 +384,91 @@ export const generateDiagram = async (
       </div>
     </div>
     
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <div>Loading diagram...</div>
+    <div class="content-area">
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div>Loading diagram...</div>
+      </div>
+      
+      <div id="svg-container"></div>
     </div>
     
-    <iframe id="editor" class="editor-frame" frameborder="0" 
-            src="/api/diagram-svg/${xmlFilename}" style="width:100%; height:100%;">
-    </iframe>
+    <div class="zoom-controls">
+      <button class="zoom-button" id="zoom-out">−</button>
+      <button class="zoom-button" id="zoom-reset">100%</button>
+      <button class="zoom-button" id="zoom-in">+</button>
+    </div>
   </div>
   
   <script>
-    // Simple diagram viewer
-    const loadingEl = document.getElementById('loading');
+    // Variables
+    let currentZoom = 1.0;
+    const svgContainer = document.getElementById('svg-container');
+    const loading = document.getElementById('loading');
     
-    // Set a timeout to hide the loading indicator
-    setTimeout(() => {
-      if (loadingEl) {
-        loadingEl.classList.add('hidden');
+    // Load SVG content directly - no iframe
+    fetch('/api/diagram-svg/${xmlFilename}')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to load diagram');
+        }
+        return response.text();
+      })
+      .then(svgText => {
+        // Insert SVG content into the container
+        svgContainer.innerHTML = svgText;
+        
+        // Hide loading indicator
+        loading.classList.add('hidden');
+        
+        // Make SVG responsive
+        const svg = svgContainer.querySelector('svg');
+        if (svg) {
+          svg.style.maxWidth = '100%';
+          svg.style.height = 'auto';
+        }
+        
+        // Notify parent that we're loaded
+        try {
+          window.parent.postMessage({ type: 'diagram-loaded' }, '*');
+        } catch (e) {
+          console.error('Error notifying parent window', e);
+        }
+      })
+      .catch(error => {
+        console.error('Error loading SVG:', error);
+        loading.innerHTML = '<div style="color:red">Error loading diagram</div>';
+      });
+    
+    // Zoom functionality
+    document.getElementById('zoom-in').addEventListener('click', () => {
+      currentZoom = Math.min(2.0, currentZoom + 0.1);
+      applyZoom();
+    });
+    
+    document.getElementById('zoom-out').addEventListener('click', () => {
+      currentZoom = Math.max(0.3, currentZoom - 0.1);
+      applyZoom();
+    });
+    
+    document.getElementById('zoom-reset').addEventListener('click', () => {
+      currentZoom = 1.0;
+      applyZoom();
+    });
+    
+    function applyZoom() {
+      if (svgContainer) {
+        svgContainer.style.transform = 'scale(' + currentZoom + ')';
+        document.getElementById('zoom-reset').textContent = Math.round(currentZoom * 100) + '%';
       }
-    }, 2000);
+    }
     
-    // Handle messages from parent frame for zoom functionality
-    window.addEventListener('message', function(evt) {
+    // Handle messages from parent window
+    window.addEventListener('message', function(event) {
       try {
-        const data = evt.data;
-        if (data && typeof data === 'object' && data.action === 'zoom') {
-          const scaleValue = data.scale || 1;
-          const svg = document.querySelector('svg');
-          if (svg) {
-            svg.style.transform = 'scale(' + scaleValue + ')';
-            svg.style.transformOrigin = 'center top';
-          }
+        if (event.data && typeof event.data === 'object' && event.data.action === 'zoom') {
+          currentZoom = event.data.scale || 1.0;
+          applyZoom();
         }
       } catch (e) {
         console.error('Error handling message:', e);
