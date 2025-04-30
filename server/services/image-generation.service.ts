@@ -164,15 +164,13 @@ export const generateDiagram = async (
         // Save the Draw.IO XML to a file
         await writeFile(xmlPath, drawioXml);
         
-        // Create an HTML wrapper for the Draw.IO diagram
+        // Create an HTML wrapper for the Draw.IO diagram that doesn't rely on external services
         const drawioHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RiverMeadow Diagram</title>
-  <script src="https://cdn.jsdelivr.net/npm/mxgraph/javascript/mxClient.js"></script>
-  <script src="https://app.diagrams.net/js/viewer.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -190,52 +188,80 @@ export const generateDiagram = async (
       overflow: hidden;
       position: relative;
     }
-    .drawio-viewer {
-      width: 100%;
-      height: 600px;
-      border: none;
-    }
     h1 {
       text-align: center;
       color: #0078d4;
       margin-bottom: 20px;
     }
-    .fallback-message {
-      padding: 20px;
-      color: #d32f2f;
+    .diagram-view {
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: #fff;
+      margin-bottom: 20px;
+      overflow: auto;
+      max-height: 600px;
+    }
+    .download-container {
       text-align: center;
-      display: none;
+      margin: 20px 0;
+    }
+    .download-button {
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .download-button:hover {
+      background-color: #005a9e;
+    }
+    .xml-display {
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      overflow: auto;
+      max-height: 300px;
+      margin-top: 20px;
+    }
+    .note {
+      font-size: 14px;
+      color: #666;
+      margin: 20px 0;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="diagram-container">
     <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
-    <div class="drawio-container">
-      <iframe class="drawio-viewer" src="https://app.diagrams.net/?embed=1&ui=min&spin=1&proto=json" frameborder="0" allowfullscreen></iframe>
-    </div>
-    <div class="fallback-message">
-      Unable to load diagram. Please download and open in <a href="https://app.diagrams.net/" target="_blank">diagrams.net</a>
-    </div>
-  </div>
-  <script>
-    // Initialize the viewer
-    const viewer = document.querySelector('.drawio-viewer');
     
-    // Load the diagram XML once the iframe is loaded
-    viewer.onload = function() {
-      try {
-        const xmlData = \`${drawioXml.replace(/`/g, '\\`')}\`;
-        viewer.contentWindow.postMessage(JSON.stringify({
-          action: 'load',
-          xml: xmlData
-        }), '*');
-      } catch (e) {
-        console.error('Error loading diagram:', e);
-        document.querySelector('.fallback-message').style.display = 'block';
-      }
-    };
-  </script>
+    <div class="note">
+      This diagram is in Draw.IO format. Please use the button below to download and open it in diagrams.net
+    </div>
+    
+    <div class="download-container">
+      <a href="data:application/xml;charset=utf-8,${encodeURIComponent(drawioXml)}" 
+         download="rivermeadow_diagram.drawio" 
+         class="download-button">Download Draw.IO Diagram</a>
+    </div>
+    
+    <div class="note">
+      After downloading, you can open this file at <a href="https://app.diagrams.net/" target="_blank">diagrams.net</a>
+    </div>
+    
+    <details>
+      <summary>View XML Content</summary>
+      <div class="xml-display">${drawioXml.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+    </details>
+  </div>
 </body>
 </html>`;
 
