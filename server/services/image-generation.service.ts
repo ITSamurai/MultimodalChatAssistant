@@ -344,54 +344,36 @@ export const generateDiagram = async (
       <div>Loading diagram...</div>
     </div>
     
-    <iframe id="editor" class="editor-frame hidden" frameborder="0" 
-            src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&analytics=0&db=0">
+    <iframe id="editor" class="editor-frame" frameborder="0" 
+            src="/api/diagram-svg/${xmlFilename}" style="width:100%; height:100%;">
     </iframe>
   </div>
   
   <script>
-    // Store the diagram XML
-    const diagramXml = ${JSON.stringify(drawioXml)};
-    
-    // Handle iframe loading and initialization
-    const editorFrame = document.getElementById('editor');
+    // Simple diagram viewer
     const loadingEl = document.getElementById('loading');
     
-    // Wait for iframe to load
-    editorFrame.addEventListener('load', function() {
-      // Once the frame is loaded, send the diagram data
-      // Using the official draw.io postMessage API
-      editorFrame.contentWindow.postMessage(JSON.stringify({
-        action: 'load',
-        xml: diagramXml,
-        modified: false,
-        noSaveBtn: true,
-        noExitBtn: true
-      }), '*');
-      
-      // Hide loading indicator and show the editor
-      setTimeout(() => {
+    // Set a timeout to hide the loading indicator
+    setTimeout(() => {
+      if (loadingEl) {
         loadingEl.classList.add('hidden');
-        editorFrame.classList.remove('hidden');
-      }, 1000);
-    });
+      }
+    }, 2000);
     
-    // Listen for messages from the editor
+    // Handle messages from parent frame for zoom functionality
     window.addEventListener('message', function(evt) {
-      // Handle events from the editor if needed
       try {
-        const msg = JSON.parse(evt.data);
-        
-        // React to editor events if necessary
-        if (msg.event === 'init') {
-          console.log('Editor initialized');
-        } else if (msg.event === 'export') {
-          console.log('Export completed');
-        } else if (msg.event === 'save') {
-          console.log('Save requested');
+        const data = evt.data;
+        if (data && typeof data === 'object' && data.action === 'zoom') {
+          const scaleValue = data.scale || 1;
+          const svg = document.querySelector('svg');
+          if (svg) {
+            svg.style.transform = 'scale(' + scaleValue + ')';
+            svg.style.transformOrigin = 'center top';
+          }
         }
       } catch (e) {
-        // Not a valid JSON message
+        console.error('Error handling message:', e);
       }
     });
   </script>

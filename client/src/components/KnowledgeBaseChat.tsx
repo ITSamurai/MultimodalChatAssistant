@@ -365,10 +365,13 @@ export function KnowledgeBaseChat() {
                                     
                                     // Send zoom message to iframe
                                     const iframe = e.currentTarget.closest('.relative')?.querySelector('iframe');
-                                    iframe?.contentWindow?.postMessage({
-                                      action: 'zoom',
-                                      scale: newZoom
-                                    }, '*');
+                                    if (iframe?.contentWindow) {
+                                      // Send simple message format for better compatibility
+                                      iframe.contentWindow.postMessage({
+                                        action: 'zoom',
+                                        scale: newZoom
+                                      }, '*');
+                                    }
                                   }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
                                   title="Zoom out"
@@ -384,10 +387,13 @@ export function KnowledgeBaseChat() {
                                     
                                     // Send zoom message to iframe
                                     const iframe = e.currentTarget.closest('.relative')?.querySelector('iframe');
-                                    iframe?.contentWindow?.postMessage({
-                                      action: 'zoom',
-                                      scale: defaultZoom
-                                    }, '*');
+                                    if (iframe?.contentWindow) {
+                                      // Send simple message format for better compatibility
+                                      iframe.contentWindow.postMessage({
+                                        action: 'zoom',
+                                        scale: defaultZoom
+                                      }, '*');
+                                    }
                                   }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
                                   title="Reset zoom"
@@ -404,10 +410,13 @@ export function KnowledgeBaseChat() {
                                     
                                     // Send zoom message to iframe
                                     const iframe = e.currentTarget.closest('.relative')?.querySelector('iframe');
-                                    iframe?.contentWindow?.postMessage({
-                                      action: 'zoom',
-                                      scale: newZoom
-                                    }, '*');
+                                    if (iframe?.contentWindow) {
+                                      // Send simple message format for better compatibility
+                                      iframe.contentWindow.postMessage({
+                                        action: 'zoom',
+                                        scale: newZoom
+                                      }, '*');
+                                    }
                                   }}
                                   className="p-1 hover:bg-gray-100 text-gray-700"
                                   title="Zoom in"
