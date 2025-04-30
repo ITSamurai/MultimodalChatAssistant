@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import OpenAI from "openai";
+import { storage } from '../storage';
 
 // Initialize OpenAI client directly
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
@@ -33,6 +34,71 @@ const ensureDirectoriesExist = async () => {
 /**
  * Generate a diagram image using DALL-E based on a text prompt
  */
+/**
+ * Generate a Draw.IO compatible diagram XML
+ */
+async function generateDrawIODiagram(
+  prompt: string,
+  enhancedPrompt: string,
+  isNetworkDiagram: boolean
+): Promise<string> {
+  try {
+    // Get configuration
+    const config = await storage.getConfig();
+    const drawioTheme = config?.drawio_theme || 'default';
+    
+    // Prompt for Draw.IO diagram
+    const drawioPrompt = isNetworkDiagram 
+      ? `Create an XML diagram for Draw.IO (diagrams.net) that shows a network diagram for: ${enhancedPrompt}
+         Include proper network components like routers, firewalls, servers, load balancers, and cloud services.
+         The diagram should use the ${drawioTheme} theme style.
+         Only respond with valid Draw.IO XML that can be imported directly into diagrams.net.`
+      : `Create an XML diagram for Draw.IO (diagrams.net) that shows a flowchart for: ${enhancedPrompt}
+         The diagram should be clean, professional, and use the ${drawioTheme} theme style.
+         Only respond with valid Draw.IO XML that can be imported directly into diagrams.net.`;
+         
+    // Use OpenAI to generate Draw.IO XML
+    const diagramResponse = await openai.chat.completions.create({
+      model: "gpt-4o", 
+      messages: [
+        {role: "system", content: "You are a diagram creation assistant that generates valid Draw.IO (diagrams.net) XML. Respond ONLY with the XML content that can be imported directly into Draw.IO, with no explanations or markdown."},
+        {role: "user", content: drawioPrompt}
+      ],
+      max_tokens: 2500,
+      temperature: 0.5,
+    });
+    
+    // Extract the Draw.IO XML
+    const messageContent = diagramResponse.choices[0].message.content || "";
+    
+    // Clean the XML (remove any markdown code block formatting)
+    let drawioXml = messageContent.trim()
+      .replace(/```xml/g, '')
+      .replace(/```/g, '')
+      .trim();
+      
+    // If the XML doesn't start with <mxfile>, wrap it in basic Draw.IO structure
+    if (!drawioXml.startsWith('<mxfile')) {
+      drawioXml = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-${uuidv4()}" name="RiverMeadow Diagram">
+    <mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        ${drawioXml}
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>`;
+    }
+    
+    return drawioXml;
+  } catch (error) {
+    console.error('Error generating Draw.IO diagram:', error);
+    throw error;
+  }
+}
+
 export const generateDiagram = async (
   prompt: string, 
   context?: string
@@ -73,7 +139,127 @@ export const generateDiagram = async (
     // Determine if we need a network diagram instead of a flowchart
     const isNetworkDiagram = detectNetworkDiagramRequest(prompt);
     
-    // Use OpenAI to generate a mermaid diagram
+    // Get configuration to determine which diagram engine to use
+    const config = await storage.getConfig();
+    const diagramEngine = config?.diagram_engine || 'drawio';
+    
+    // Check if we should use Draw.IO
+    if (diagramEngine === 'drawio') {
+      console.log('Using Draw.IO for diagram generation');
+      
+      try {
+        // Generate Draw.IO diagram XML
+        const drawioXml = await generateDrawIODiagram(prompt, enhancedPrompt, isNetworkDiagram);
+        
+        // Create timestamp & unique filename
+        const timestamp = Date.now();
+        const uuid = uuidv4().substring(0, 8);
+        const baseFilename = `generated_diagram_${timestamp}_${uuid}`;
+        const xmlFilename = `${baseFilename}.xml`;
+        const htmlFilename = `${baseFilename}.html`;
+        
+        const xmlPath = path.join(GENERATED_IMAGES_DIR, xmlFilename);
+        const htmlPath = path.join(GENERATED_IMAGES_DIR, htmlFilename);
+        
+        // Save the Draw.IO XML to a file
+        await writeFile(xmlPath, drawioXml);
+        
+        // Create an HTML wrapper for the Draw.IO diagram
+        const drawioHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RiverMeadow Diagram</title>
+  <script src="https://cdn.jsdelivr.net/npm/mxgraph/javascript/mxClient.js"></script>
+  <script src="https://app.diagrams.net/js/viewer.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .diagram-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      max-width: 100%;
+      margin: 0 auto;
+      overflow: hidden;
+      position: relative;
+    }
+    .drawio-viewer {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    h1 {
+      text-align: center;
+      color: #0078d4;
+      margin-bottom: 20px;
+    }
+    .fallback-message {
+      padding: 20px;
+      color: #d32f2f;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram-container">
+    <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
+    <div class="drawio-container">
+      <iframe class="drawio-viewer" src="https://app.diagrams.net/?embed=1&ui=min&spin=1&proto=json" frameborder="0" allowfullscreen></iframe>
+    </div>
+    <div class="fallback-message">
+      Unable to load diagram. Please download and open in <a href="https://app.diagrams.net/" target="_blank">diagrams.net</a>
+    </div>
+  </div>
+  <script>
+    // Initialize the viewer
+    const viewer = document.querySelector('.drawio-viewer');
+    
+    // Load the diagram XML once the iframe is loaded
+    viewer.onload = function() {
+      try {
+        const xmlData = \`${drawioXml.replace(/`/g, '\\`')}\`;
+        viewer.contentWindow.postMessage(JSON.stringify({
+          action: 'load',
+          xml: xmlData
+        }), '*');
+      } catch (e) {
+        console.error('Error loading diagram:', e);
+        document.querySelector('.fallback-message').style.display = 'block';
+      }
+    };
+  </script>
+</body>
+</html>`;
+
+        // Save the HTML file
+        await writeFile(htmlPath, drawioHtml);
+        
+        console.log(`Successfully generated Draw.IO diagram: ${xmlFilename} and HTML viewer: ${htmlFilename}`);
+        
+        // Return the paths
+        return {
+          imagePath: `/uploads/generated/${htmlFilename}`,
+          mmdPath: `/uploads/generated/${xmlFilename}`,
+          mmdFilename: xmlFilename,
+          altText: prompt.substring(0, 255)
+        };
+      } catch (error) {
+        console.error('Error generating Draw.IO diagram:', error);
+        console.log('Falling back to mermaid diagram generation due to error');
+        // Fall through to mermaid generation as a fallback
+      }
+    }
+    
+    // If we're here, use Mermaid for diagram generation
+    console.log('Using Mermaid for diagram generation');
     let mermaidPrompt;
     
     if (isNetworkDiagram) {
