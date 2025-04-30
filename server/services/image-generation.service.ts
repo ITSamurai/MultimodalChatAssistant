@@ -238,7 +238,7 @@ export const generateDiagram = async (
         // Save the Draw.IO XML to a file
         await writeFile(xmlPath, drawioXml);
         
-        // Create an HTML wrapper for the Draw.IO diagram that doesn't rely on external services
+        // Create an HTML wrapper for the Draw.IO diagram using the embeddable component
         const drawioHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -249,135 +249,152 @@ export const generateDiagram = async (
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background: #f5f5f5;
+      height: 100vh;
+      overflow: hidden;
     }
     .diagram-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .header {
       background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-      max-width: 100%;
-      margin: 0 auto;
-      overflow: hidden;
-      position: relative;
+      padding: 10px 20px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     h1 {
-      text-align: center;
       color: #0078d4;
-      margin-bottom: 20px;
+      margin: 0;
       font-size: 18px;
     }
-    .diagram-view {
-      padding: 10px;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      background: #fff;
-      margin-bottom: 20px;
-      overflow: auto;
-      max-height: 600px;
-    }
-    .diagram-preview {
+    .editor-frame {
+      flex: 1;
+      border: none;
       width: 100%;
-      height: 280px;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      background: #fafafa;
-      margin: 15px 0;
+    }
+    .actions {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      text-align: center;
-      overflow: hidden;
+      gap: 10px;
     }
-    .diagram-preview h2 {
-      margin-top: 0;
-      margin-bottom: 15px;
-      font-size: 16px;
-      color: #444;
-    }
-    .diagram-preview-content {
-      font-size: 13px;
-      color: #666;
-      margin: 0 20px;
-    }
-    .download-container {
-      text-align: center;
-      margin: 15px 0;
-    }
-    .download-button {
+    .button {
       background-color: #0078d4;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 8px 15px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 14px;
       text-decoration: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
     }
-    .download-button:hover {
+    .button:hover {
       background-color: #005a9e;
     }
-    .api-download-button {
+    .button-download {
       background-color: #28a745;
-      margin-left: 5px;
     }
-    .api-download-button:hover {
+    .button-download:hover {
       background-color: #218838;
     }
-    .xml-display {
-      white-space: pre-wrap;
-      font-family: monospace;
-      font-size: 12px;
-      padding: 10px;
-      background: #f5f5f5;
-      border-radius: 4px;
-      overflow: auto;
-      max-height: 300px;
-      margin-top: 20px;
-    }
-    .note {
-      font-size: 14px;
-      color: #666;
-      margin: 15px 0;
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       text-align: center;
+      color: #666;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0078d4;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
   <div class="diagram-container">
-    <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
-    
-    <div class="note">
-      This diagram is in Draw.IO format. You can download it to edit in diagrams.net
+    <div class="header">
+      <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
+      
+      <div class="actions">
+        <a href="/api/diagram-xml/${xmlFilename}" download="rivermeadow_diagram.drawio" 
+           class="button button-download">Download Diagram</a>
+      </div>
     </div>
     
-    <div class="diagram-preview">
-      <h2>Diagram Preview</h2>
-      <img src="/api/diagram-png/${xmlFilename}" alt="Diagram Preview" 
-           style="max-width: 100%; max-height: 500px; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0;" />
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <div>Loading diagram...</div>
     </div>
     
-    <div class="download-container">
-      <a href="data:application/xml;charset=utf-8,${encodeURIComponent(drawioXml)}" 
-         download="rivermeadow_diagram.drawio" 
-         class="download-button">Download Draw.IO Diagram</a>
-         
-      <a href="/api/diagram-xml/${xmlFilename}" 
-         class="download-button api-download-button">API Download</a>
-    </div>
-    
-    <div class="note">
-      After downloading, you can open this file at <a href="https://app.diagrams.net/" target="_blank">diagrams.net</a>
-    </div>
-    
-    <details>
-      <summary>View XML Content</summary>
-      <div class="xml-display">${drawioXml.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-    </details>
+    <iframe id="editor" class="editor-frame hidden" frameborder="0" 
+            src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&analytics=0&db=0">
+    </iframe>
   </div>
+  
+  <script>
+    // Store the diagram XML
+    const diagramXml = ${JSON.stringify(drawioXml)};
+    
+    // Handle iframe loading and initialization
+    const editorFrame = document.getElementById('editor');
+    const loadingEl = document.getElementById('loading');
+    
+    // Wait for iframe to load
+    editorFrame.addEventListener('load', function() {
+      // Once the frame is loaded, send the diagram data
+      // Using the official draw.io postMessage API
+      editorFrame.contentWindow.postMessage(JSON.stringify({
+        action: 'load',
+        xml: diagramXml,
+        modified: false,
+        noSaveBtn: true,
+        noExitBtn: true
+      }), '*');
+      
+      // Hide loading indicator and show the editor
+      setTimeout(() => {
+        loadingEl.classList.add('hidden');
+        editorFrame.classList.remove('hidden');
+      }, 1000);
+    });
+    
+    // Listen for messages from the editor
+    window.addEventListener('message', function(evt) {
+      // Handle events from the editor if needed
+      try {
+        const msg = JSON.parse(evt.data);
+        
+        // React to editor events if necessary
+        if (msg.event === 'init') {
+          console.log('Editor initialized');
+        } else if (msg.event === 'export') {
+          console.log('Export completed');
+        } else if (msg.event === 'save') {
+          console.log('Save requested');
+        }
+      } catch (e) {
+        // Not a valid JSON message
+      }
+    });
+  </script>
 </body>
 </html>`;
 

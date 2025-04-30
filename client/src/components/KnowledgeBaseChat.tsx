@@ -339,17 +339,17 @@ export function KnowledgeBaseChat() {
                                   <strong>Draw.IO Diagram</strong> - Click the Download button to edit in diagrams.net
                                 </div>
                                 
-                                {/* Use iframe for SVG rendering instead of image */}
+                                {/* Use direct embed of the HTML file with Draw.IO */}
                                 <iframe 
-                                  src={getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`)}
+                                  src={getFullUrl(ref.imagePath || '')}
                                   title="RiverMeadow Diagram" 
-                                  className="w-full border border-gray-200 rounded h-[400px]"
+                                  className="w-full border border-gray-200 rounded h-[450px]"
                                   loading="lazy"
-                                  sandbox="allow-scripts allow-same-origin"
+                                  sandbox="allow-scripts allow-same-origin allow-popups"
                                   onError={(e) => {
                                     console.error("Failed to load diagram in iframe:", e);
-                                    // Fall back to direct link
-                                    e.currentTarget.src = getFullUrl(ref.imagePath || '');
+                                    // Fall back to SVG rendering as backup
+                                    e.currentTarget.src = getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`);
                                   }}
                                 />
                               </div>
