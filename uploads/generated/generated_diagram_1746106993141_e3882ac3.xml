@@ -1,0 +1,141 @@
+<mxfile host="app.diagrams.net" modified="2025-05-01T13:43:13.141Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-a9b32168-497e-4953-8f48-0f0a472a95f0" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_993141_0" value="" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="20" y="20" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_1" value="Migration Details" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="20" y="20" width="140" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_2" value="Migrate" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="200" y="20" width="100" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_3" value="View Migrations" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="350" y="20" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_4" value="Migration Summary" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="500" y="20" width="140" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_5" value="Plan Name: W2K8R2-Demo-2021/03/18 15:36:26" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="650" y="20" width="240" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_6" value="View" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="900" y="20" width="60" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_7" value="Migration Type: Full" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="20" y="100" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_8" value="Transfer Method: Block-based" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="200" y="100" width="200" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_9" value="Stalls" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="430" y="100" width="60" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_10" value="ID: 5a5f1704-2aed-40f8-b3e3-e44cfe3aa0b4" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="520" y="100" width="280" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_11" value="Selected Mounts: C" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="820" y="100" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_12" value="Project: rm-se-33" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="20" y="180" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_13" value="Region: us-east1" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="200" y="180" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_14" value="Zone: us-east1-b" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="380" y="180" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_15" value="Machine Type" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="560" y="180" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_16" value="Disk Types" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="700" y="180" width="100" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_17" value="Network Adapters" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="820" y="180" width="140" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_18" value="Network Tags" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="980" y="180" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_19" value="Automatic DNS registration" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="20" y="260" width="220" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_20" value="Shutdown Source" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="260" y="260" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_21" value="Shutdown Target" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="440" y="260" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_22" value="OS Modernization" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="620" y="260" width="160" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_23" value="Target OS Upgrade Version" style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="800" y="260" width="200" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_24" value="Success" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="1020" y="260" width="80" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_25" value="The RMS Migration Appliance is deployed into the target cloud(s) of choice." style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="20" y="340" width="300" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_26" value="Secure Network" style="shape=ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="340" y="340" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_27" value="The RMS Migration Appliance communicates with the RiverMeadow Platform." style="shape=rectangle;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="480" y="340" width="360" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_28" value="" edge="1" parent="0" source="1" target="2">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_29" value="" edge="1" parent="0" source="2" target="3">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_30" value="" edge="1" parent="0" source="3" target="4">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_31" value="" edge="1" parent="0" source="4" target="5">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_32" value="" edge="1" parent="0" source="5" target="6">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_33" value="" edge="1" parent="0" source="6" target="7">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_34" value="" edge="1" parent="0" source="7" target="8">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_35" value="" edge="1" parent="0" source="8" target="9">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_36" value="" edge="1" parent="0" source="9" target="10">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_37" value="" edge="1" parent="0" source="10" target="11">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_38" value="" edge="1" parent="0" source="11" target="12">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_39" value="" edge="1" parent="0" source="12" target="13">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_40" value="" edge="1" parent="0" source="13" target="14">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_41" value="" edge="1" parent="0" source="14" target="15">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_42" value="" edge="1" parent="0" source="15" target="16">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_993141_43" value="" edge="1" parent="0" source="16" target="17">
+    <mxGeometry relative="
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

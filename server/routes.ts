@@ -231,10 +231,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter out the layout cells to get only the content cells
       const contentCells = cells.filter((c, i) => i !== rootCellIndex && i !== containerCellIndex);
       
-      // Calculate diagram dimensions
+      // Calculate diagram dimensions with extra attention to ensure all content is included
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       
-      for (const cell of contentCells) {
+      // Process all cells including root and container
+      for (const cell of cells) {
         if (cell.geometry) {
           const x = cell.geometry.x;
           const y = cell.geometry.y;
@@ -248,11 +249,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Add padding and ensure we have valid dimensions
-      minX = isFinite(minX) ? minX - 20 : 0;
-      minY = isFinite(minY) ? minY - 20 : 0;
-      maxX = isFinite(maxX) ? maxX + 20 : 800;
-      maxY = isFinite(maxY) ? maxY + 20 : 600;
+      // Add generous padding and ensure we have valid dimensions
+      // More padding ensures we capture all elements
+      minX = isFinite(minX) ? minX - 50 : 0;
+      minY = isFinite(minY) ? minY - 50 : 0;
+      maxX = isFinite(maxX) ? maxX + 50 : 800;
+      maxY = isFinite(maxY) ? maxY + 50 : 600;
+      
+      // For very small diagrams with few elements, ensure minimum dimensions
+      if (maxX - minX < 400) maxX = minX + 800;
+      if (maxY - minY < 300) maxY = minY + 600;
       
       const width = maxX - minX;
       const height = maxY - minY;

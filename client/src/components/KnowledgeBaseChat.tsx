@@ -105,17 +105,41 @@ export function KnowledgeBaseChat() {
               const svgBlob = new Blob([svgText], {type: 'image/svg+xml'});
               const url = URL.createObjectURL(svgBlob);
               
+              // Extract viewBox to get the full diagram dimensions
+              let fullWidth = width;
+              let fullHeight = height;
+              const viewBoxAttr = svgElement.getAttribute('viewBox');
+              
+              if (viewBoxAttr) {
+                const viewBoxValues = viewBoxAttr.split(' ').map(parseFloat);
+                if (viewBoxValues.length === 4) {
+                  // viewBox format: minX minY width height
+                  fullWidth = viewBoxValues[2];
+                  fullHeight = viewBoxValues[3];
+                }
+              }
+              
               // Create image and load the SVG
               const img = new Image();
               img.onload = () => {
+                // Set canvas size to match the full diagram size (with high resolution)
+                canvas.width = fullWidth * scale;
+                canvas.height = fullHeight * scale;
+                
                 const ctx = canvas.getContext('2d');
                 if (ctx) {
                   // Set white background
                   ctx.fillStyle = 'white';
                   ctx.fillRect(0, 0, canvas.width, canvas.height);
-                  // Draw scaled image
+                  
+                  // Reset any previous transform
+                  ctx.setTransform(1, 0, 0, 1, 0, 0);
+                  
+                  // Scale for high resolution
                   ctx.scale(scale, scale);
-                  ctx.drawImage(img, 0, 0);
+                  
+                  // Draw the complete image, not just the visible part
+                  ctx.drawImage(img, 0, 0, fullWidth, fullHeight);
                 }
                 
                 // Convert to PNG and download
