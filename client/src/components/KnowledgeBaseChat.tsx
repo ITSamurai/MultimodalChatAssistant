@@ -7,6 +7,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { getFullUrl } from '@/lib/config';
 import { Loader2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from "@/components/ui/toast";
 import { Progress } from "@/components/ui/progress";
 import * as htmlToImage from 'html-to-image';
 import { AppConfig, defaultConfig } from "@/lib/config-types";
@@ -71,78 +72,193 @@ export function KnowledgeBaseChat() {
           baseFileName = fileName.replace('.xml', '');
         }
         
-        // Try to download as PNG first
+        // METHOD 1: Direct SVG approach - convert to PNG in browser
         try {
-          // Use the screenshot API to get a PNG version
-          const screenshotUrl = getFullUrl(`/api/screenshot-diagram/${baseFileName}`);
-          console.log(`Attempting to get PNG screenshot: ${screenshotUrl}`);
+          // Use the SVG API to get the SVG content
+          const svgUrl = getFullUrl(`/api/diagram-svg/${baseFileName}.xml`);
+          console.log(`Fetching diagram SVG from API for PNG conversion: ${svgUrl}`);
           
-          const response = await fetch(screenshotUrl);
+          const response = await fetch(svgUrl);
           
           if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `rivermeadow_diagram_${Date.now()}.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
+            const svgText = await response.text();
+            // Create a temporary hidden SVG container
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = svgText.trim();
+            document.body.appendChild(tempDiv);
+            const svgElement = tempDiv.querySelector('svg');
             
-            toast({
-              title: "Success", 
-              description: "Diagram downloaded as PNG",
-            });
-            return;
-          } else {
-            console.warn("PNG screenshot not available, falling back to XML download");
+            if (svgElement) {
+              // Get SVG dimensions
+              const width = parseFloat(svgElement.getAttribute('width') || '800');
+              const height = parseFloat(svgElement.getAttribute('height') || '600');
+              
+              // Create a canvas with higher resolution
+              const canvas = document.createElement('canvas');
+              const scale = 2; // Higher resolution scale factor
+              canvas.width = width * scale;
+              canvas.height = height * scale;
+              
+              // Convert SVG to string
+              const svgString = new XMLSerializer().serializeToString(svgElement);
+              const encodedSvg = encodeURIComponent(svgString);
+              const svgBlob = new Blob([svgText], {type: 'image/svg+xml'});
+              const url = URL.createObjectURL(svgBlob);
+              
+              // Create image and load the SVG
+              const img = new Image();
+              img.onload = () => {
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  // Set white background
+                  ctx.fillStyle = 'white';
+                  ctx.fillRect(0, 0, canvas.width, canvas.height);
+                  // Draw scaled image
+                  ctx.scale(scale, scale);
+                  ctx.drawImage(img, 0, 0);
+                }
+                
+                // Convert to PNG and download
+                canvas.toBlob((blob) => {
+                  if (!blob) {
+                    throw new Error('Canvas to Blob conversion failed');
+                  }
+                  
+                  const pngUrl = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = pngUrl;
+                  a.download = `rivermeadow_diagram_${Date.now()}.png`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  
+                  // Clean up
+                  URL.revokeObjectURL(pngUrl);
+                  URL.revokeObjectURL(url);
+                  document.body.removeChild(tempDiv);
+                  
+                  toast({
+                    title: "Success", 
+                    description: "Diagram downloaded as PNG",
+                  });
+                  setIsLoading(false);
+                }, 'image/png', 1.0);
+              };
+              
+              img.onerror = () => {
+                console.error('Failed to load SVG as image');
+                document.body.removeChild(tempDiv);
+                // Continue to fallback methods
+                tryServerPngScreenshot();
+              };
+              
+              img.src = url;
+              return; // Exit early, onload will handle completion
+            } else {
+              document.body.removeChild(tempDiv);
+              console.warn('SVG element not found in response');
+            }
           }
         } catch (error) {
-          console.warn("Error getting PNG screenshot:", error);
+          console.warn("Error converting SVG to PNG in browser:", error);
         }
         
-        // If PNG failed, try to download the XML
-        try {
-          // Use getFullUrl helper to construct proper absolute URL for XML
-          const xmlApiPath = getFullUrl(`/api/diagram-xml/${baseFileName}.xml`);
-          console.log(`Fetching diagram XML from API: ${xmlApiPath}`);
-          
-          const xmlResponse = await fetch(xmlApiPath);
-          
-          if (xmlResponse.ok) {
-            // Download the XML as a Draw.IO file
-            const blob = await xmlResponse.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `rivermeadow_diagram_${Date.now()}.drawio`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
+        // METHOD 2: Try server-side screenshot method
+        // Define the function here so it's available for all code paths
+        const tryServerPngScreenshot = async () => {
+          try {
+            // Use the screenshot API to get a PNG version
+            const screenshotUrl = getFullUrl(`/api/screenshot-diagram/${baseFileName}`);
+            console.log(`Attempting to get PNG screenshot from server: ${screenshotUrl}`);
             
-            toast({
-              title: "Success", 
-              description: "Diagram downloaded successfully. Open it with diagrams.net",
-            });
-          } else {
-            // If all else fails, open in a new tab
+            const response = await fetch(screenshotUrl);
+            
+            if (response.ok) {
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `rivermeadow_diagram_${Date.now()}.png`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+              
+              toast({
+                title: "Success", 
+                description: "Diagram downloaded as PNG",
+              });
+              return true;
+            } else {
+              console.warn("PNG screenshot not available from server");
+              return false;
+            }
+          } catch (error) {
+            console.warn("Error getting PNG screenshot from server:", error);
+            return false;
+          }
+        };
+        
+        // METHOD 3: Last resort - download drawio XML
+        const downloadXmlAsFallback = async () => {
+          try {
+            // As a last resort, download the XML file
+            const xmlApiPath = getFullUrl(`/api/diagram-xml/${baseFileName}.xml`);
+            console.log(`Falling back to diagram XML download: ${xmlApiPath}`);
+            
+            const xmlResponse = await fetch(xmlApiPath);
+            
+            if (xmlResponse.ok) {
+              // Create a rendered PNG first using the SVG approach
+              // Then ask user if they want to download the XML instead
+              
+              toast({
+                title: "PNG Conversion Failed", 
+                description: "Would you like to download the diagram source file (drawio) instead?",
+                action: (
+                  <ToastAction altText="Download XML" onClick={async () => {
+                    // Download the XML as a Draw.IO file
+                    const blob = await xmlResponse.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `rivermeadow_diagram_${Date.now()}.drawio`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                  }}>
+                    Download
+                  </ToastAction>
+                ),
+              });
+              
+              // Just open the diagram in a new tab for now
+              window.open(getFullUrl(imagePath), '_blank');
+            } else {
+              // If all else fails, open in a new tab
+              window.open(getFullUrl(imagePath), '_blank');
+              
+              toast({
+                title: "Opening diagram page",
+                description: "Please use your browser to save a screenshot",
+              });
+            }
+          } catch (error) {
+            console.error("Error with all download methods:", error);
             window.open(getFullUrl(imagePath), '_blank');
             
             toast({
-              title: "Opening diagram page",
-              description: "Please use the download button on the page or take a screenshot",
+              title: "Diagram opened in new tab",
+              description: "Please use your browser to save a screenshot",
             });
           }
-        } catch (error) {
-          console.error("Error downloading diagram:", error);
-          window.open(getFullUrl(imagePath), '_blank');
-          
-          toast({
-            title: "Diagram opened in new tab",
-            description: "Please use the download button on the page or take a screenshot",
-          });
+        };
+        
+        // Try server PNG approach, then XML fallback if needed
+        const pngSuccess = await tryServerPngScreenshot();
+        if (!pngSuccess) {
+          await downloadXmlAsFallback();
         }
       } else {
         // For regular images, just create a download link
