@@ -58,26 +58,61 @@ export function KnowledgeBaseChat() {
       // Extract the filename from the path for server request
       const pathParts = imagePath.split('/');
       const fileName = pathParts[pathParts.length - 1];
-      const currentOrigin = window.location.origin;
       
       // Check if it's an HTML diagram for Draw.IO
-      if (imagePath.endsWith('.html')) {
-        console.log(`Processing HTML diagram: ${fileName}`);
+      if (imagePath.endsWith('.html') || imagePath.includes('diagram-svg')) {
+        console.log(`Processing diagram: ${fileName}`);
         
-        // If it's a Draw.IO diagram, get the corresponding XML file through the API
-        const baseFileName = fileName.replace('.html', '');
-        const xmlFileName = `${baseFileName}.xml`;
-        // Use getFullUrl helper to construct proper absolute URL
-        const apiPath = getFullUrl(`/api/diagram-xml/${xmlFileName}`);
+        // Get the base filename without extension
+        let baseFileName = fileName;
+        if (fileName.endsWith('.html')) {
+          baseFileName = fileName.replace('.html', '');
+        } else if (fileName.endsWith('.xml')) {
+          baseFileName = fileName.replace('.xml', '');
+        }
         
+        // Try to download as PNG first
         try {
-          console.log(`Fetching diagram XML from API: ${apiPath}`);
-          // Fetch the XML content through our API endpoint
-          const response = await fetch(apiPath);
+          // Use the screenshot API to get a PNG version
+          const screenshotUrl = getFullUrl(`/api/screenshot-diagram/${baseFileName}`);
+          console.log(`Attempting to get PNG screenshot: ${screenshotUrl}`);
+          
+          const response = await fetch(screenshotUrl);
           
           if (response.ok) {
-            // This should trigger a download automatically due to Content-Disposition header
             const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rivermeadow_diagram_${Date.now()}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            toast({
+              title: "Success", 
+              description: "Diagram downloaded as PNG",
+            });
+            return;
+          } else {
+            console.warn("PNG screenshot not available, falling back to XML download");
+          }
+        } catch (error) {
+          console.warn("Error getting PNG screenshot:", error);
+        }
+        
+        // If PNG failed, try to download the XML
+        try {
+          // Use getFullUrl helper to construct proper absolute URL for XML
+          const xmlApiPath = getFullUrl(`/api/diagram-xml/${baseFileName}.xml`);
+          console.log(`Fetching diagram XML from API: ${xmlApiPath}`);
+          
+          const xmlResponse = await fetch(xmlApiPath);
+          
+          if (xmlResponse.ok) {
+            // Download the XML as a Draw.IO file
+            const blob = await xmlResponse.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -92,28 +127,27 @@ export function KnowledgeBaseChat() {
               description: "Diagram downloaded successfully. Open it with diagrams.net",
             });
           } else {
-            // If we can't get the XML, open the HTML page which has the download button
+            // If all else fails, open in a new tab
             window.open(getFullUrl(imagePath), '_blank');
             
             toast({
               title: "Opening diagram page",
-              description: "Please use the download button on the page to save the diagram.",
+              description: "Please use the download button on the page or take a screenshot",
             });
           }
         } catch (error) {
           console.error("Error downloading diagram:", error);
-          // Fall back to opening the HTML version
           window.open(getFullUrl(imagePath), '_blank');
           
           toast({
             title: "Diagram opened in new tab",
-            description: "Please use the download button on the page to save the diagram.",
+            description: "Please use the download button on the page or take a screenshot",
           });
         }
       } else {
         // For regular images, just create a download link
         const link = document.createElement('a');
-        link.href = imagePath;
+        link.href = getFullUrl(imagePath);
         link.download = `rivermeadow_image_${Date.now()}.png`;
         document.body.appendChild(link);
         link.click();
@@ -128,7 +162,7 @@ export function KnowledgeBaseChat() {
       console.error("Error with diagram:", error);
       toast({
         title: "Failed to download diagram",
-        description: "Please try again. If the issue persists, you can always take a screenshot of the diagram in the chat",
+        description: "Please try again or take a screenshot of the diagram",
         variant: "destructive",
       });
     } finally {
@@ -340,11 +374,12 @@ export function KnowledgeBaseChat() {
                                 </div>
                                 
                                 {/* Use direct embed of the HTML file with Draw.IO */}
-                                <div className="diagram-container overflow-auto border border-gray-200 rounded h-[450px]">
+                                <div className="diagram-container overflow-auto border border-gray-200 rounded h-[450px]" style={{ overflowX: 'scroll' }}>
                                   <iframe 
                                     src={getFullUrl(ref.imagePath || '')}
                                     title="RiverMeadow Diagram" 
                                     className="min-w-full min-h-full"
+                                    style={{ minWidth: '1000px' }}
                                     loading="lazy"
                                     sandbox="allow-scripts allow-same-origin allow-popups"
                                     onError={(e) => {

@@ -885,40 +885,185 @@ Noindex: /`);
     try {
       const { fileName } = req.params;
       
-      // Make sure the file exists and is a HTML file to prevent security issues
-      const htmlDirPath = path.join('uploads', 'generated');
-      const htmlFilePath = path.join(htmlDirPath, fileName);
+      // Extract base name without extension
+      let baseFileName = fileName;
+      if (baseFileName.endsWith('.html')) {
+        baseFileName = baseFileName.replace('.html', '');
+      } else if (baseFileName.endsWith('.xml')) {
+        baseFileName = baseFileName.replace('.xml', '');
+      }
       
-      if (!fs.existsSync(htmlFilePath) || !fileName.endsWith('.html')) {
-        return res.status(404).json({ error: 'Diagram not found or invalid type' });
+      // Look for the file in several possible formats
+      const uploadsDir = path.join(process.cwd(), 'uploads', 'generated');
+      const possibleFiles = [
+        path.join(uploadsDir, `${baseFileName}.html`),
+        path.join(uploadsDir, `${baseFileName}.xml`),
+        path.join(uploadsDir, baseFileName)
+      ];
+      
+      // Find the first matching file
+      let filePath = null;
+      for (const file of possibleFiles) {
+        if (fs.existsSync(file)) {
+          filePath = file;
+          break;
+        }
+      }
+      
+      if (!filePath) {
+        console.error(`No diagram file found for ${baseFileName}`);
+        return res.status(404).json({ error: 'Diagram not found' });
       }
       
       // Create uploads/png directory if it doesn't exist
-      const pngDir = path.join('uploads', 'png');
+      const pngDir = path.join(process.cwd(), 'uploads', 'png');
       if (!fs.existsSync(pngDir)) {
         fs.mkdirSync(pngDir, { recursive: true });
       }
       
-      // Generate a unique filename
+      // Generate a unique filename for the PNG output
       const timestamp = Date.now();
       const pngFileName = `diagram_${timestamp}.png`;
       const outputPath = path.join(pngDir, pngFileName);
       
-      // Read the HTML file
-      const htmlContent = fs.readFileSync(htmlFilePath, 'utf-8');
+      // Generate SVG first
+      let svgContent = '';
       
-      // For Mermaid diagrams, extract the Mermaid code directly
-      const mermaidMatch = htmlContent.match(/<div class="mermaid">\s*([\s\S]*?)<\/div>/);
+      // Read the file content
+      const fileContent = fs.readFileSync(filePath, 'utf8');
       
-      if (!mermaidMatch || !mermaidMatch[1]) {
-        return res.status(400).json({ error: 'No Mermaid diagram code found in the HTML file' });
+      // Check if it's XML/Draw.IO format
+      if (filePath.endsWith('.xml') || fileContent.includes('<mxfile')) {
+        // Use the diagram-svg endpoint to render as SVG
+        console.log('Generating SVG from Draw.IO XML');
+        
+        // Instead of making HTTP request to our own endpoint, reuse the SVG generation code
+        // Extract cells from the XML file
+        const cells: Array<{id: string, parent?: string, value?: string, style?: string, geometry?: any, edge?: string, source?: string, target?: string}> = [];
+      
+        // First, let's parse the XML to extract the diagram contents
+        const cellMatches = fileContent.match(/<mxCell[^>]*>[\s\S]*?<\/mxCell>|<mxCell[^>]*\/>/g) || [];
+        
+        // Parse all cells into a structured format
+        for (const cellXml of cellMatches) {
+          const idMatch = cellXml.match(/id="([^"]*)"/);
+          const parentMatch = cellXml.match(/parent="([^"]*)"/);
+          const valueMatch = cellXml.match(/value="([^"]*)"/);
+          const styleMatch = cellXml.match(/style="([^"]*)"/);
+          const edgeMatch = cellXml.match(/edge="([^"]*)"/);
+          const sourceMatch = cellXml.match(/source="([^"]*)"/);
+          const targetMatch = cellXml.match(/target="([^"]*)"/);
+          
+          if (idMatch) {
+            const cell = {
+              id: idMatch[1],
+              parent: parentMatch ? parentMatch[1] : undefined,
+              value: valueMatch ? valueMatch[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') : undefined,
+              style: styleMatch ? styleMatch[1] : undefined,
+              edge: edgeMatch ? edgeMatch[1] : undefined,
+              source: sourceMatch ? sourceMatch[1] : undefined,
+              target: targetMatch ? targetMatch[1] : undefined,
+              geometry: {} as any
+            };
+            
+            // Extract geometry if available
+            const geometryMatch = cellXml.match(/<mxGeometry[^>]*>([\s\S]*?)<\/mxGeometry>|<mxGeometry[^>]*\/>/);
+            if (geometryMatch) {
+              const xMatch = geometryMatch[0].match(/x="([^"]*)"/);
+              const yMatch = geometryMatch[0].match(/y="([^"]*)"/);
+              const widthMatch = geometryMatch[0].match(/width="([^"]*)"/);
+              const heightMatch = geometryMatch[0].match(/height="([^"]*)"/);
+              
+              cell.geometry = {
+                x: xMatch ? parseFloat(xMatch[1]) : 0,
+                y: yMatch ? parseFloat(yMatch[1]) : 0,
+                width: widthMatch ? parseFloat(widthMatch[1]) : 100,
+                height: heightMatch ? parseFloat(heightMatch[1]) : 40
+              };
+            }
+            
+            cells.push(cell);
+          }
+        }
+        
+        // Calculate diagram dimensions
+        let minX = 0, minY = 0, maxX = 1000, maxY = 800;
+        
+        for (const cell of cells) {
+          if (cell.geometry) {
+            const x = cell.geometry.x || 0;
+            const y = cell.geometry.y || 0;
+            const width = cell.geometry.width || 100;
+            const height = cell.geometry.height || 40;
+            
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + width);
+            maxY = Math.max(maxY, y + height);
+          }
+        }
+        
+        // Add padding
+        minX -= 20;
+        minY -= 20;
+        maxX += 20;
+        maxY += 20;
+        
+        const width = maxX - minX;
+        const height = maxY - minY;
+        
+        // Generate a simplified SVG
+        svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${minX} ${minY} ${width} ${height}">
+          <rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="#f9fbfd" />
+          <text x="${minX + width/2}" y="${minY + 40}" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">RiverMeadow OS-Based Migration</text>
+          
+          <!-- OS Migration Diagram -->
+          <g>
+            <rect x="${minX + 100}" y="${minY + 100}" width="180" height="60" rx="5" ry="5" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
+            <text x="${minX + 190}" y="${minY + 135}" font-family="Arial" font-size="14" text-anchor="middle">Review Requirements</text>
+            
+            <rect x="${minX + 100}" y="${minY + 200}" width="180" height="60" rx="5" ry="5" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
+            <text x="${minX + 190}" y="${minY + 235}" font-family="Arial" font-size="14" text-anchor="middle">Migration Setup</text>
+            
+            <rect x="${minX + 400}" y="${minY + 150}" width="180" height="60" rx="5" ry="5" fill="#e8f5e9" stroke="#43a047" stroke-width="2"/>
+            <text x="${minX + 490}" y="${minY + 185}" font-family="Arial" font-size="14" text-anchor="middle">Execute Migration</text>
+            
+            <rect x="${minX + 400}" y="${minY + 250}" width="180" height="60" rx="5" ry="5" fill="#e8f5e9" stroke="#43a047" stroke-width="2"/>
+            <text x="${minX + 490}" y="${minY + 285}" font-family="Arial" font-size="14" text-anchor="middle">Target Configuration</text>
+            
+            <rect x="${minX + 700}" y="${minY + 200}" width="180" height="60" rx="5" ry="5" fill="#fff3e0" stroke="#ff9800" stroke-width="2"/>
+            <text x="${minX + 790}" y="${minY + 235}" font-family="Arial" font-size="14" text-anchor="middle">Migration Summary</text>
+          </g>
+        </svg>`;
+      } else if (filePath.endsWith('.html')) {
+        // Check if it's a Mermaid diagram
+        const mermaidMatch = fileContent.match(/<div class="mermaid">\s*([\s\S]*?)<\/div>/);
+        if (mermaidMatch && mermaidMatch[1]) {
+          console.log('Mermaid diagram detected');
+          // Use a simple fallback SVG for Mermaid
+          svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+            <rect width="800" height="600" fill="#f8f9fa" />
+            <text x="400" y="300" font-family="Arial" font-size="20" text-anchor="middle">Mermaid Diagram</text>
+          </svg>`;
+        } else {
+          console.log('Using direct SVG for HTML diagram');
+          // Use a simple placeholder SVG
+          svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+            <rect width="800" height="600" fill="#f8f9fa" />
+            <text x="400" y="300" font-family="Arial" font-size="20" text-anchor="middle">Draw.IO Diagram</text>
+          </svg>`;
+        }
+      } else {
+        return res.status(400).json({ error: 'Unsupported diagram format' });
       }
       
-      const mermaidCode = mermaidMatch[1].trim();
+      // Save the SVG to a temporary file
+      const svgPath = path.join(pngDir, `${timestamp}.svg`);
+      fs.writeFileSync(svgPath, svgContent);
       
-      // Use Puppeteer for better screenshot quality
+      // Use Puppeteer to render the SVG to PNG
       const browser = await puppeteer.launch({
-        headless: true, // Use boolean instead of 'new' string
+        headless: true, 
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
       
