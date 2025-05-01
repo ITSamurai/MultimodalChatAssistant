@@ -148,7 +148,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert the Draw.IO XML to a simple SVG representation of the diagram
       
       // Extract cells from the XML file
-      const cells: Array<{id: string, parent?: string, value?: string, style?: string, geometry?: any, edge?: string, source?: string, target?: string}> = [];
+      const cells: Array<{
+        id: string;
+        parent?: string;
+        value?: string;
+        style?: string;
+        edge?: string;
+        source?: string;
+        target?: string;
+        geometry?: {
+          x: number;
+          y: number;
+          width: number;
+          height: number;
+        };
+      }> = [];
       
       // First, let's parse the XML to extract the diagram contents
       const cellMatches = cleanedContent.match(/<mxCell[^>]*>[\s\S]*?<\/mxCell>|<mxCell[^>]*\/>/g) || [];
@@ -164,7 +178,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const targetMatch = cellXml.match(/target="([^"]*)"/);
         
         if (idMatch) {
-          const cell = {
+          // Create cell object with proper typing for geometry
+          const cell: {
+            id: string;
+            parent?: string;
+            value?: string;
+            style?: string;
+            edge?: string;
+            source?: string;
+            target?: string;
+            geometry?: {
+              x: number;
+              y: number;
+              width: number;
+              height: number;
+            };
+          } = {
             id: idMatch[1],
             parent: parentMatch ? parentMatch[1] : undefined,
             value: valueMatch ? valueMatch[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') : undefined,
