@@ -340,18 +340,20 @@ export function KnowledgeBaseChat() {
                                 </div>
                                 
                                 {/* Use direct embed of the HTML file with Draw.IO */}
-                                <iframe 
-                                  src={getFullUrl(ref.imagePath || '')}
-                                  title="RiverMeadow Diagram" 
-                                  className="w-full border border-gray-200 rounded h-[450px]"
-                                  loading="lazy"
-                                  sandbox="allow-scripts allow-same-origin allow-popups"
-                                  onError={(e) => {
-                                    console.error("Failed to load diagram in iframe:", e);
-                                    // Fall back to SVG rendering as backup
-                                    e.currentTarget.src = getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`);
-                                  }}
-                                />
+                                <div className="diagram-container overflow-auto border border-gray-200 rounded h-[450px]">
+                                  <iframe 
+                                    src={getFullUrl(ref.imagePath || '')}
+                                    title="RiverMeadow Diagram" 
+                                    className="min-w-full min-h-full"
+                                    loading="lazy"
+                                    sandbox="allow-scripts allow-same-origin allow-popups"
+                                    onError={(e) => {
+                                      console.error("Failed to load diagram in iframe:", e);
+                                      // Fall back to SVG rendering as backup
+                                      e.currentTarget.src = getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`);
+                                    }}
+                                  />
+                                </div>
                               </div>
                               
                               {/* Diagram controls */}

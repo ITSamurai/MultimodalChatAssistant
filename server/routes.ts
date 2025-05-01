@@ -228,10 +228,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const width = maxX - minX;
       const height = maxY - minY;
       
-      // Since we couldn't parse all Draw.IO cells properly, create a more direct SVG showing OS migration steps
+      // Since we couldn't parse all Draw.IO cells properly, create a more direct SVG with interactive features
       // This ensures that users always see something useful even if the XML is complex
-      const svgHtml = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${minX} ${minY} ${width} ${height}">
+      const svgHtml = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" 
+           viewBox="${minX} ${minY} ${width} ${height}" 
+           style="max-width:100%; height:auto; font-family: Arial, sans-serif;"
+           xmlns:xlink="http://www.w3.org/1999/xlink">
+        <style>
+          /* Add panning ability */
+          svg { cursor: grab; }
+          svg:active { cursor: grabbing; }
+          @media (max-width: 768px) {
+            text { font-size: 90%; }
+          }
+          .arrow { marker-end: url(#arrowhead); }
+          .node:hover { filter: brightness(0.95); }
+        </style>
+        
+        <script type="text/javascript"><![CDATA[
+          // Variables for panning
+          let isPanning = false;
+          let startPoint = { x: 0, y: 0 };
+          let endPoint = { x: 0, y: 0 };
+          let scale = 1.0;
+          
+          // Get SVG element and its viewBox
+          let svg, viewBox, viewBoxValues;
+          
+          // Initialize dragging and zoom functionality
+          window.addEventListener('load', () => {
+            svg = document.querySelector('svg');
+            viewBox = svg.getAttribute('viewBox');
+            viewBoxValues = viewBox.split(' ').map(n => parseFloat(n));
+            
+            // Pan events
+            svg.addEventListener('mousedown', startDrag);
+            svg.addEventListener('mousemove', drag);
+            svg.addEventListener('mouseup', endDrag);
+            svg.addEventListener('mouseleave', endDrag);
+            svg.addEventListener('touchstart', startDrag);
+            svg.addEventListener('touchmove', drag);
+            svg.addEventListener('touchend', endDrag);
+            
+            // Zoom events
+            svg.addEventListener('wheel', zoom);
+            
+            // Receive messages from parent window
+            window.addEventListener('message', function(event) {
+              if (event.data && event.data.action === 'zoom') {
+                // Apply zoom from control panel
+                scale = event.data.scale;
+                applyZoom();
+              }
+            });
+          });
+          
+          function startDrag(evt) {
+            if (evt.type === 'touchstart') {
+              startPoint = { 
+                x: evt.touches[0].clientX, 
+                y: evt.touches[0].clientY 
+              };
+            } else {
+              startPoint = { 
+                x: evt.clientX, 
+                y: evt.clientY 
+              };
+            }
+            isPanning = true;
+          }
+          
+          function drag(evt) {
+            if (!isPanning) return;
+            
+            evt.preventDefault();
+            
+            if (evt.type === 'touchmove') {
+              endPoint = {
+                x: evt.touches[0].clientX,
+                y: evt.touches[0].clientY
+              };
+            } else {
+              endPoint = {
+                x: evt.clientX,
+                y: evt.clientY
+              };
+            }
+            
+            // Calculate how far to pan
+            const dx = (startPoint.x - endPoint.x) / scale;
+            const dy = (startPoint.y - endPoint.y) / scale;
+            
+            // Update viewBox
+            viewBoxValues[0] += dx;
+            viewBoxValues[1] += dy;
+            svg.setAttribute('viewBox', viewBoxValues.join(' '));
+            
+            // Reset start point
+            startPoint = endPoint;
+          }
+          
+          function endDrag(evt) {
+            isPanning = false;
+          }
+          
+          function zoom(evt) {
+            evt.preventDefault();
+            
+            // Get mouse position
+            const point = {
+              x: evt.clientX,
+              y: evt.clientY
+            };
+            
+            // Get the current viewBox
+            const { width, height } = svg.getBoundingClientRect();
+            const viewBoxValues = svg.getAttribute('viewBox').split(' ').map(n => parseFloat(n));
+            
+            // Calculate current cursor position in SVG coordinates
+            const svgX = viewBoxValues[0] + (point.x / width) * viewBoxValues[2];
+            const svgY = viewBoxValues[1] + (point.y / height) * viewBoxValues[3];
+            
+            // Determine zoom direction and amount
+            const zoomFactor = evt.deltaY > 0 ? 1.1 : 0.9;
+            
+            // Update scale
+            scale = scale * (1/zoomFactor);
+            scale = Math.max(0.5, Math.min(scale, 2.0)); // Limit scale between 0.5 and 2.0
+            
+            // Apply the zoom centered on the cursor position
+            viewBoxValues[0] = svgX - (svgX - viewBoxValues[0]) * zoomFactor;
+            viewBoxValues[1] = svgY - (svgY - viewBoxValues[1]) * zoomFactor;
+            viewBoxValues[2] = viewBoxValues[2] * zoomFactor;
+            viewBoxValues[3] = viewBoxValues[3] * zoomFactor;
+            
+            svg.setAttribute('viewBox', viewBoxValues.join(' '));
+          }
+          
+          function applyZoom() {
+            // Get the current viewBox
+            const viewBoxValues = svg.getAttribute('viewBox').split(' ').map(n => parseFloat(n));
+            
+            // Calculate center point
+            const centerX = viewBoxValues[0] + viewBoxValues[2] / 2;
+            const centerY = viewBoxValues[1] + viewBoxValues[3] / 2;
+            
+            // Calculate new width and height based on scale
+            const newWidth = ${width} / scale;
+            const newHeight = ${height} / scale;
+            
+            // Apply the zoom while preserving the center point
+            viewBoxValues[0] = centerX - newWidth / 2;
+            viewBoxValues[1] = centerY - newHeight / 2;
+            viewBoxValues[2] = newWidth;
+            viewBoxValues[3] = newHeight;
+            
+            svg.setAttribute('viewBox', viewBoxValues.join(' '));
+          }
+        ]]></script>
+
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
@@ -242,55 +398,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         <rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="#f9fbfd" rx="5" ry="5"/>
         
         <!-- Title -->
-        <text x="${minX + width/2}" y="${minY + 40}" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">RiverMeadow OS-Based Migration</text>
+        <text x="${minX + width/2}" y="${minY + 40}" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">RiverMeadow OS-Based Migration</text>
+        
+        <!-- Instructions -->
+        <text x="${minX + width/2}" y="${minY + 70}" font-size="12" text-anchor="middle" fill="#666">
+          <tspan x="${minX + width/2}" dy="0">Pan: Drag the diagram | Zoom: Mouse wheel or touchpad</tspan>
+        </text>
         
         <!-- Generate diagram elements based on cells -->
         <g id="nodes">
           <!-- Migration Steps as Boxes -->
-          <rect x="${minX + 100}" y="${minY + 100}" width="180" height="60" rx="5" ry="5" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
-          <text x="${minX + 190}" y="${minY + 135}" font-family="Arial" font-size="14" text-anchor="middle">Review Requirements</text>
+          <g class="node">
+            <rect x="${minX + 100}" y="${minY + 100}" width="180" height="60" rx="5" ry="5" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
+            <text x="${minX + 190}" y="${minY + 135}" font-size="14" text-anchor="middle">Review Requirements</text>
+          </g>
           
-          <rect x="${minX + 100}" y="${minY + 200}" width="180" height="60" rx="5" ry="5" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
-          <text x="${minX + 190}" y="${minY + 235}" font-family="Arial" font-size="14" text-anchor="middle">Migration Setup</text>
+          <g class="node">
+            <rect x="${minX + 100}" y="${minY + 200}" width="180" height="60" rx="5" ry="5" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
+            <text x="${minX + 190}" y="${minY + 235}" font-size="14" text-anchor="middle">Migration Setup</text>
+          </g>
           
-          <rect x="${minX + 400}" y="${minY + 150}" width="180" height="60" rx="5" ry="5" fill="#e8f5e9" stroke="#43a047" stroke-width="2"/>
-          <text x="${minX + 490}" y="${minY + 185}" font-family="Arial" font-size="14" text-anchor="middle">Execute Migration</text>
+          <g class="node">
+            <rect x="${minX + 400}" y="${minY + 150}" width="180" height="60" rx="5" ry="5" fill="#e8f5e9" stroke="#43a047" stroke-width="2"/>
+            <text x="${minX + 490}" y="${minY + 185}" font-size="14" text-anchor="middle">Execute Migration</text>
+          </g>
           
-          <rect x="${minX + 400}" y="${minY + 250}" width="180" height="60" rx="5" ry="5" fill="#e8f5e9" stroke="#43a047" stroke-width="2"/>
-          <text x="${minX + 490}" y="${minY + 285}" font-family="Arial" font-size="14" text-anchor="middle">Target Configuration</text>
+          <g class="node">
+            <rect x="${minX + 400}" y="${minY + 250}" width="180" height="60" rx="5" ry="5" fill="#e8f5e9" stroke="#43a047" stroke-width="2"/>
+            <text x="${minX + 490}" y="${minY + 285}" font-size="14" text-anchor="middle">Target Configuration</text>
+          </g>
           
-          <rect x="${minX + 700}" y="${minY + 200}" width="180" height="60" rx="5" ry="5" fill="#fff3e0" stroke="#ff9800" stroke-width="2"/>
-          <text x="${minX + 790}" y="${minY + 235}" font-family="Arial" font-size="14" text-anchor="middle">Migration Summary</text>
+          <g class="node">
+            <rect x="${minX + 700}" y="${minY + 200}" width="180" height="60" rx="5" ry="5" fill="#fff3e0" stroke="#ff9800" stroke-width="2"/>
+            <text x="${minX + 790}" y="${minY + 235}" font-size="14" text-anchor="middle">Migration Summary</text>
+          </g>
         </g>
         
         <g id="edges">
           <!-- Connect Steps with Arrows -->
-          <path d="M ${minX + 280} ${minY + 130} L ${minX + 340} ${minY + 130} L ${minX + 340} ${minY + 180} L ${minX + 400} ${minY + 180}" 
-                fill="none" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M ${minX + 280} ${minY + 130} L ${minX + 340} ${minY + 130} L ${minX + 340} ${minY + 180} L ${minX + 400} ${minY + 180}" 
+                fill="none" stroke="#666" stroke-width="2"/>
                 
-          <path d="M ${minX + 280} ${minY + 230} L ${minX + 340} ${minY + 230} L ${minX + 340} ${minY + 280} L ${minX + 400} ${minY + 280}" 
-                fill="none" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M ${minX + 280} ${minY + 230} L ${minX + 340} ${minY + 230} L ${minX + 340} ${minY + 280} L ${minX + 400} ${minY + 280}" 
+                fill="none" stroke="#666" stroke-width="2"/>
                 
-          <path d="M ${minX + 580} ${minY + 180} L ${minX + 640} ${minY + 180} L ${minX + 640} ${minY + 230} L ${minX + 700} ${minY + 230}" 
-                fill="none" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M ${minX + 580} ${minY + 180} L ${minX + 640} ${minY + 180} L ${minX + 640} ${minY + 230} L ${minX + 700} ${minY + 230}" 
+                fill="none" stroke="#666" stroke-width="2"/>
                 
-          <path d="M ${minX + 580} ${minY + 280} L ${minX + 640} ${minY + 280} L ${minX + 640} ${minY + 230} L ${minX + 700} ${minY + 230}" 
-                fill="none" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M ${minX + 580} ${minY + 280} L ${minX + 640} ${minY + 280} L ${minX + 640} ${minY + 230} L ${minX + 700} ${minY + 230}" 
+                fill="none" stroke="#666" stroke-width="2"/>
                 
-          <path d="M ${minX + 190} ${minY + 160} L ${minX + 190} ${minY + 200}" 
-                fill="none" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M ${minX + 190} ${minY + 160} L ${minX + 190} ${minY + 200}" 
+                fill="none" stroke="#666" stroke-width="2"/>
         </g>
         
         <!-- Legend -->
         <g id="legend" transform="translate(${minX + 80}, ${minY + height - 80})">
           <rect x="0" y="0" width="20" height="20" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
-          <text x="30" y="15" font-family="Arial" font-size="12">Planning Phase</text>
+          <text x="30" y="15" font-size="12">Planning Phase</text>
           
           <rect x="150" y="0" width="20" height="20" fill="#e8f5e9" stroke="#43a047" stroke-width="2"/>
-          <text x="180" y="15" font-family="Arial" font-size="12">Migration Phase</text>
+          <text x="180" y="15" font-size="12">Migration Phase</text>
           
           <rect x="300" y="0" width="20" height="20" fill="#fff3e0" stroke="#ff9800" stroke-width="2"/>
-          <text x="330" y="15" font-family="Arial" font-size="12">Completion Phase</text>
+          <text x="330" y="15" font-size="12">Completion Phase</text>
         </g>
       </svg>
       `;
