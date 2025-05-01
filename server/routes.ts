@@ -938,8 +938,22 @@ Noindex: /`);
         console.log('Generating SVG from Draw.IO XML');
         
         // Instead of making HTTP request to our own endpoint, reuse the SVG generation code
-        // Extract cells from the XML file
-        const cells: Array<{id: string, parent?: string, value?: string, style?: string, geometry?: any, edge?: string, source?: string, target?: string}> = [];
+        // Extract cells from the XML file with proper types
+        const cells: Array<{
+          id: string;
+          parent?: string;
+          value?: string;
+          style?: string;
+          edge?: string;
+          source?: string;
+          target?: string;
+          geometry?: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+          };
+        }> = [];
       
         // First, let's parse the XML to extract the diagram contents
         const cellMatches = fileContent.match(/<mxCell[^>]*>[\s\S]*?<\/mxCell>|<mxCell[^>]*\/>/g) || [];
@@ -955,7 +969,22 @@ Noindex: /`);
           const targetMatch = cellXml.match(/target="([^"]*)"/);
           
           if (idMatch) {
-            const cell = {
+            // Create cell object with type that includes geometry
+            const cell: {
+              id: string;
+              parent?: string;
+              value?: string;
+              style?: string;
+              edge?: string;
+              source?: string;
+              target?: string;
+              geometry?: {
+                x: number;
+                y: number;
+                width: number;
+                height: number;
+              };
+            } = {
               id: idMatch[1],
               parent: parentMatch ? parentMatch[1] : undefined,
               value: valueMatch ? valueMatch[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') : undefined,
@@ -963,7 +992,6 @@ Noindex: /`);
               edge: edgeMatch ? edgeMatch[1] : undefined,
               source: sourceMatch ? sourceMatch[1] : undefined,
               target: targetMatch ? targetMatch[1] : undefined,
-              geometry: {} as any
             };
             
             // Extract geometry if available
@@ -1077,33 +1105,25 @@ Noindex: /`);
           deviceScaleFactor: 2 // Higher quality
         });
         
-        // Load the HTML file directly
-        const fullHtmlPath = path.resolve(htmlFilePath);
-        await page.goto(`file://${fullHtmlPath}`, { 
+        // Load the SVG file directly
+        const fullSvgPath = path.resolve(svgPath);
+        await page.goto(`file://${fullSvgPath}`, { 
           waitUntil: ['load', 'networkidle0']
         });
         
-        // Wait a bit for Mermaid to fully render
-        await page.waitForSelector('.mermaid svg', { timeout: 5000 });
+        // SVG might take time to load and render
+        await new Promise(resolve => setTimeout(resolve, 200));
         
-        // Add inline CSS instead of modifying DOM elements directly
-        // This avoids TypeScript errors with DOM manipulation
+        // Add inline CSS for SVG rendering
         await page.addStyleTag({
           content: `
             body {
               margin: 0;
-              padding: 0;
+              padding: 20px;
+              background: white;
               overflow: visible;
             }
-            .diagram-container {
-              max-width: none !important;
-              width: 2400px !important;
-              overflow: visible !important;
-              margin: 0 !important;
-              padding: 40px !important;
-              box-shadow: none !important;
-            }
-            .mermaid svg {
+            svg {
               max-width: none !important;
               width: 100% !important;
               height: auto !important;
@@ -1114,17 +1134,12 @@ Noindex: /`);
         // Wait a moment for style changes to take effect
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Take a screenshot of the diagram container
-        const diagramElement = await page.$('.diagram-container');
-        if (!diagramElement) {
-          throw new Error('Diagram container not found');
-        }
-        
-        const screenshot = await diagramElement.screenshot({
+        // Take a screenshot of the entire page since we're dealing with SVG
+        await page.screenshot({
           type: 'png',
           omitBackground: false,
-          captureBeyondViewport: true,
-          path: outputPath
+          path: outputPath,
+          fullPage: true
         });
         
         return res.status(200).json({
