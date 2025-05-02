@@ -15,6 +15,20 @@ const openai = new OpenAI({
   try {
     if (!process.env.OPENAI_API_KEY) {
       console.warn('WARNING: OPENAI_API_KEY environment variable is not set. Diagram generation may fail.');
+    } else {
+      console.log('OpenAI API key is set and ready for diagram generation');
+      // Mask the key for security when logging
+      const maskedKey = process.env.OPENAI_API_KEY.substring(0, 3) + '...' + 
+        process.env.OPENAI_API_KEY.substring(process.env.OPENAI_API_KEY.length - 3);
+      console.log(`Using OpenAI API key: ${maskedKey}`);
+      
+      try {
+        // Test that the model is available by making a simple call
+        const models = await openai.models.list();
+        console.log('Successfully connected to OpenAI API');
+      } catch (modelError) {
+        console.error('Error testing OpenAI API connection:', modelError);
+      }
     }
   } catch (err) {
     console.error('Error validating OpenAI API key:', err);

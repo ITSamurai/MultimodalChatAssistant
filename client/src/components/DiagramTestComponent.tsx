@@ -151,11 +151,19 @@ export function DiagramTestComponent() {
         <Card className="overflow-hidden mb-6">
           <CardContent className="p-0">
             <div className="relative">
-              <img 
-                src={getFullUrl(generatedImagePath)} 
-                alt={altText || "Generated diagram"} 
-                className="w-full h-auto" 
-              />
+              {generatedImagePath.endsWith('.html') || generatedImagePath.includes('diagram') ? (
+                <iframe
+                  src={getFullUrl(generatedImagePath)}
+                  className="w-full h-[400px] border-0"
+                  sandbox="allow-scripts allow-same-origin"
+                ></iframe>
+              ) : (
+                <img 
+                  src={getFullUrl(generatedImagePath)} 
+                  alt={altText || "Generated diagram"} 
+                  className="w-full h-auto" 
+                />
+              )}
               <div className="absolute top-2 right-2 bg-white rounded shadow-md">
                 <a
                   href={getFullUrl(generatedImagePath)}
