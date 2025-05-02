@@ -1,0 +1,100 @@
+<mxfile host="app.diagrams.net" modified="2025-05-02T14:54:53.895Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-028b2028-e65a-4468-8bda-543f1a5b56d8" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_693895_1" value="Migration Details" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="100" y="100" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_2" value="Migrate" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="300" y="100" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_3" value="View Migrations" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="500" y="100" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_4" value="Migration Summary" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="700" y="100" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_5" value="Plan Name: W2K8R2-Demo-2021/03/18 15:36:26" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="100" y="200" width="260" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_6" value="Migration Type: Full" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="400" y="200" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_7" value="Transfer Method: Block-based" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="600" y="200" width="200" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_8" value="Selected Mounts: C" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="100" y="300" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_9" value="Shutdown Source" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="300" y="300" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_10" value="Shutdown Target" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="500" y="300" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_11" value="OS Modernization" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="700" y="300" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_12" value="Source Server" style="shape=mxgraph.cisco.servers.server;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="100" y="400" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_13" value="Migration Appliance" style="shape=mxgraph.cisco.misc.bridge;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="300" y="400" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_14" value="Target Cloud" style="shape=mxgraph.cisco.cloud.cloud;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="500" y="400" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_15" value="OS/System Components" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="700" y="400" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_16" value="Storage/Disks" style="shape=mxgraph.cisco.storage.storage;whiteSpace=wrap;html=1;" vertex="1" parent="0">
+    <mxGeometry x="900" y="400" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_17" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="1" target="2">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_18" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="2" target="3">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_19" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="3" target="4">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_20" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="4" target="5">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_21" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="5" target="6">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_22" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="6" target="7">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_23" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="7" target="8">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_24" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="8" target="9">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_25" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="9" target="10">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_26" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="10" target="11">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_27" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="12" target="13">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_28" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="13" target="14">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_29" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="14" target="15">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_693895_30" style="edgeStyle=elbowEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="0" source="15" target="16">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

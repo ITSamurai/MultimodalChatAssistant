@@ -311,14 +311,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             viewBox = svg.getAttribute('viewBox');
             viewBoxValues = viewBox.split(' ').map(n => parseFloat(n));
             
-            // DISABLED: Pan events cause unpredictable zooming
-            // svg.addEventListener('mousedown', startDrag);
-            // svg.addEventListener('mousemove', drag);
-            // svg.addEventListener('mouseup', endDrag);
-            // svg.addEventListener('mouseleave', endDrag);
-            // svg.addEventListener('touchstart', startDrag);
-            // svg.addEventListener('touchmove', drag);
-            // svg.addEventListener('touchend', endDrag);
+            // Re-enabled drag functionality with better handling
+            svg.addEventListener('mousedown', startDrag);
+            svg.addEventListener('mousemove', drag);
+            svg.addEventListener('mouseup', endDrag);
+            svg.addEventListener('mouseleave', endDrag);
+            svg.addEventListener('touchstart', startDrag);
+            svg.addEventListener('touchmove', drag);
+            svg.addEventListener('touchend', endDrag);
             
             // IMPORTANT: Disable automatic wheel zoom events completely
             // svg.addEventListener('wheel', zoom);
@@ -475,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         <!-- Instructions -->
         <text x="${minX + width/2}" y="${minY + 70}" font-size="12" text-anchor="middle" fill="#666">
-          <tspan x="${minX + width/2}" dy="0">Use the + and - buttons to zoom in and out</tspan>
+          <tspan x="${minX + width/2}" dy="0">Drag to move diagram | Use + and - buttons to zoom</tspan>
         </text>
         
         <!-- Generate diagram elements based on cells -->

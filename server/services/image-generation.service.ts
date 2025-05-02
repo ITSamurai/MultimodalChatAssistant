@@ -450,13 +450,13 @@ export const generateDiagram = async (
         currentZoom = parseFloat(savedZoom);
         console.log('Restored saved zoom level:', Math.round(currentZoom * 100) + '%');
       } else {
-        // Default from config, or 70% if not specified
-        currentZoom = ${config?.diagram_default_zoom || 0.7};
+        // Default to 50% as requested by the user
+        currentZoom = 0.5;
         console.log('Using default zoom level:', Math.round(currentZoom * 100) + '%');
       }
     } catch (e) {
-      // Fallback to default zoom level
-      currentZoom = ${config?.diagram_default_zoom || 0.7};
+      // Fallback to default zoom level of 50%
+      currentZoom = 0.5;
       console.log('Error loading zoom, using default:', Math.round(currentZoom * 100) + '%');
     }
     
