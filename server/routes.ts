@@ -1659,6 +1659,242 @@ Noindex: /`);
     }
   });
 
+  // Admin routes (requires authentication + admin permissions)
+  const requireAdminAuth = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Check if user is an admin or superadmin
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({ message: 'Admin privileges required' });
+    }
+    
+    next();
+  };
+
+  // User management API endpoints
+  app.get('/api/admin/users', requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  app.post('/api/admin/users', requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      // Validate user input
+      const userSchema = insertUserSchema.extend({
+        password: z.string().min(6),
+        confirmPassword: z.string()
+      }).refine(data => data.password === data.confirmPassword, {
+        message: "Passwords don't match",
+        path: ["confirmPassword"]
+      });
+
+      const validatedData = userSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(validatedData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+
+      // Hash password and create user
+      const hashedPassword = await require('./auth').hashPassword(validatedData.password);
+      
+      const newUser = await storage.createUser({
+        username: validatedData.username,
+        password: hashedPassword,
+        email: validatedData.email,
+        name: validatedData.name,
+        role: validatedData.role || 'user'
+      });
+
+      // Remove password from response
+      const { password, ...userWithoutPassword } = newUser;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: error.errors });
+      }
+      console.error('Error creating user:', error);
+      res.status(500).json({ message: 'Failed to create user' });
+    }
+  });
+  
+  // Chat management API endpoints
+  app.get('/api/chats', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user.id;
+      const chats = await storage.getUserChats(userId);
+      res.json(chats);
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+      res.status(500).json({ message: 'Failed to fetch chats' });
+    }
+  });
+
+  app.post('/api/chats', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user.id;
+      
+      // Validate chat input
+      const chatSchema = insertChatSchema.extend({
+        title: z.string().min(1, 'Title is required'),
+      });
+      
+      const validatedData = chatSchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      const newChat = await storage.createChat(validatedData);
+      res.status(201).json(newChat);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: error.errors });
+      }
+      console.error('Error creating chat:', error);
+      res.status(500).json({ message: 'Failed to create chat' });
+    }
+  });
+  
+  app.get('/api/chats/:id', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const chatId = parseInt(req.params.id, 10);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ message: 'Chat not found' });
+      }
+      
+      // Make sure the user owns this chat
+      if (chat.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const messages = await storage.getChatMessages(chatId);
+      
+      res.json({
+        chat,
+        messages,
+      });
+    } catch (error) {
+      console.error('Error fetching chat:', error);
+      res.status(500).json({ message: 'Failed to fetch chat' });
+    }
+  });
+  
+  app.post('/api/chats/:id/messages', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const chatId = parseInt(req.params.id, 10);
+      const chat = await storage.getChat(chatId);
+      
+      // Verify chat exists and belongs to user
+      if (!chat) {
+        return res.status(404).json({ message: 'Chat not found' });
+      }
+      
+      // Make sure the user owns this chat
+      if (chat.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Validate message
+      const messageSchema = insertChatMessageSchema.extend({
+        content: z.string().min(1, 'Message content is required'),
+        role: z.enum(['user', 'system', 'assistant']),
+      });
+      
+      const validatedData = messageSchema.parse({
+        ...req.body,
+        chatId,
+      });
+      
+      // Save user message
+      const userMessage = await storage.createChatMessage({
+        chatId,
+        content: validatedData.content,
+        role: 'user',
+        references: validatedData.references || null,
+      });
+      
+      // Process the message with the AI (keeping existing functionality)
+      const aiResponseContent = await createChatWithKnowledgeBase(
+        [{ role: 'user', content: validatedData.content }],
+        50,
+        0.7,
+        "gpt-4o"
+      );
+      
+      // Save assistant response
+      const assistantMessage = await storage.createChatMessage({
+        chatId,
+        content: aiResponseContent,
+        role: 'assistant',
+        references: null,
+      });
+      
+      // Return both messages
+      res.json({
+        userMessage,
+        assistantMessage,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: error.errors });
+      }
+      console.error('Error creating message:', error);
+      res.status(500).json({ message: 'Failed to create message' });
+    }
+  });
+
+  // User preferences API
+  app.get('/api/preferences', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user.id;
+      const preferences = await storage.getUserPreferences(userId);
+      
+      // Convert array of preferences to a more usable object format
+      const preferencesObject: Record<string, any> = {};
+      preferences.forEach(pref => {
+        preferencesObject[pref.preferenceName] = pref.preferenceValue;
+      });
+      
+      res.json(preferencesObject);
+    } catch (error) {
+      console.error('Error fetching preferences:', error);
+      res.status(500).json({ message: 'Failed to fetch preferences' });
+    }
+  });
+  
+  app.post('/api/preferences', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user.id;
+      const { name, value } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: 'Preference name is required' });
+      }
+      
+      const preference: InsertUserPreference = {
+        userId,
+        preferenceName: name,
+        preferenceValue: value,
+      };
+      
+      const savedPreference = await storage.saveUserPreference(preference);
+      res.json(savedPreference);
+    } catch (error) {
+      console.error('Error saving preference:', error);
+      res.status(500).json({ message: 'Failed to save preference' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
