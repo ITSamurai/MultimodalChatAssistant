@@ -311,6 +311,22 @@ export const generateDiagram = async (
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border-radius: 4px;
       padding: 16px;
+      /* Disable unwanted auto-zoom behavior */
+      pointer-events: none; 
+      touch-action: none;
+    }
+    
+    /* But allow pointer events on child SVG elements for links */
+    #svg-container svg * {
+      pointer-events: auto;
+    }
+    
+    /* Prevent users from accidentally interacting with SVG in ways that might zoom it */
+    svg {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
     }
     .actions {
       display: flex;
@@ -464,11 +480,27 @@ export const generateDiagram = async (
         // Hide loading indicator
         loading.classList.add('hidden');
         
-        // Make SVG responsive
+        // Make SVG responsive and prevent auto-zooming
         const svg = svgContainer.querySelector('svg');
         if (svg) {
+          // Set basic responsive styles
           svg.style.maxWidth = '100%';
           svg.style.height = 'auto';
+          
+          // Disable auto scaling/zooming when clicking on the diagram
+          svg.style.transformOrigin = 'center';
+          
+          // Remove any event listeners that might trigger auto-zoom
+          svg.querySelectorAll('*').forEach(el => {
+            // Prevent click events from scaling the diagram
+            el.addEventListener('click', (e) => {
+              // Only stop propagation if not a link or interactive element
+              if (el.tagName !== 'a' && el.tagName !== 'A' && 
+                  !el.hasAttribute('href') && !el.hasAttribute('xlink:href')) {
+                e.stopPropagation();
+              }
+            });
+          });
         }
         
         // Notify parent that we're loaded
