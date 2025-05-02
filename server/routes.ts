@@ -479,7 +479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Update scale
             scale = scale * (1/zoomFactor);
-            scale = Math.max(0.5, Math.min(scale, 2.0)); // Limit scale between 0.5 and 2.0
+            scale = Math.max(0.2, Math.min(scale, 2.5)); // Allow much more zoom in (20%) and a bit more zoom out (250%)
             
             // Apply the zoom centered on the cursor position
             viewBoxValues[0] = svgX - (svgX - viewBoxValues[0]) * zoomFactor;

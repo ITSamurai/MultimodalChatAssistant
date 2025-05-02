@@ -517,12 +517,12 @@ export const generateDiagram = async (
     
     // Zoom functionality
     document.getElementById('zoom-in').addEventListener('click', () => {
-      currentZoom = Math.min(2.0, currentZoom + 0.1);
+      currentZoom = Math.min(2.5, currentZoom + 0.1);
       applyZoom();
     });
     
     document.getElementById('zoom-out').addEventListener('click', () => {
-      currentZoom = Math.max(0.3, currentZoom - 0.1);
+      currentZoom = Math.max(0.2, currentZoom - 0.1);
       applyZoom();
     });
     
