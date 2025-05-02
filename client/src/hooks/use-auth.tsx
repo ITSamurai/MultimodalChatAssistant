@@ -39,7 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await res.json();
       return data;
     },
-    onSuccess: (user: User) => {
+    onSuccess: (userData: any) => {
+      // Extract token and save to localStorage
+      const { token, ...user } = userData;
+      if (token) {
+        localStorage.setItem('auth_token', token);
+      }
+      
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Login successful",
@@ -61,7 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await res.json();
       return data;
     },
-    onSuccess: (user: User) => {
+    onSuccess: (userData: any) => {
+      // Extract token and save to localStorage
+      const { token, ...user } = userData;
+      if (token) {
+        localStorage.setItem('auth_token', token);
+      }
+      
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
@@ -82,6 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Remove token from localStorage
+      localStorage.removeItem('auth_token');
+      
       queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logged out",

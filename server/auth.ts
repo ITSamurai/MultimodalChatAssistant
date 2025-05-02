@@ -28,7 +28,7 @@ async function verifyAuthToken(token: string): Promise<SelectUser | null> {
 }
 
 // Token authentication middleware
-function tokenAuth(req: Request, res: Response, next: NextFunction) {
+async function tokenAuth(req: Request, res: Response, next: NextFunction) {
   // Check for token in Authorization header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -37,8 +37,12 @@ function tokenAuth(req: Request, res: Response, next: NextFunction) {
 
   const token = authHeader.split(' ')[1];
   
-  // Store token in request for later use
-  (req as any).authToken = token;
+  // Verify token and get user
+  const user = await verifyAuthToken(token);
+  if (user) {
+    // Set user in request
+    req.user = user;
+  }
   
   next();
 }
@@ -165,7 +169,15 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json(user);
+        
+        // Generate token for API access
+        const token = generateAuthToken(user.id);
+        
+        // Return user data with token
+        res.status(201).json({
+          ...user,
+          token: token
+        });
       });
     } catch (error) {
       next(error);
@@ -204,10 +216,24 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
+  app.get("/api/user", async (req, res) => {
+    // First check for session authentication
+    if (req.isAuthenticated()) {
+      return res.json(req.user);
     }
-    res.json(req.user);
+    
+    // If not session-authenticated, check for token authentication
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const user = await verifyAuthToken(token);
+      
+      if (user) {
+        return res.json(user);
+      }
+    }
+    
+    // No valid authentication found
+    return res.status(401).json({ message: "Not authenticated" });
   });
 }

@@ -72,7 +72,7 @@ export interface IStorage {
 // Database implementation of the storage interface
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
-import memorystore from "memorystore";
+// Using PostgreSQL session store
 
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
