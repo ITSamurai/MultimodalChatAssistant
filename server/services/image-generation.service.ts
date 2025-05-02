@@ -49,19 +49,39 @@ async function generateDrawIODiagram(
     
     // Prompt for Draw.IO diagram - requesting only the CELLS not the full XML
     const drawioPrompt = isNetworkDiagram 
-      ? `Create cell elements for a Draw.IO (diagrams.net) diagram that shows a network diagram for: ${enhancedPrompt}
-         Include proper network components like routers, firewalls, servers, load balancers, and cloud services.
-         IMPORTANT: Do NOT include <mxfile>, <diagram>, <mxGraphModel>, or <root> tags. ONLY return the individual <mxCell> elements.
-         The diagram should use the ${drawioTheme} theme style and be properly connected with edges.`
-      : `Create cell elements for a Draw.IO (diagrams.net) diagram that shows a flowchart for: ${enhancedPrompt}
-         IMPORTANT: Do NOT include <mxfile>, <diagram>, <mxGraphModel>, or <root> tags. ONLY return the individual <mxCell> elements.
-         The diagram should be clean, professional, use the ${drawioTheme} theme style, and have proper flow connections.`;
+      ? `Create cell elements for a Draw.IO (diagrams.net) diagram that shows a detailed network diagram for: ${enhancedPrompt}
+         IMPORTANT:
+         1. Use built-in Draw.IO library icons for hardware and networking components such as:
+            - Servers (use style="shape=mxgraph.cisco.servers.server")
+            - Routers (use style="shape=mxgraph.cisco.routers.router")
+            - Firewalls (use style="shape=mxgraph.cisco.security.firewall")
+            - Cloud services (use style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud")
+            - Database (use style="shape=mxgraph.cisco.storage.relational_database")
+            - Virtual machines (use style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc")
+            - End-user device (use style="shape=mxgraph.cisco.computers_and_peripherals.pc")
+         2. Do NOT include <mxfile>, <diagram>, <mxGraphModel>, or <root> tags. ONLY return the individual <mxCell> elements.
+         3. Ensure proper connections between components with clearly labeled arrows.
+         4. Use the ${drawioTheme} theme style with visually distinct components and logical grouping.
+         5. Add descriptive text labels for each component.`
+      : `Create cell elements for a Draw.IO (diagrams.net) diagram that shows a professional OS-based migration flowchart for: ${enhancedPrompt}
+         IMPORTANT:
+         1. Use appropriate built-in Draw.IO library icons:
+            - For source servers (use style="shape=mxgraph.cisco.servers.server")
+            - For target/cloud servers (use style="shape=mxgraph.cisco.cloud.cloud")
+            - For migration appliance (use style="shape=mxgraph.cisco.misc.bridge")
+            - For OS/system components (use style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc")
+            - For storage/disks (use style="shape=mxgraph.cisco.storage.storage")
+            - For process/action steps (use style="shape=mxgraph.flowchart.process")
+         2. Do NOT include <mxfile>, <diagram>, <mxGraphModel>, or <root> tags. ONLY return the individual <mxCell> elements.
+         3. Ensure proper flow connections between steps with clearly labeled arrows.
+         4. Use the ${drawioTheme} theme style with visual hierarchy.
+         5. Add descriptive text labels for each step in the migration process.`;
          
     // Use OpenAI to generate Draw.IO XML
     const diagramResponse = await openai.chat.completions.create({
       model: "gpt-4o", 
       messages: [
-        {role: "system", content: "You are a diagram creation assistant that generates Draw.IO (diagrams.net) XML cell elements. Respond ONLY with <mxCell> elements without any outer container tags like <mxfile>, <diagram>, <mxGraphModel>, or <root>. Do not include markdown formatting or explanations."},
+        {role: "system", content: "You are a diagram creation assistant that generates Draw.IO (diagrams.net) XML cell elements with professional, visually-rich diagrams. For tech and network diagrams, use industry-standard iconography through the mxGraph shape libraries (style=\"shape=mxgraph.xxx\") to create more visually informative diagrams rather than simple rectangles and ellipses. Respond ONLY with <mxCell> elements without any outer container tags like <mxfile>, <diagram>, <mxGraphModel>, or <root>. Do not include markdown formatting or explanations. Use descriptive text labels and proper connection arrows between elements."},
         {role: "user", content: drawioPrompt}
       ],
       max_tokens: 2500,

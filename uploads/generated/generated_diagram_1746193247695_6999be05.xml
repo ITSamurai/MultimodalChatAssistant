@@ -1,0 +1,67 @@
+<mxfile host="app.diagrams.net" modified="2025-05-02T13:40:47.695Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-330b0bac-2d30-48e0-8527-974c69454b54" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_247694_0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" parent="1" source="2" target="3">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell parent="1" id="cell_247694_1" style="group" vertex="1">
+    <mxGeometry x="0" y="0" width="800" height="600" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_2" value="Migration Details" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="40" y="20" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_3" value="Migrate" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="240" y="20" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" parent="1" source="3" target="5">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_5" value="View Migrations" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="440" y="20" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" parent="1" source="5" target="7">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_7" value="Migration Summary" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="640" y="20" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_8" value="Plan Name: W2K8R2-Demo-2021/03/18 15:36:26" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="40" y="120" width="260" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_9" value="Migration Type: Full" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="340" y="120" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_10" value="Transfer Method: Block-based" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="540" y="120" width="200" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_11" value="OS Modernization" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="40" y="220" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_12" value="Target OS Upgrade Version" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="240" y="220" width="200" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_13" value="Success ID: 5a5f1704-2aed-40f8-b3e3-e44cfe3aa0b4" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="480" y="220" width="320" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_14" value="RiverMeadow OS-based Migration" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="40" y="320" width="300" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_15" value="1. Deploy RMS Migration Appliance" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="40" y="420" width="300" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_16" value="2. Appliance communicates with RiverMeadow Platform" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+    <mxGeometry x="40" y="520" width="300" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" parent="1" source="14" target="15">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_247694_18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" parent="1" source="15" target="16">
+    <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
