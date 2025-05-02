@@ -1,0 +1,49 @@
+<mxfile host="app.diagrams.net" modified="2025-05-02T13:48:38.199Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-3885003c-f0ad-4dc3-89bd-ca84e7a3b9ea" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_718199_1" value="Source Server" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+  <mxGeometry x="60" y="60" width="80" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_2" value="RMS Migration Appliance" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+  <mxGeometry x="200" y="60" width="80" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_3" value="Target Cloud" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+  <mxGeometry x="340" y="60" width="80" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_4" value="Migration Details" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="200" y="150" width="120" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_5" value="OS Modernization" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+  <mxGeometry x="200" y="250" width="120" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_6" value="Storage/Disks" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="0">
+  <mxGeometry x="200" y="350" width="120" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="1" target="2">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="2" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="2" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="4" target="5">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="5" target="6">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_12" value="Success" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="340" y="350" width="80" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="cell_718199_13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="6" target="12">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

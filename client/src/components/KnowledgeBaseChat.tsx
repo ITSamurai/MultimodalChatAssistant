@@ -578,7 +578,9 @@ export function KnowledgeBaseChat() {
                                   className="p-1 hover:bg-gray-100 text-gray-700"
                                   title="Reset zoom"
                                 >
-                                  <span className="text-xs px-1">70%</span>
+                                  <span className="text-xs px-1">
+                                    {Math.round((diagramZooms[ref.imagePath!] || 0.7) * 100)}%
+                                  </span>
                                 </button>
                                 
                                 <button
