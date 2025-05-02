@@ -1661,16 +1661,66 @@ Noindex: /`);
 
   // Admin routes (requires authentication + admin permissions)
   const requireAdminAuth = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Authentication required' });
+    try {
+      // First check if the user is authenticated via session
+      if (req.isAuthenticated()) {
+        // Check if the user has admin role
+        if (req.user.role === 'admin' || req.user.role === 'superadmin') {
+          return next();
+        }
+      } else {
+        // If not session-authenticated, check for token authentication
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.split(' ')[1];
+          const user = await verifyAuthToken(token);
+          
+          if (user && (user.role === 'admin' || user.role === 'superadmin')) {
+            // Set user in request and proceed
+            req.user = user;
+            return next();
+          }
+        }
+      }
+      
+      // No valid admin authentication found
+      return res.status(403).json({ message: 'Admin access required' });
+    } catch (error) {
+      console.error('Error in admin auth:', error);
+      return res.status(500).json({ message: 'Server error during authentication' });
     }
-    
-    // Check if user is an admin or superadmin
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
-      return res.status(403).json({ message: 'Admin privileges required' });
+  };
+
+  // Only allow superadmin role for some sensitive operations
+  const requireSuperAdminAuth = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // First check if the user is authenticated via session
+      if (req.isAuthenticated()) {
+        // Check if the user has superadmin role
+        if (req.user.role === 'superadmin') {
+          return next();
+        }
+      } else {
+        // If not session-authenticated, check for token authentication
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.split(' ')[1];
+          const user = await verifyAuthToken(token);
+          
+          if (user && user.role === 'superadmin') {
+            // Set user in request and proceed
+            req.user = user;
+            return next();
+          }
+        }
+      }
+      
+      // No valid superadmin authentication found
+      return res.status(403).json({ message: 'Superadmin access required' });
+    } catch (error) {
+      console.error('Error in superadmin auth:', error);
+      return res.status(500).json({ message: 'Server error during authentication' });
     }
-    
-    next();
   };
 
   // User management API endpoints
@@ -1688,13 +1738,17 @@ Noindex: /`);
     try {
       // Validate user input
       const userSchema = insertUserSchema.extend({
-        password: z.string().min(6),
-        confirmPassword: z.string()
-      }).refine(data => data.password === data.confirmPassword, {
-        message: "Passwords don't match",
-        path: ["confirmPassword"]
+        password: z.string().min(6, 'Password must be at least 6 characters'),
       });
-
+      
+      // Get current user from request
+      const currentUser = req as any;
+      
+      // Only superadmins can create other superadmins
+      if (req.body.role === 'superadmin' && currentUser.user?.role !== 'superadmin') {
+        return res.status(403).json({ message: 'Only superadmins can create superadmin users' });
+      }
+      
       const validatedData = userSchema.parse(req.body);
       
       // Check if username already exists
@@ -1704,7 +1758,7 @@ Noindex: /`);
       }
 
       // Hash password and create user
-      const hashedPassword = await require('./auth').hashPassword(validatedData.password);
+      const hashedPassword = await hashPassword(validatedData.password);
       
       const newUser = await storage.createUser({
         username: validatedData.username,
@@ -1714,9 +1768,15 @@ Noindex: /`);
         role: validatedData.role || 'user'
       });
 
-      // Remove password from response
+      // Generate token for the new user
+      const token = generateAuthToken(newUser.id);
+      
+      // Return user with token, but remove password
       const { password, ...userWithoutPassword } = newUser;
-      res.status(201).json(userWithoutPassword);
+      res.status(201).json({
+        ...userWithoutPassword,
+        token
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: error.errors });

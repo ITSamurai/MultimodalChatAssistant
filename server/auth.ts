@@ -108,6 +108,7 @@ export function setupAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+  app.use(tokenAuth);
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
