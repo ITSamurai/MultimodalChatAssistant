@@ -69,129 +69,202 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
-// In-memory implementation of the storage interface
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private documents: Map<number, Document>;
-  private documentImages: Map<number, DocumentImage>;
-  private messages: Map<number, Message>;
+// Database implementation of the storage interface
+import { db } from "./db";
+import { eq, desc, and } from "drizzle-orm";
+import memorystore from "memorystore";
+
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
   private config: Record<string, any>;
-  
-  private userId: number;
-  private documentId: number;
-  private documentImageId: number;
-  private messageId: number;
-  
+
   constructor() {
-    this.users = new Map();
-    this.documents = new Map();
-    this.documentImages = new Map();
-    this.messages = new Map();
+    const PostgresStore = connectPg(session);
+    this.sessionStore = new PostgresStore({
+      pool,
+      createTableIfMissing: true,
+    });
     this.config = {};
-    
-    this.userId = 1;
-    this.documentId = 1;
-    this.documentImageId = 1;
-    this.messageId = 1;
   }
-  
+
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const results = await db.select().from(users).where(eq(users.id, id));
+    return results.length ? results[0] : undefined;
   }
-  
+
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
+    const results = await db.select().from(users).where(eq(users.username, username));
+    return results.length ? results[0] : undefined;
   }
-  
+
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userId++;
-    const user: User = { 
-      ...insertUser, 
-      id,
-      email: insertUser.email || null,
-      name: insertUser.name || null 
-    };
-    this.users.set(id, user);
-    return user;
+    const result = await db.insert(users).values(insertUser).returning();
+    return result[0];
   }
-  
+
+  async updateUserLastLogin(id: number): Promise<void> {
+    await db.update(users)
+      .set({ lastLogin: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  // Chat methods
+  async getChat(id: number): Promise<Chat | undefined> {
+    const results = await db.select().from(chats).where(eq(chats.id, id));
+    return results.length ? results[0] : undefined;
+  }
+
+  async getUserChats(userId: number): Promise<Chat[]> {
+    return db.select().from(chats)
+      .where(eq(chats.userId, userId))
+      .orderBy(desc(chats.updatedAt));
+  }
+
+  async createChat(chat: InsertChat): Promise<Chat> {
+    const result = await db.insert(chats).values(chat).returning();
+    return result[0];
+  }
+
+  async updateChat(id: number, updates: Partial<Chat>): Promise<Chat> {
+    const result = await db.update(chats)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(chats.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteChat(id: number): Promise<void> {
+    await db.delete(chats).where(eq(chats.id, id));
+  }
+
+  // Chat message methods
+  async getChatMessages(chatId: number): Promise<ChatMessage[]> {
+    return db.select().from(chatMessages)
+      .where(eq(chatMessages.chatId, chatId))
+      .orderBy(chatMessages.createdAt);
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const result = await db.insert(chatMessages).values(message).returning();
+    
+    // Update the last message timestamp on the chat
+    await db.update(chats)
+      .set({ 
+        lastMessageAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(chats.id, message.chatId));
+      
+    return result[0];
+  }
+
+  // User preferences methods
+  async getUserPreferences(userId: number): Promise<UserPreference[]> {
+    return db.select().from(userPreferences)
+      .where(eq(userPreferences.userId, userId));
+  }
+
+  async getUserPreferenceByName(userId: number, name: string): Promise<UserPreference | undefined> {
+    const results = await db.select().from(userPreferences)
+      .where(
+        and(
+          eq(userPreferences.userId, userId),
+          eq(userPreferences.preferenceName, name)
+        )
+      );
+    return results.length ? results[0] : undefined;
+  }
+
+  async saveUserPreference(preference: InsertUserPreference): Promise<UserPreference> {
+    // Check if preference already exists
+    const existing = await this.getUserPreferenceByName(
+      preference.userId,
+      preference.preferenceName
+    );
+
+    if (existing) {
+      // Update existing preference
+      const result = await db.update(userPreferences)
+        .set({ 
+          preferenceValue: preference.preferenceValue,
+          updatedAt: new Date()
+        })
+        .where(eq(userPreferences.id, existing.id))
+        .returning();
+      return result[0];
+    } else {
+      // Create new preference
+      const result = await db.insert(userPreferences)
+        .values(preference)
+        .returning();
+      return result[0];
+    }
+  }
+
+  async updateUserPreference(id: number, value: any): Promise<UserPreference> {
+    const result = await db.update(userPreferences)
+      .set({ 
+        preferenceValue: value,
+        updatedAt: new Date()
+      })
+      .where(eq(userPreferences.id, id))
+      .returning();
+    return result[0];
+  }
+
   // Document methods
   async getDocument(id: number): Promise<Document | undefined> {
-    return this.documents.get(id);
+    const results = await db.select().from(documents).where(eq(documents.id, id));
+    return results.length ? results[0] : undefined;
   }
-  
+
   async getAllDocuments(): Promise<Document[]> {
-    return Array.from(this.documents.values());
+    return db.select().from(documents);
   }
-  
-  async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    const id = this.documentId++;
-    const now = new Date().toISOString();
-    const document: Document = { 
-      ...insertDocument, 
-      id, 
-      createdAt: now
-    };
-    this.documents.set(id, document);
-    return document;
+
+  async createDocument(document: InsertDocument): Promise<Document> {
+    const result = await db.insert(documents).values(document).returning();
+    return result[0];
   }
-  
+
   // Document Image methods
   async getDocumentImages(documentId: number): Promise<DocumentImage[]> {
-    return Array.from(this.documentImages.values()).filter(
-      (image) => image.documentId === documentId
-    );
+    return db.select().from(documentImages)
+      .where(eq(documentImages.documentId, documentId));
   }
-  
+
   async getDocumentImage(id: number): Promise<DocumentImage | undefined> {
-    return this.documentImages.get(id);
+    const results = await db.select().from(documentImages).where(eq(documentImages.id, id));
+    return results.length ? results[0] : undefined;
   }
-  
-  async createDocumentImage(insertImage: InsertDocumentImage): Promise<DocumentImage> {
-    const id = this.documentImageId++;
-    const image: DocumentImage = { 
-      ...insertImage, 
-      id,
-      altText: insertImage.altText || null,
-      caption: insertImage.caption || null,
-      pageNumber: insertImage.pageNumber || null
-    };
-    this.documentImages.set(id, image);
-    return image;
+
+  async createDocumentImage(image: InsertDocumentImage): Promise<DocumentImage> {
+    const result = await db.insert(documentImages).values(image).returning();
+    return result[0];
   }
-  
+
   // Message methods
   async getMessages(documentId: number): Promise<Message[]> {
-    return Array.from(this.messages.values())
-      .filter((message) => message.documentId === documentId)
-      .sort((a, b) => {
-        const dateA = new Date(a.timestamp).getTime();
-        const dateB = new Date(b.timestamp).getTime();
-        return dateA - dateB;
-      });
+    return db.select().from(messages)
+      .where(eq(messages.documentId, documentId))
+      .orderBy(messages.timestamp);
   }
-  
-  async createMessage(insertMessage: InsertMessage): Promise<Message> {
-    const id = this.messageId++;
-    const now = new Date().toISOString();
-    const message: Message = { 
-      ...insertMessage, 
-      id, 
-      timestamp: now,
-      references: insertMessage.references || null
-    };
-    this.messages.set(id, message);
-    return message;
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const result = await db.insert(messages).values(message).returning();
+    return result[0];
   }
-  
+
   // Configuration methods
   async getConfig(): Promise<Record<string, any>> {
     return { ...this.config };
   }
-  
+
   async saveConfig(config: Record<string, any>): Promise<Record<string, any>> {
     this.config = { ...config };
     return this.config;
@@ -199,4 +272,4 @@ export class MemStorage implements IStorage {
 }
 
 // Create and export a singleton instance
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

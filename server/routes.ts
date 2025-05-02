@@ -4,7 +4,14 @@ import multer from "multer";
 import { storage } from "./storage";
 import { processDocument, getDocumentData } from "./services/document.service";
 import { processMessage } from "./services/openai.service";
-import { chatMessageSchema, insertMessageSchema } from "@shared/schema";
+import { 
+  chatMessageSchema,
+  insertMessageSchema,
+  insertChatSchema,
+  insertChatMessageSchema,
+  insertUserSchema,
+  InsertUserPreference
+} from "@shared/schema";
 import { z } from "zod";
 import sharp from 'sharp';
 import fs from 'fs';

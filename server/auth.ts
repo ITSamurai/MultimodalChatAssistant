@@ -86,20 +86,16 @@ export async function requireTokenAuth(req: Request, res: Response, next: NextFu
 }
 
 export function setupAuth(app: Express) {
-  const MemStore = MemoryStore(session);
-  
   const sessionSettings: session.SessionOptions = {
-    secret: "rivermeadow-secret-key",
+    secret: process.env.SESSION_SECRET || "rivermeadow-secret-key",
     resave: false,
     saveUninitialized: false,
-    store: new MemStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    }),
+    store: storage.sessionStore,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "none", // Allow cross-site cookies (for vertical-assistant.com)
+      sameSite: "none", // Allow cross-site cookies
       domain: process.env.COOKIE_DOMAIN || undefined // Use explicit domain if provided
     }
   };
@@ -113,7 +109,7 @@ export function setupAuth(app: Express) {
       try {
         const user = await storage.getUserByUsername(username);
         
-        // For the hardcoded user (scott/tiger)
+        // For the hardcoded superadmin user (scott/tiger)
         if (username === "scott" && password === "tiger") {
           // If the user doesn't exist yet, create it
           if (!user) {
@@ -121,16 +117,21 @@ export function setupAuth(app: Express) {
               username: "scott",
               password: await hashPassword("tiger"),
               email: "scott@rivermeadow.com",
-              name: "Scott Admin"
+              name: "Scott Admin",
+              role: "superadmin"
             });
             return done(null, newUser);
           }
+          // Update lastLogin timestamp
+          await storage.updateUserLastLogin(user.id);
           return done(null, user);
         }
         
         if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false);
         } else {
+          // Update lastLogin timestamp
+          await storage.updateUserLastLogin(user.id);
           return done(null, user);
         }
       } catch (error) {
