@@ -1729,7 +1729,13 @@ Noindex: /`);
   // Chat management API endpoints
   app.get('/api/chats', requireTokenAuth, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.id;
+      // Cast req as any to access the user property
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
       const chats = await storage.getUserChats(userId);
       res.json(chats);
     } catch (error) {
@@ -1740,7 +1746,12 @@ Noindex: /`);
 
   app.post('/api/chats', requireTokenAuth, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.id;
+      // Cast req as any to access the user property
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       
       // Validate chat input
       const chatSchema = insertChatSchema.extend({
@@ -1768,12 +1779,19 @@ Noindex: /`);
       const chatId = parseInt(req.params.id, 10);
       const chat = await storage.getChat(chatId);
       
+      // Cast req as any to access the user property
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
       if (!chat) {
         return res.status(404).json({ message: 'Chat not found' });
       }
       
       // Make sure the user owns this chat
-      if (chat.userId !== req.user.id) {
+      if (chat.userId !== userId) {
         return res.status(403).json({ message: 'Access denied' });
       }
       
@@ -1794,13 +1812,20 @@ Noindex: /`);
       const chatId = parseInt(req.params.id, 10);
       const chat = await storage.getChat(chatId);
       
+      // Cast req as any to access the user property
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
       // Verify chat exists and belongs to user
       if (!chat) {
         return res.status(404).json({ message: 'Chat not found' });
       }
       
       // Make sure the user owns this chat
-      if (chat.userId !== req.user.id) {
+      if (chat.userId !== userId) {
         return res.status(403).json({ message: 'Access denied' });
       }
       
@@ -1823,18 +1848,28 @@ Noindex: /`);
         references: validatedData.references || null,
       });
       
-      // Process the message with the AI (keeping existing functionality)
-      const aiResponseContent = await createChatWithKnowledgeBase(
-        [{ role: 'user', content: validatedData.content }],
-        50,
-        0.7,
-        "gpt-4o"
-      );
+      // Process the message with the AI
+      // Use correct parameters for createChatWithKnowledgeBase
+      const messages = [{ 
+        role: 'user' as 'user' | 'system' | 'assistant', 
+        content: validatedData.content 
+      }];
+      const aiResponseContent = await createChatWithKnowledgeBase(messages);
+      
+      // Get the response content as string
+      let responseContent = '';
+      if (typeof aiResponseContent === 'string') {
+        responseContent = aiResponseContent;
+      } else if (aiResponseContent && typeof aiResponseContent === 'object') {
+        responseContent = aiResponseContent.content || 'No response generated';
+      } else {
+        responseContent = 'No response generated';
+      }
       
       // Save assistant response
       const assistantMessage = await storage.createChatMessage({
         chatId,
-        content: aiResponseContent,
+        content: responseContent,
         role: 'assistant',
         references: null,
       });
@@ -1856,7 +1891,13 @@ Noindex: /`);
   // User preferences API
   app.get('/api/preferences', requireTokenAuth, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.id;
+      // Cast req as any to access the user property
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
       const preferences = await storage.getUserPreferences(userId);
       
       // Convert array of preferences to a more usable object format
@@ -1874,7 +1915,13 @@ Noindex: /`);
   
   app.post('/api/preferences', requireTokenAuth, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.id;
+      // Cast req as any to access the user property
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
       const { name, value } = req.body;
       
       if (!name) {
