@@ -5,8 +5,21 @@ import { v4 as uuidv4 } from 'uuid';
 import OpenAI from "openai";
 import { storage } from '../storage';
 
-// Initialize OpenAI client directly
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+// Initialize OpenAI client directly with proper error handling
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY || ""
+});
+
+// Validate OpenAI API Key immediately on startup
+(async () => {
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      console.warn('WARNING: OPENAI_API_KEY environment variable is not set. Diagram generation may fail.');
+    }
+  } catch (err) {
+    console.error('Error validating OpenAI API key:', err);
+  }
+})();
 
 // Define the directories for storing images
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
