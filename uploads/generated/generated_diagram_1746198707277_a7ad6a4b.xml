@@ -1,0 +1,66 @@
+<mxfile host="app.diagrams.net" modified="2025-05-02T15:11:47.277Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-9a019f10-458b-4df5-8cff-d68f4f7d5aa5" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_707276_1" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+    <mxGeometry x="20" y="20" width="100" height="60" as="geometry"/>
+    <mxLabel>Source Server: W2K8R2-Demo</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_2" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="0">
+    <mxGeometry x="200" y="20" width="100" height="60" as="geometry"/>
+    <mxLabel>Configured Migrations</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_3" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+    <mxGeometry x="380" y="20" width="120" height="60" as="geometry"/>
+    <mxLabel>Migration Setup</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_4" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+    <mxGeometry x="580" y="20" width="100" height="60" as="geometry"/>
+    <mxLabel>Migration Appliance</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_5" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+    <mxGeometry x="780" y="20" width="100" height="60" as="geometry"/>
+    <mxLabel>Target Cloud: Azure</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_6" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+    <mxGeometry x="200" y="120" width="120" height="60" as="geometry"/>
+    <mxLabel>Full Migration Profile Setup</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_7" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+    <mxGeometry x="380" y="120" width="120" height="60" as="geometry"/>
+    <mxLabel>Differential Migration Profile Setup</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_8" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+    <mxGeometry x="580" y="120" width="100" height="60" as="geometry"/>
+    <mxLabel>OS-based Migration Database</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_9" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="0" source="1" target="2">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel>Step 1</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_10" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="0" source="2" target="3">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel>Step 2</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_11" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="0" source="3" target="4">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel>Step 3</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_12" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="0" source="4" target="5">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel>Step 4</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_13" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="0" source="6" target="8">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel>Step 5</mxLabel>
+</mxCell>
+<mxCell id="cell_707276_14" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="0" source="7" target="8">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel>Step 6</mxLabel>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -6,8 +6,20 @@ import {
   documents,
   documentImages,
   messages,
-  users
+  users,
+  chats,
+  chatMessages,
+  InsertChat,
+  Chat,
+  InsertChatMessage,
+  ChatMessage,
+  userPreferences,
+  InsertUserPreference,
+  UserPreference
 } from "@shared/schema";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
 // Interface for storage operations
 export interface IStorage {
@@ -15,6 +27,25 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
+  updateUserLastLogin(id: number): Promise<void>;
+  
+  // Chat methods
+  getChat(id: number): Promise<Chat | undefined>;
+  getUserChats(userId: number): Promise<Chat[]>;
+  createChat(chat: InsertChat): Promise<Chat>;
+  updateChat(id: number, updates: Partial<Chat>): Promise<Chat>;
+  deleteChat(id: number): Promise<void>;
+
+  // Chat message methods
+  getChatMessages(chatId: number): Promise<ChatMessage[]>;
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  
+  // User preferences methods
+  getUserPreferences(userId: number): Promise<UserPreference[]>;
+  getUserPreferenceByName(userId: number, name: string): Promise<UserPreference | undefined>;
+  saveUserPreference(preference: InsertUserPreference): Promise<UserPreference>;
+  updateUserPreference(id: number, value: any): Promise<UserPreference>;
   
   // Document methods
   getDocument(id: number): Promise<Document | undefined>;
@@ -33,6 +64,9 @@ export interface IStorage {
   // Configuration methods
   getConfig(): Promise<Record<string, any>>;
   saveConfig(config: Record<string, any>): Promise<Record<string, any>>;
+  
+  // Session store for authentication
+  sessionStore: session.Store;
 }
 
 // In-memory implementation of the storage interface
