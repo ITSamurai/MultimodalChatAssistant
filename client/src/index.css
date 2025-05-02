@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Improve text rendering throughout the application */
+:root {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Make text sharper and more readable */
+body {
+  font-weight: 400;
+  letter-spacing: 0.011em;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Improve readability of small text */
+small, .text-sm, .text-xs {
+  font-weight: 500;
+}
+
+/* Improve heading clarity */
+h1, h2, h3, h4, h5, h6, 
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Ensure SVG text is crisp */
+svg text {
+  font-weight: 500;
+  shape-rendering: geometricPrecision;
+}
+
 @layer base {
   * {
     @apply border-border;

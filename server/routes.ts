@@ -268,15 +268,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const svgHtml = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
       <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" 
            viewBox="${minX} ${minY} ${width} ${height}" 
-           style="max-width:100%; height:auto; font-family: Arial, sans-serif;"
-           xmlns:xlink="http://www.w3.org/1999/xlink">
+           style="max-width:100%; height:auto; font-family: 'Segoe UI', Arial, sans-serif;"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           shape-rendering="geometricPrecision" text-rendering="optimizeLegibility">
         <style>
           /* Add panning ability */
           svg { cursor: grab; }
           svg:active { cursor: grabbing; }
+          
+          /* Improve text rendering */
+          text {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-weight: 500;
+            stroke: none;
+            paint-order: stroke;
+            stroke-width: 0.5px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+          }
+          
           @media (max-width: 768px) {
             text { font-size: 90%; }
           }
+          
           .arrow { marker-end: url(#arrowhead); }
           .node:hover { filter: brightness(0.95); }
         </style>
@@ -507,14 +521,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error rendering diagram as SVG:', error);
       
-      // Return a simple error SVG
+      // Return a simple error SVG with improved rendering quality
       const errorSvg = `
-        <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
-          <rect width="100%" height="100%" fill="#fff0f0" />
-          <text x="50%" y="50%" font-family="Arial" font-size="20" text-anchor="middle" fill="#d32f2f">
+        <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg" 
+             shape-rendering="geometricPrecision" text-rendering="optimizeLegibility">
+          <rect width="100%" height="100%" fill="#fff0f0" rx="5" ry="5" />
+          <text x="50%" y="45%" font-family="'Segoe UI', Arial, sans-serif" font-size="22" 
+                text-anchor="middle" fill="#d32f2f" font-weight="600">
             Error Loading Diagram
           </text>
-          <text x="50%" y="60%" font-family="Arial" font-size="14" text-anchor="middle" fill="#d32f2f">
+          <text x="50%" y="55%" font-family="'Segoe UI', Arial, sans-serif" font-size="16" 
+                text-anchor="middle" fill="#d32f2f">
             Please try regenerating the diagram
           </text>
         </svg>

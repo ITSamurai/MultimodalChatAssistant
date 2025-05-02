@@ -520,7 +520,14 @@ export function KnowledgeBaseChat() {
                                     src={getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`)}
                                     title="RiverMeadow Diagram" 
                                     className="min-w-full min-h-full"
-                                    style={{ minWidth: '1000px', height: '450px' }}
+                                    style={{ 
+                                      minWidth: '1000px', 
+                                      height: '450px',
+                                      // Improve text rendering
+                                      WebkitFontSmoothing: 'antialiased',
+                                      MozOsxFontSmoothing: 'grayscale',
+                                      textRendering: 'optimizeLegibility'
+                                    }}
                                     loading="lazy"
                                     sandbox="allow-scripts allow-same-origin allow-popups"
                                   />

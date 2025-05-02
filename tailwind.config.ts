@@ -5,6 +5,43 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          '"Segoe UI"',
+          '"SF Pro Text"',
+          '"Inter"',
+          'system-ui', 
+          '-apple-system', 
+          'BlinkMacSystemFont',
+          'Roboto',
+          '"Helvetica Neue"',
+          'Arial',
+          'sans-serif'
+        ],
+        heading: [
+          '"Segoe UI"',
+          '"SF Pro Display"',
+          'system-ui', 
+          '-apple-system', 
+          'BlinkMacSystemFont',
+          '"Helvetica Neue"',
+          'Arial',
+          'sans-serif'
+        ],
+        mono: [
+          'SFMono-Regular',
+          'ui-monospace',
+          'Menlo',
+          'Monaco',
+          'Consolas',
+          '"Liberation Mono"',
+          '"Courier New"',
+          'monospace'
+        ],
+      },
+      fontWeight: {
+        normal: '450', // Slightly heavier than default for better legibility
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
