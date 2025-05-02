@@ -985,6 +985,14 @@ Noindex: /`);
     try {
       console.log('Received diagram generation request');
       
+      // Check for OpenAI API key
+      if (!process.env.OPENAI_API_KEY) {
+        console.error('Missing OPENAI_API_KEY environment variable');
+        return res.status(500).json({
+          error: 'OpenAI API key is missing. Please set the OPENAI_API_KEY environment variable.'
+        });
+      }
+      
       // Validate request
       if (!req.body.prompt) {
         return res.status(400).json({ error: 'Prompt is required' });
