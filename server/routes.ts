@@ -293,6 +293,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           .arrow { marker-end: url(#arrowhead); }
           .node:hover { filter: brightness(0.95); }
+          
+          /* Cursor and visual feedback for dragging */
+          svg { cursor: grab; }
+          svg.dragging { cursor: grabbing; }
         </style>
         
         <script type="text/javascript"><![CDATA[
@@ -300,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let isPanning = false;
           let startPoint = { x: 0, y: 0 };
           let endPoint = { x: 0, y: 0 };
-          let scale = 1.0;
+          let scale = 0.5; // Set initial scale to 50%
           
           // Get SVG element and its viewBox
           let svg, viewBox, viewBoxValues;
@@ -310,6 +314,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             svg = document.querySelector('svg');
             viewBox = svg.getAttribute('viewBox');
             viewBoxValues = viewBox.split(' ').map(n => parseFloat(n));
+            
+            // Apply initial 50% scale immediately on load
+            setTimeout(() => {
+              applyZoom();
+              console.log('Initial zoom applied: 50%');
+            }, 100);
             
             // Re-enabled drag functionality with better handling
             svg.addEventListener('mousedown', startDrag);
@@ -323,29 +333,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // IMPORTANT: Disable automatic wheel zoom events completely
             // svg.addEventListener('wheel', zoom);
             
-            // Disable any other interactions that might trigger auto-zoom
-            document.addEventListener('DOMContentLoaded', function() {
-              // Completely prevent all wheel events on the SVG
-              const preventWheel = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-              };
-              
-              // Apply to both SVG and document 
-              svg.addEventListener('wheel', preventWheel, { passive: false });
-              document.addEventListener('wheel', preventWheel, { passive: false });
-              
-              // Disable all click interactions that might trigger auto-zoom
-              svg.addEventListener('click', function(e) {
-                // Only allow clicks on explicit link elements
+            // IMPORTANT: Complete disable all interactions that might cause auto-zooming
+            
+            // Stop ALL wheel events on load
+            const preventWheel = function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            };
+            
+            // Apply to both SVG and document 
+            svg.addEventListener('wheel', preventWheel, { passive: false });
+            document.addEventListener('wheel', preventWheel, { passive: false });
+            
+            // Disable any automatic click behavior on SVG elements
+            const allElements = svg.querySelectorAll('*');
+            allElements.forEach(el => {
+              // Prevent default click actions that might trigger zooming
+              el.addEventListener('click', function(e) {
+                // Only if not a link
                 if (e.target.tagName !== 'a' && e.target.tagName !== 'A' && 
                     !e.target.hasAttribute('href') && !e.target.hasAttribute('xlink:href')) {
                   e.preventDefault();
                   e.stopPropagation();
                 }
               }, true);
+              
+              // Disable double-click zoom behavior
+              el.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+              }, true);
             });
+            
+            // Also prevent on the document level
+            document.addEventListener('dblclick', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }, true);
             
             // Receive messages from parent window
             window.addEventListener('message', function(event) {
@@ -358,6 +385,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           function startDrag(evt) {
+            // Prevent default behavior to stop unwanted side effects
+            evt.preventDefault();
+            evt.stopPropagation();
+            
+            // Only start drag on left mouse button (button === 0)
+            if (evt.type === 'mousedown' && evt.button !== 0) {
+              return;
+            }
+            
             if (evt.type === 'touchstart') {
               startPoint = { 
                 x: evt.touches[0].clientX, 
@@ -369,7 +405,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 y: evt.clientY 
               };
             }
+            
             isPanning = true;
+            
+            // Add feedback class to indicate dragging
+            svg.classList.add('dragging');
           }
           
           function drag(evt) {
@@ -403,7 +443,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           function endDrag(evt) {
+            if (!isPanning) return;
+            
             isPanning = false;
+            
+            // Remove visual feedback
+            svg.classList.remove('dragging');
+            
+            // Prevent any default actions
+            if (evt) {
+              evt.preventDefault();
+              evt.stopPropagation();
+            }
           }
           
           function zoom(evt) {

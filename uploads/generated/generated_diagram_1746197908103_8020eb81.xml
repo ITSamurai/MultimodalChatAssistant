@@ -1,0 +1,78 @@
+<mxfile host="app.diagrams.net" modified="2025-05-02T14:58:28.103Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-74bc08fa-2de1-4a0c-8211-f70bccc84dc9" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_908102_0" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="1">
+  <mxGeometry x="50" y="100" width="80" height="80" as="geometry"/>
+  <mxLabel>Source Server</mxLabel>
+</mxCell>
+<mxCell id="cell_908102_1" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="200" y="100" width="100" height="60" as="geometry"/>
+  <mxLabel>Migration Details</mxLabel>
+</mxCell>
+<mxCell id="cell_908102_2" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="1">
+  <mxGeometry x="350" y="100" width="80" height="80" as="geometry"/>
+  <mxLabel>RMS Migration Appliance</mxLabel>
+</mxCell>
+<mxCell id="cell_908102_3" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="1">
+  <mxGeometry x="500" y="100" width="80" height="80" as="geometry"/>
+  <mxLabel>Target Cloud</mxLabel>
+</mxCell>
+<mxCell id="cell_908102_4" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="200" y="200" width="100" height="60" as="geometry"/>
+  <mxLabel>View Migrations</mxLabel>
+</mxCell>
+<mxCell id="cell_908102_5" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="200" y="300" width="100" height="60" as="geometry"/>
+  <mxLabel>Migration Summary</mxLabel>
+</mxCell>
+<mxCell id="cell_908102_6" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="1">
+  <mxGeometry x="200" y="400" width="100" height="60" as="geometry"/>
+  <mxLabel>OS Modernization</mxLabel>
+</mxCell>
+<mxCell id="cell_908102_7" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="1">
+  <mxGeometry x="350" y="400" width="80" height="80" as="geometry"/>
+  <mxLabel>Storage/Disks</mxLabel>
+</mxCell>
+<mxCell id="cell_908102_8" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Initiate Migration</mxLabel>
+  <mxSource id="cell_908102_0"/>
+  <mxTarget id="cell_908102_1"/>
+</mxCell>
+<mxCell id="cell_908102_9" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Communicate</mxLabel>
+  <mxSource id="cell_908102_1"/>
+  <mxTarget id="cell_908102_2"/>
+</mxCell>
+<mxCell id="cell_908102_10" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Deploy to Cloud</mxLabel>
+  <mxSource id="cell_908102_2"/>
+  <mxTarget id="cell_908102_3"/>
+</mxCell>
+<mxCell id="cell_908102_11" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Review</mxLabel>
+  <mxSource id="cell_908102_4"/>
+  <mxTarget id="cell_908102_5"/>
+</mxCell>
+<mxCell id="cell_908102_12" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Upgrade OS</mxLabel>
+  <mxSource id="cell_908102_5"/>
+  <mxTarget id="cell_908102_6"/>
+</mxCell>
+<mxCell id="cell_908102_13" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Update Storage</mxLabel>
+  <mxSource id="cell_908102_6"/>
+  <mxTarget id="cell_908102_7"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
