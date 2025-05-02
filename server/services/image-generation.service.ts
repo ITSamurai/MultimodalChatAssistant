@@ -421,10 +421,33 @@ export const generateDiagram = async (
   </div>
   
   <script>
-    // Variables
-    let currentZoom = 1.0;
+    // Initialize variables
     const svgContainer = document.getElementById('svg-container');
     const loading = document.getElementById('loading');
+    const zoomResetButton = document.getElementById('zoom-reset');
+    
+    // Determine initial zoom level - try to recover from localStorage or use config default
+    let currentZoom;
+    try {
+      const savedZoom = localStorage.getItem('diagram_zoom_level');
+      if (savedZoom && !isNaN(parseFloat(savedZoom))) {
+        currentZoom = parseFloat(savedZoom);
+        console.log('Restored saved zoom level:', Math.round(currentZoom * 100) + '%');
+      } else {
+        // Default from config, or 70% if not specified
+        currentZoom = ${config?.diagram_default_zoom || 0.7};
+        console.log('Using default zoom level:', Math.round(currentZoom * 100) + '%');
+      }
+    } catch (e) {
+      // Fallback to default zoom level
+      currentZoom = ${config?.diagram_default_zoom || 0.7};
+      console.log('Error loading zoom, using default:', Math.round(currentZoom * 100) + '%');
+    }
+    
+    // Update the zoom reset button text to match initial zoom
+    if (zoomResetButton) {
+      zoomResetButton.textContent = Math.round(currentZoom * 100) + '%';
+    }
     
     // Load SVG content directly - no iframe
     fetch('/api/diagram-svg/${xmlFilename}')
@@ -478,8 +501,24 @@ export const generateDiagram = async (
     
     function applyZoom() {
       if (svgContainer) {
+        // Update the transform scale
         svgContainer.style.transform = 'scale(' + currentZoom + ')';
-        document.getElementById('zoom-reset').textContent = Math.round(currentZoom * 100) + '%';
+        
+        // Update zoom percentage button text
+        const resetButton = document.getElementById('zoom-reset');
+        if (resetButton) {
+          resetButton.textContent = Math.round(currentZoom * 100) + '%';
+        }
+        
+        // Log current zoom for debugging
+        console.log('Current zoom: ' + Math.round(currentZoom * 100) + '%');
+        
+        // Save zoom level to localStorage for persistence
+        try {
+          localStorage.setItem('diagram_zoom_level', currentZoom.toString());
+        } catch (e) {
+          console.warn('Could not save zoom level to localStorage', e);
+        }
       }
     }
     
