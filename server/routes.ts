@@ -28,7 +28,7 @@ import {
   createChatWithKnowledgeBase
 } from './services/pinecone.service';
 import { generateDiagram } from './services/image-generation.service';
-import { setupAuth, requireTokenAuth } from './auth';
+import { setupAuth, requireTokenAuth, verifyAuthToken, generateAuthToken, hashPassword } from './auth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for in-memory storage

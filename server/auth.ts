@@ -13,14 +13,14 @@ import { User as SelectUser } from "@shared/schema";
 const authTokens = new Map<string, number>(); // token -> userId
 
 // Generate a new auth token for a user
-function generateAuthToken(userId: number): string {
+export function generateAuthToken(userId: number): string {
   const token = randomBytes(32).toString('hex');
   authTokens.set(token, userId);
   return token;
 }
 
 // Verify an auth token
-async function verifyAuthToken(token: string): Promise<SelectUser | null> {
+export async function verifyAuthToken(token: string): Promise<SelectUser | null> {
   const userId = authTokens.get(token);
   if (!userId) return null;
   
@@ -55,7 +55,7 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string) {
+export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
