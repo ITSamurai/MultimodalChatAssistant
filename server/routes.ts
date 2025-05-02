@@ -311,17 +311,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
             viewBox = svg.getAttribute('viewBox');
             viewBoxValues = viewBox.split(' ').map(n => parseFloat(n));
             
-            // Pan events
-            svg.addEventListener('mousedown', startDrag);
-            svg.addEventListener('mousemove', drag);
-            svg.addEventListener('mouseup', endDrag);
-            svg.addEventListener('mouseleave', endDrag);
-            svg.addEventListener('touchstart', startDrag);
-            svg.addEventListener('touchmove', drag);
-            svg.addEventListener('touchend', endDrag);
+            // DISABLED: Pan events cause unpredictable zooming
+            // svg.addEventListener('mousedown', startDrag);
+            // svg.addEventListener('mousemove', drag);
+            // svg.addEventListener('mouseup', endDrag);
+            // svg.addEventListener('mouseleave', endDrag);
+            // svg.addEventListener('touchstart', startDrag);
+            // svg.addEventListener('touchmove', drag);
+            // svg.addEventListener('touchend', endDrag);
             
-            // Zoom events
-            svg.addEventListener('wheel', zoom);
+            // IMPORTANT: Disable automatic wheel zoom events completely
+            // svg.addEventListener('wheel', zoom);
+            
+            // Disable any other interactions that might trigger auto-zoom
+            document.addEventListener('DOMContentLoaded', function() {
+              // Completely prevent all wheel events on the SVG
+              const preventWheel = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+              };
+              
+              // Apply to both SVG and document 
+              svg.addEventListener('wheel', preventWheel, { passive: false });
+              document.addEventListener('wheel', preventWheel, { passive: false });
+              
+              // Disable all click interactions that might trigger auto-zoom
+              svg.addEventListener('click', function(e) {
+                // Only allow clicks on explicit link elements
+                if (e.target.tagName !== 'a' && e.target.tagName !== 'A' && 
+                    !e.target.hasAttribute('href') && !e.target.hasAttribute('xlink:href')) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }, true);
+            });
             
             // Receive messages from parent window
             window.addEventListener('message', function(event) {
@@ -451,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         <!-- Instructions -->
         <text x="${minX + width/2}" y="${minY + 70}" font-size="12" text-anchor="middle" fill="#666">
-          <tspan x="${minX + width/2}" dy="0">Pan: Drag the diagram | Zoom: Mouse wheel or touchpad</tspan>
+          <tspan x="${minX + width/2}" dy="0">Use the + and - buttons to zoom in and out</tspan>
         </text>
         
         <!-- Generate diagram elements based on cells -->
