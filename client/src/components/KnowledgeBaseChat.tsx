@@ -469,10 +469,16 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                 }
                 
                 // First immediately update the UI with the new title without waiting for server
+                console.log(`Creating chat-title-updated-local event for chat ${chatId} with title "${newTitle}"`);
                 const chatUpdatedEvent = new CustomEvent('chat-title-updated-local', { 
                   detail: { chatId, newTitle } 
                 });
                 window.dispatchEvent(chatUpdatedEvent);
+
+                // Also dispatch the original event as a fallback
+                console.log(`Dispatching additional fallback chat-title-updated event`);
+                const fallbackEvent = new CustomEvent('chat-title-updated');
+                window.dispatchEvent(fallbackEvent);
                 
                 // Also update on the server
                 try {
