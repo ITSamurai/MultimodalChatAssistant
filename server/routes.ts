@@ -21,7 +21,7 @@ import {
   createChatWithKnowledgeBase
 } from './services/pinecone.service';
 import { generateDiagram } from './services/image-generation.service';
-import { setupAuth, requireTokenAuth, hashPassword } from './auth';
+import { setupAuth, requireTokenAuth, hashPassword, verifyAuthToken } from './auth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for in-memory storage
@@ -1827,30 +1827,80 @@ Noindex: /`);
   });
 
   // Admin API endpoints for user management
-  const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Not authenticated' });
+  const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // First check for token-based authentication
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        const user = await verifyAuthToken(token);
+        
+        if (user) {
+          // Token is valid, set the user on the request
+          req.user = user;
+          
+          // Check if user has admin role
+          if (user.role !== 'admin' && user.role !== 'superadmin') {
+            return res.status(403).json({ message: 'Not authorized - admin access required' });
+          }
+          
+          return next();
+        }
+      }
+      
+      // Fall back to session-based authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const user = req.user as User;
+      if (user.role !== 'admin' && user.role !== 'superadmin') {
+        return res.status(403).json({ message: 'Not authorized - admin access required' });
+      }
+      
+      next();
+    } catch (error) {
+      console.error('Authentication error:', error);
+      res.status(500).json({ message: 'Authentication error' });
     }
-    
-    const user = req.user as User;
-    if (user.role !== 'admin' && user.role !== 'superadmin') {
-      return res.status(403).json({ message: 'Not authorized - admin access required' });
-    }
-    
-    next();
   };
   
-  const requireSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Not authenticated' });
+  const requireSuperAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // First check for token-based authentication
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        const user = await verifyAuthToken(token);
+        
+        if (user) {
+          // Token is valid, set the user on the request
+          req.user = user;
+          
+          // Check if user has superadmin role
+          if (user.role !== 'superadmin') {
+            return res.status(403).json({ message: 'Not authorized - superadmin access required' });
+          }
+          
+          return next();
+        }
+      }
+      
+      // Fall back to session-based authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const user = req.user as User;
+      if (user.role !== 'superadmin') {
+        return res.status(403).json({ message: 'Not authorized - superadmin access required' });
+      }
+      
+      next();
+    } catch (error) {
+      console.error('Authentication error:', error);
+      res.status(500).json({ message: 'Authentication error' });
     }
-    
-    const user = req.user as User;
-    if (user.role !== 'superadmin') {
-      return res.status(403).json({ message: 'Not authorized - superadmin access required' });
-    }
-    
-    next();
   };
   
   // Get all users (admin only)

@@ -19,7 +19,7 @@ function generateAuthToken(userId: number): string {
 }
 
 // Verify an auth token
-async function verifyAuthToken(token: string): Promise<SelectUser | null> {
+export async function verifyAuthToken(token: string): Promise<SelectUser | null> {
   const userId = authTokens.get(token);
   if (!userId) return null;
   
