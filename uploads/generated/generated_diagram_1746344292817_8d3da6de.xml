@@ -1,0 +1,63 @@
+<mxfile host="app.diagrams.net" modified="2025-05-04T07:38:12.817Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-3be52f9c-c788-4d14-9c90-c3ff6d3f3d0d" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_292816_1" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+  <mxGeometry x="20" y="20" width="80" height="80" as="geometry"/>
+  <mxLabel value="Source Server: ip-172-16-1-16 (54.243.18.16)" />
+</mxCell>
+<mxCell id="cell_292816_2" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+  <mxGeometry x="140" y="20" width="80" height="80" as="geometry"/>
+  <mxLabel value="Migration Appliance" />
+</mxCell>
+<mxCell id="cell_292816_3" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+  <mxGeometry x="260" y="20" width="80" height="80" as="geometry"/>
+  <mxLabel value="Target Cloud Server: W2K8R2-Demo (100.24.68.14)" />
+</mxCell>
+<mxCell id="cell_292816_4" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="140" y="120" width="100" height="40" as="geometry"/>
+  <mxLabel value="Migration Setup" />
+</mxCell>
+<mxCell id="cell_292816_5" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="140" y="180" width="100" height="40" as="geometry"/>
+  <mxLabel value="Full Migration Profile Setup" />
+</mxCell>
+<mxCell id="cell_292816_6" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="140" y="240" width="100" height="40" as="geometry"/>
+  <mxLabel value="Differential Migration Profile Setup" />
+</mxCell>
+<mxCell id="cell_292816_7" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="140" y="300" width="100" height="40" as="geometry"/>
+  <mxLabel value="OS Modernization" />
+</mxCell>
+<mxCell id="cell_292816_8" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="140" y="360" width="100" height="40" as="geometry"/>
+  <mxLabel value="Review OS-based Migration Requirements" />
+</mxCell>
+<mxCell id="cell_292816_9" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;" edge="1" parent="0" source="1" target="2">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_292816_10" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;" edge="1" parent="0" source="2" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_292816_11" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;" edge="1" parent="0" source="2" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_292816_12" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;" edge="1" parent="0" source="4" target="5">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_292816_13" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;" edge="1" parent="0" source="5" target="6">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_292816_14" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;" edge="1" parent="0" source="6" target="7">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_292816_15" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;" edge="1" parent="0" source="7" target="8">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

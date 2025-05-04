@@ -267,12 +267,38 @@ export function KnowledgeBaseChat() {
                     <div key={idx} className="mt-3">
                       {ref.type === 'image' && ref.imagePath && (
                         <div className="relative">
-                          <img 
-                            src={getFullUrl(ref.imagePath)}
-                            alt={ref.caption || "Generated Image"} 
-                            className="w-full h-auto rounded" 
-                            loading="lazy"
-                          />
+                          {ref.imagePath.endsWith('.html') || ref.imagePath.includes('diagram') ? (
+                            <div className="rounded relative">
+                              <iframe
+                                src={getFullUrl(ref.imagePath)}
+                                className="w-full h-[400px] border-0 rounded"
+                                sandbox="allow-scripts allow-same-origin"
+                                title={ref.caption || "Generated Diagram"}
+                              ></iframe>
+                              <div className="absolute top-2 right-2 bg-white rounded shadow-md opacity-90 hover:opacity-100">
+                                <a
+                                  href={getFullUrl(ref.imagePath)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-2 hover:bg-gray-100 flex items-center text-gray-700 text-xs"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                  </svg>
+                                  Download
+                                </a>
+                              </div>
+                            </div>
+                          ) : (
+                            <img 
+                              src={getFullUrl(ref.imagePath)}
+                              alt={ref.caption || "Generated Image"} 
+                              className="w-full h-auto rounded" 
+                              loading="lazy"
+                            />
+                          )}
                           {ref.caption && (
                             <div className="p-2 text-sm text-gray-500">
                               {ref.caption}
