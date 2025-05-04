@@ -10,4 +10,14 @@ if (!import.meta.env.VITE_OPENAI_API_KEY && process.env.NODE_ENV !== "production
   );
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Add debugging information
+console.log("Starting application with React...");
+
+// Get the root element
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  console.error("Could not find root element!");
+} else {
+  console.log("Found root element, rendering app");
+  createRoot(rootElement).render(<App />);
+}

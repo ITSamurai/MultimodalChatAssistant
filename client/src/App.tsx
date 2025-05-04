@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,12 +11,22 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
+  const [location] = useLocation();
+  
+  // Add debug logging
+  console.log("Current location:", location);
+  
   return (
     <Switch>
       <ProtectedRoute path="/" component={() => <KnowledgeChatPage />} />
+      <ProtectedRoute path="/chat" component={() => <KnowledgeChatPage />} />
+      <ProtectedRoute path="/chat/:id" component={() => <KnowledgeChatPage />} />
       <ProtectedRoute path="/config" component={() => <ConfigPage />} />
-      <Route path="/auth" component={AuthPage} />
-      <Route component={NotFound} />
+      <Route path="/auth" component={() => <AuthPage />} />
+      <Route component={() => {
+        console.log("Not found route triggered for path:", location);
+        return <NotFound />;
+      }} />
     </Switch>
   );
 }
