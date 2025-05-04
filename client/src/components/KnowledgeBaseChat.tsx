@@ -35,7 +35,11 @@ interface Message {
   references?: MessageReference[];
 }
 
-export function KnowledgeBaseChat() {
+interface KnowledgeBaseChatProps {
+  chatId?: number;
+}
+
+export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +49,38 @@ export function KnowledgeBaseChat() {
   const [diagramZooms, setDiagramZooms] = useState<Record<string, number>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  // Load existing chat messages when chatId changes
+  useEffect(() => {
+    async function loadChatMessages() {
+      if (!chatId) return;
+      
+      setIsLoading(true);
+      try {
+        const response = await apiRequest('GET', `/api/chats/${chatId}/messages`);
+        
+        if (response.ok) {
+          const chatMessages = await response.json();
+          // Convert chat messages to the format our component uses
+          const convertedMessages = chatMessages.map((msg: any) => ({
+            role: msg.role,
+            content: msg.content,
+            references: msg.references || undefined
+          }));
+          
+          setMessages(convertedMessages);
+        } else {
+          console.error('Failed to load chat messages');
+        }
+      } catch (error) {
+        console.error('Error loading chat messages:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadChatMessages();
+  }, [chatId]);
   
   // Function to download diagrams or convert them to PNG
   const downloadDiagram = async (imagePath: string, index: number) => {
@@ -401,6 +437,18 @@ export function KnowledgeBaseChat() {
     setIsLoading(true);
     
     try {
+      // Save the user message to the chat in the database if we have a chatId
+      if (chatId) {
+        try {
+          await apiRequest('POST', `/api/chats/${chatId}/messages`, {
+            role: 'user',
+            content: input
+          });
+        } catch (error) {
+          console.error('Error saving user message to chat:', error);
+        }
+      }
+      
       // Format messages for API
       const apiMessages: KnowledgeBaseChatMessage[] = [
         ...messages,
