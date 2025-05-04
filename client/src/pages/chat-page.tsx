@@ -14,39 +14,55 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Load chat data if we have a chat ID
-  useEffect(() => {
-    async function loadChat() {
-      if (!id) return;
-      
-      setIsLoading(true);
-      try {
-        const response = await apiRequest('GET', `/api/chats/${id}`);
-        if (response.ok) {
-          const chatData = await response.json();
-          setChat(chatData);
-        } else {
-          const error = await response.json();
-          toast({
-            title: 'Error',
-            description: error.message || 'Failed to load chat',
-            variant: 'destructive',
-          });
-        }
-      } catch (error) {
-        console.error('Error loading chat:', error);
+  // Function to load chat data
+  const loadChat = async () => {
+    if (!id) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await apiRequest('GET', `/api/chats/${id}`);
+      if (response.ok) {
+        const chatData = await response.json();
+        setChat(chatData);
+      } else {
+        const error = await response.json();
         toast({
           title: 'Error',
-          description: 'An unexpected error occurred',
+          description: error.message || 'Failed to load chat',
           variant: 'destructive',
         });
-      } finally {
-        setIsLoading(false);
       }
+    } catch (error) {
+      console.error('Error loading chat:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
-    
+  };
+
+  // Load chat data if we have a chat ID
+  useEffect(() => {
     loadChat();
   }, [id, toast]);
+
+  // Listen for chat title updates
+  useEffect(() => {
+    const handleChatTitleUpdate = () => {
+      if (id) {
+        loadChat(); // Reload chat to get the latest title
+      }
+    };
+    
+    window.addEventListener('chat-title-updated', handleChatTitleUpdate);
+    
+    return () => {
+      window.removeEventListener('chat-title-updated', handleChatTitleUpdate);
+    };
+  }, [id]);
 
   return (
     <Layout>

@@ -440,10 +440,33 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
       // Save the user message to the chat in the database if we have a chatId
       if (chatId) {
         try {
+          // Save the message to the database
           await apiRequest('POST', `/api/chats/${chatId}/messages`, {
             role: 'user',
             content: input
           });
+          
+          // Check if this is the first message in the chat
+          if (messages.length === 0) {
+            // Get the current chat to check its title
+            const chatResponse = await apiRequest('GET', `/api/chats/${chatId}`);
+            if (chatResponse.ok) {
+              const chat = await chatResponse.json();
+              
+              // If chat title is still "New Conversation", refresh it to show the updated title
+              if (chat.title === 'New Conversation') {
+                // Get latest chat data
+                setTimeout(async () => {
+                  const updatedChatResponse = await apiRequest('GET', `/api/chats/${chatId}`);
+                  if (updatedChatResponse.ok) {
+                    // Force refresh of chat list to update the sidebar
+                    const event = new CustomEvent('chat-title-updated');
+                    window.dispatchEvent(event);
+                  }
+                }, 500); // Small delay to ensure server has time to update the title
+              }
+            }
+          }
         } catch (error) {
           console.error('Error saving user message to chat:', error);
         }

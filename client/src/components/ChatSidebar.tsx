@@ -37,29 +37,43 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
   const [editTitle, setEditTitle] = useState('');
   const { toast } = useToast();
 
+  // Function to load chats
+  const loadChats = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await apiRequest('GET', '/api/chats');
+      if (response.ok) {
+        const data = await response.json();
+        setChats(data);
+      } else {
+        console.error('Failed to load chats');
+      }
+    } catch (error) {
+      console.error('Error loading chats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Load chats for the current user
   useEffect(() => {
-    async function loadChats() {
-      if (!user) return;
-      
-      setIsLoading(true);
-      try {
-        const response = await apiRequest('GET', '/api/chats');
-        if (response.ok) {
-          const data = await response.json();
-          setChats(data);
-        } else {
-          console.error('Failed to load chats');
-        }
-      } catch (error) {
-        console.error('Error loading chats:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
     loadChats();
   }, [user]);
+  
+  // Listen for chat title updates
+  useEffect(() => {
+    const handleChatTitleUpdate = () => {
+      loadChats();
+    };
+    
+    window.addEventListener('chat-title-updated', handleChatTitleUpdate);
+    
+    return () => {
+      window.removeEventListener('chat-title-updated', handleChatTitleUpdate);
+    };
+  }, []);
 
   const createNewChat = async () => {
     if (!user) return;
