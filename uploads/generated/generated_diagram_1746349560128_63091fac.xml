@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net" modified="2025-05-04T09:06:00.128Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-0ad85902-f0d1-46fa-ad20-277b9dc680ca" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_560127_1" value="Source Server" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+  <mxGeometry x="60" y="60" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_2" value="Migration Appliance" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+  <mxGeometry x="200" y="60" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_3" value="Target Cloud Server" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+  <mxGeometry x="340" y="60" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_4" value="OS-Based Migration" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="200" y="180" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_5" value="VM-Based Migration" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="200" y="260" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_6" value="OS Type, CPU, RAM, Disk" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+  <mxGeometry x="60" y="180" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_7" value="VM Specifications, vCPU, vRAM" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+  <mxGeometry x="60" y="260" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_8" value="File Mobility" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="0">
+  <mxGeometry x="60" y="360" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_9" value="Block Mobility" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="0">
+  <mxGeometry x="200" y="360" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="1" target="2">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="2" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_12" value="" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;" edge="1" parent="0" source="6" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_13" value="" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;" edge="1" parent="0" source="7" target="5">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_14" value="" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;" edge="1" parent="0" source="4" target="8">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_560127_15" value="" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;" edge="1" parent="0" source="5" target="9">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
