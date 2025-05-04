@@ -64,14 +64,30 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
   
   // Listen for chat title updates
   useEffect(() => {
+    // Handle global refresh event
     const handleChatTitleUpdate = () => {
       loadChats();
     };
     
+    // Handle local title update (immediate UI update without server refetch)
+    const handleLocalChatTitleUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<{chatId: number, newTitle: string}>;
+      if (customEvent.detail) {
+        // Update the chat title in state without refetching
+        setChats(prevChats => prevChats.map(chat => 
+          chat.id === customEvent.detail.chatId 
+            ? { ...chat, title: customEvent.detail.newTitle } 
+            : chat
+        ));
+      }
+    };
+    
     window.addEventListener('chat-title-updated', handleChatTitleUpdate);
+    window.addEventListener('chat-title-updated-local', handleLocalChatTitleUpdate);
     
     return () => {
       window.removeEventListener('chat-title-updated', handleChatTitleUpdate);
+      window.removeEventListener('chat-title-updated-local', handleLocalChatTitleUpdate);
     };
   }, []);
 

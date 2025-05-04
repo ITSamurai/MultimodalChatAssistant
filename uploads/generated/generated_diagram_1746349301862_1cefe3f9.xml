@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net" modified="2025-05-04T09:01:41.862Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-1a619abf-c360-4b5a-b4de-96c6a8dd8caa" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_301861_1" value="Source Server" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+  <mxGeometry x="60" y="60" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_2" value="Review Requirements (Planning)" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="200" y="60" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_3" value="Verify Source OS on Support Matrix" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="200" y="180" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_4" value="Check Configuration Requirements" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="200" y="300" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_5" value="Validate Source Credentials" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="200" y="420" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_6" value="Check Required Ports" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="200" y="540" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_7" value="Migration Appliance" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+  <mxGeometry x="200" y="660" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_8" value="Target Cloud" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+  <mxGeometry x="400" y="660" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="1" target="2">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="2" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="3" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="4" target="5">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="5" target="6">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="6" target="7">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_301861_15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="7" target="8">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

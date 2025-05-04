@@ -51,16 +51,36 @@ export default function ChatPage() {
 
   // Listen for chat title updates
   useEffect(() => {
+    // Handle global refresh event (from other components)
     const handleChatTitleUpdate = () => {
       if (id) {
         loadChat(); // Reload chat to get the latest title
       }
     };
     
+    // Handle local title update (immediate UI update without server refetch)
+    const handleLocalChatTitleUpdate = (event: Event) => {
+      if (!id) return;
+      
+      const customEvent = event as CustomEvent<{chatId: number, newTitle: string}>;
+      if (customEvent.detail && parseInt(id) === customEvent.detail.chatId) {
+        // Directly update the chat title in state without refetching
+        setChat(prevChat => {
+          if (!prevChat) return null;
+          return {
+            ...prevChat,
+            title: customEvent.detail.newTitle
+          };
+        });
+      }
+    };
+    
     window.addEventListener('chat-title-updated', handleChatTitleUpdate);
+    window.addEventListener('chat-title-updated-local', handleLocalChatTitleUpdate);
     
     return () => {
       window.removeEventListener('chat-title-updated', handleChatTitleUpdate);
+      window.removeEventListener('chat-title-updated-local', handleLocalChatTitleUpdate);
     };
   }, [id]);
 

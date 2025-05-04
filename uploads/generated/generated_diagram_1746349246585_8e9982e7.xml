@@ -1,0 +1,62 @@
+<mxfile host="app.diagrams.net" modified="2025-05-04T09:00:46.585Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-04913d9f-5341-4751-9c36-8d2e666c0d8b" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_246584_1" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+  <mxGeometry x="20" y="20" width="80" height="80" as="geometry"/>
+  <mxLabel>Source Server</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_2" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+  <mxGeometry x="20" y="120" width="80" height="80" as="geometry"/>
+  <mxLabel>OS Type, CPU, RAM, Disk</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_3" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="140" y="70" width="120" height="60" as="geometry"/>
+  <mxLabel>OS-Based Migration</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_4" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+  <mxGeometry x="300" y="70" width="80" height="80" as="geometry"/>
+  <mxLabel>Migration Appliance</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_5" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+  <mxGeometry x="440" y="70" width="80" height="80" as="geometry"/>
+  <mxLabel>Target Cloud Server</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_6" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+  <mxGeometry x="440" y="170" width="80" height="80" as="geometry"/>
+  <mxLabel>Modern OS Version</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_7" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="0">
+  <mxGeometry x="20" y="220" width="80" height="80" as="geometry"/>
+  <mxLabel>Encrypted Credentials</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_8" edge="1" parent="0" source="1" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Initiate Migration</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_9" edge="1" parent="0" source="3" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Transfer Data</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_10" edge="1" parent="0" source="4" target="5">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Deploy to Cloud</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_11" edge="1" parent="0" source="2" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Analyze System</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_12" edge="1" parent="0" source="7" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>Optional: Use Credentials</mxLabel>
+</mxCell>
+<mxCell id="cell_246584_13" edge="1" parent="0" source="5" target="6">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel>OS Modernization</mxLabel>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

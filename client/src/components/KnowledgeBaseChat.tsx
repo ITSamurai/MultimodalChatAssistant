@@ -453,17 +453,35 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
             if (chatResponse.ok) {
               const chat = await chatResponse.json();
               
-              // If chat title is still "New Conversation", refresh it to show the updated title
+              // If chat title is still "New Conversation", update it directly
               if (chat.title === 'New Conversation') {
-                // Get latest chat data
-                setTimeout(async () => {
-                  const updatedChatResponse = await apiRequest('GET', `/api/chats/${chatId}`);
-                  if (updatedChatResponse.ok) {
-                    // Force refresh of chat list to update the sidebar
-                    const event = new CustomEvent('chat-title-updated');
-                    window.dispatchEvent(event);
+                // Generate a title from the user's first message (using first 5-6 words or 40 chars max)
+                let newTitle = input.trim();
+                
+                // Limit to first 5-6 words or 40 chars
+                if (newTitle.length > 40) {
+                  newTitle = newTitle.substring(0, 40).trim() + '...';
+                } else {
+                  const words = newTitle.split(' ');
+                  if (words.length > 6) {
+                    newTitle = words.slice(0, 5).join(' ') + '...';
                   }
-                }, 500); // Small delay to ensure server has time to update the title
+                }
+                
+                // First immediately update the UI with the new title without waiting for server
+                const chatUpdatedEvent = new CustomEvent('chat-title-updated-local', { 
+                  detail: { chatId, newTitle } 
+                });
+                window.dispatchEvent(chatUpdatedEvent);
+                
+                // Also update on the server
+                try {
+                  await apiRequest('PATCH', `/api/chats/${chatId}`, {
+                    title: newTitle
+                  });
+                } catch (titleError) {
+                  console.error('Error updating chat title:', titleError);
+                }
               }
             }
           }
