@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net" modified="2025-05-04T07:53:06.331Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-83b0a5ca-8fd9-4a7c-9cc1-6d4b49807d99" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_186331_1" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+    <mxGeometry x="20" y="20" width="80" height="80" as="geometry"/>
+    <mxCell label="Source Server: W2K8R2" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxGeometry x="20" y="100" width="80" height="30" as="geometry"/>
+    </mxCell>
+</mxCell>
+<mxCell id="cell_186331_2" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+    <mxGeometry x="150" y="40" width="120" height="60" as="geometry"/>
+    <mxCell label="Migrate" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="cell_186331_2">
+        <mxGeometry x="150" y="100" width="120" height="30" as="geometry"/>
+    </mxCell>
+</mxCell>
+<mxCell id="cell_186331_3" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+    <mxGeometry x="320" y="20" width="100" height="80" as="geometry"/>
+    <mxCell label="RMS Migration Appliance" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="cell_186331_3">
+        <mxGeometry x="320" y="100" width="100" height="30" as="geometry"/>
+    </mxCell>
+</mxCell>
+<mxCell id="cell_186331_4" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+    <mxGeometry x="480" y="20" width="80" height="80" as="geometry"/>
+    <mxCell label="Target Cloud: us-east1" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="cell_186331_4">
+        <mxGeometry x="480" y="100" width="80" height="30" as="geometry"/>
+    </mxCell>
+</mxCell>
+<mxCell id="cell_186331_5" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+    <mxGeometry x="150" y="150" width="120" height="60" as="geometry"/>
+    <mxCell label="OS Modernization" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="cell_186331_5">
+        <mxGeometry x="150" y="210" width="120" height="30" as="geometry"/>
+    </mxCell>
+</mxCell>
+<mxCell id="cell_186331_6" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+    <mxGeometry x="320" y="150" width="100" height="80" as="geometry"/>
+    <mxCell label="Target OS Upgrade" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="cell_186331_6">
+        <mxGeometry x="320" y="230" width="100" height="30" as="geometry"/>
+    </mxCell>
+</mxCell>
+<mxCell id="cell_186331_7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="1" target="2">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxCell label="Migration Details" style="text;html=1;align=center;" edge="1" parent="cell_186331_7">
+        <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+</mxCell>
+<mxCell id="cell_186331_8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="2" target="3">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxCell label="Transfer Method: Block-based" style="text;html=1;align=center;" edge="1" parent="cell_186331_8">
+        <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+</mxCell>
+<mxCell id="cell_186331_9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="3" target="4">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxCell label="Secure Network" style="text;html=1;align=center;" edge="1" parent="cell_186331_9">
+        <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+</mxCell>
+<mxCell id="cell_186331_10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="0" source="5" target="6">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxCell label="Version Upgrade" style="text;html=1;align=center;" edge="1" parent="cell_186331_10">
+        <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
