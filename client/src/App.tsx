@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import KnowledgeChatPage from "@/pages/knowledge-chat";
+import ChatPage from "@/pages/chat-page";
 import ConfigPage from "@/pages/config-page";
 import AuthPage from "@/pages/auth-page";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -18,9 +19,10 @@ function Router() {
   
   return (
     <Switch>
-      <ProtectedRoute path="/" component={() => <KnowledgeChatPage />} />
-      <ProtectedRoute path="/chat" component={() => <KnowledgeChatPage />} />
-      <ProtectedRoute path="/chat/:id" component={() => <KnowledgeChatPage />} />
+      <ProtectedRoute path="/" component={() => <ChatPage />} />
+      <ProtectedRoute path="/chat" component={() => <ChatPage />} />
+      <ProtectedRoute path="/chat/:id" component={ChatPage} />
+      <ProtectedRoute path="/knowledge" component={() => <KnowledgeChatPage />} />
       <ProtectedRoute path="/config" component={() => <ConfigPage />} />
       <Route path="/auth" component={() => <AuthPage />} />
       <Route component={() => {

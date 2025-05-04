@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AuthPage() {
-  const { user, loginMutation } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>("login");
 
   // Redirect if already logged in
   if (user) {
@@ -21,6 +23,26 @@ export default function AuthPage() {
     loginMutation.mutate({
       username: formData.get("username") as string,
       password: formData.get("password") as string,
+    });
+  };
+  
+  const handleRegister = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+    
+    if (password !== confirmPassword) {
+      alert("Passwords don't match");
+      return;
+    }
+    
+    registerMutation.mutate({
+      username: formData.get("username") as string,
+      password: password,
+      role: "user", // Default role for new users
+      name: formData.get("name") as string || "",
+      last_login: new Date().toISOString(),
     });
   };
 

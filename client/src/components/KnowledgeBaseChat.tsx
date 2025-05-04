@@ -489,11 +489,26 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
       }
       
       // Add AI response to messages with references if available
-      setMessages((prev) => [...prev, {
+      const assistantMessage: Message = {
         role: 'assistant',
         content: response.content,
         references: response.references
-      }]);
+      };
+      
+      setMessages((prev) => [...prev, assistantMessage]);
+      
+      // Save the assistant message to the chat in the database if we have a chatId
+      if (chatId) {
+        try {
+          await apiRequest('POST', `/api/chats/${chatId}/messages`, {
+            role: 'assistant',
+            content: response.content,
+            references: response.references
+          });
+        } catch (error) {
+          console.error('Error saving assistant message to chat:', error);
+        }
+      }
       
       // Additional scroll after message is added and refs are available
       setTimeout(() => {
