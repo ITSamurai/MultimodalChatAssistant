@@ -310,7 +310,7 @@ export default function AdminPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteUser(user.id)}
-                          disabled={user.id === user.id} // Can't delete yourself
+                          disabled={user.role === 'superadmin'} // Can't delete superadmin accounts
                         >
                           <Trash className="h-4 w-4" />
                         </Button>

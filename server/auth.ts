@@ -121,7 +121,8 @@ export function setupAuth(app: Express) {
               username: "scott",
               password: await hashPassword("tiger"),
               email: "scott@rivermeadow.com",
-              name: "Scott Admin"
+              name: "Scott Admin",
+              role: "superadmin"
             });
             return done(null, newUser);
           }
@@ -202,10 +203,28 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
+  app.get("/api/user", async (req, res) => {
+    try {
+      // First check for token-based authentication
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        const user = await verifyAuthToken(token);
+        
+        if (user) {
+          return res.json(user);
+        }
+      }
+      
+      // Fall back to session-based authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      res.json(req.user);
+    } catch (error) {
+      console.error('User authentication error:', error);
+      res.status(500).json({ message: 'Authentication error' });
     }
-    res.json(req.user);
   });
 }
