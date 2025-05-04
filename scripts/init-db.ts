@@ -4,6 +4,7 @@ import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
+import { eq } from 'drizzle-orm';
 
 // Required for Neon serverless
 neonConfig.webSocketConstructor = ws;
@@ -23,14 +24,25 @@ async function main() {
   const hashedPassword = await hashPassword("tiger");
   
   try {
+    // First check if scott user already exists
+    const existingUser = await db.select()
+      .from(users)
+      .where(eq(users.username, "scott"));
+      
+    if (existingUser.length > 0) {
+      console.log("User scott already exists, skipping user creation");
+      return;
+    }
+    
     // Create superadmin user (scott)
     const [admin] = await db.insert(users).values({
       username: "scott",
       password: hashedPassword,
       email: "scott@example.com",
       name: "Scott (Superadmin)",
-      isAdmin: true,
+      role: "admin",
       createdAt: new Date(),
+      updatedAt: new Date(),
     }).returning();
     
     console.log(`Created admin user with ID: ${admin.id}`);

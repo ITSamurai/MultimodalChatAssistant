@@ -3,15 +3,16 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Define the User schema with isAdmin field
+// Define the User schema 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email"),
   name: text("name"),
-  isAdmin: boolean("is_admin").default(false).notNull(),
+  role: text("role").default("user").notNull(),  // "admin" or "user"
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   lastLogin: timestamp("last_login"),
 });
 
@@ -20,7 +21,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   email: true,
   name: true,
-  isAdmin: true,
+  role: true,
+  updatedAt: true,
 });
 
 // Define relationships for users
