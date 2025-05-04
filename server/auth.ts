@@ -4,8 +4,7 @@ import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import connectPgSimple from "connect-pg-simple";
-import { pool } from "./db";
+import MemoryStore from "memorystore";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
@@ -13,14 +12,14 @@ import { User as SelectUser } from "@shared/schema";
 const authTokens = new Map<string, number>(); // token -> userId
 
 // Generate a new auth token for a user
-export function generateAuthToken(userId: number): string {
+function generateAuthToken(userId: number): string {
   const token = randomBytes(32).toString('hex');
   authTokens.set(token, userId);
   return token;
 }
 
 // Verify an auth token
-export async function verifyAuthToken(token: string): Promise<SelectUser | null> {
+async function verifyAuthToken(token: string): Promise<SelectUser | null> {
   const userId = authTokens.get(token);
   if (!userId) return null;
   
@@ -28,7 +27,7 @@ export async function verifyAuthToken(token: string): Promise<SelectUser | null>
 }
 
 // Token authentication middleware
-async function tokenAuth(req: Request, res: Response, next: NextFunction) {
+function tokenAuth(req: Request, res: Response, next: NextFunction) {
   // Check for token in Authorization header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -37,12 +36,8 @@ async function tokenAuth(req: Request, res: Response, next: NextFunction) {
 
   const token = authHeader.split(' ')[1];
   
-  // Verify token and get user
-  const user = await verifyAuthToken(token);
-  if (user) {
-    // Set user in request
-    req.user = user;
-  }
+  // Store token in request for later use
+  (req as any).authToken = token;
   
   next();
 }
@@ -55,7 +50,7 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-export async function hashPassword(password: string) {
+async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
@@ -91,16 +86,20 @@ export async function requireTokenAuth(req: Request, res: Response, next: NextFu
 }
 
 export function setupAuth(app: Express) {
+  const MemStore = MemoryStore(session);
+  
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "rivermeadow-secret-key",
+    secret: "rivermeadow-secret-key",
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
+    store: new MemStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    }),
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "none", // Allow cross-site cookies
+      sameSite: "none", // Allow cross-site cookies (for vertical-assistant.com)
       domain: process.env.COOKIE_DOMAIN || undefined // Use explicit domain if provided
     }
   };
@@ -108,14 +107,13 @@ export function setupAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
-  app.use(tokenAuth);
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
         
-        // For the hardcoded superadmin user (scott/tiger)
+        // For the hardcoded user (scott/tiger)
         if (username === "scott" && password === "tiger") {
           // If the user doesn't exist yet, create it
           if (!user) {
@@ -123,21 +121,16 @@ export function setupAuth(app: Express) {
               username: "scott",
               password: await hashPassword("tiger"),
               email: "scott@rivermeadow.com",
-              name: "Scott Admin",
-              role: "superadmin"
+              name: "Scott Admin"
             });
             return done(null, newUser);
           }
-          // Update lastLogin timestamp
-          await storage.updateUserLastLogin(user.id);
           return done(null, user);
         }
         
         if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false);
         } else {
-          // Update lastLogin timestamp
-          await storage.updateUserLastLogin(user.id);
           return done(null, user);
         }
       } catch (error) {
@@ -170,15 +163,7 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) return next(err);
-        
-        // Generate token for API access
-        const token = generateAuthToken(user.id);
-        
-        // Return user data with token
-        res.status(201).json({
-          ...user,
-          token: token
-        });
+        res.status(201).json(user);
       });
     } catch (error) {
       next(error);
@@ -217,24 +202,10 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", async (req, res) => {
-    // First check for session authentication
-    if (req.isAuthenticated()) {
-      return res.json(req.user);
+  app.get("/api/user", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
     }
-    
-    // If not session-authenticated, check for token authentication
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      const user = await verifyAuthToken(token);
-      
-      if (user) {
-        return res.json(user);
-      }
-    }
-    
-    // No valid authentication found
-    return res.status(401).json({ message: "Not authenticated" });
+    res.json(req.user);
   });
 }

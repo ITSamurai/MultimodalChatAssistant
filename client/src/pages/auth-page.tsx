@@ -1,183 +1,105 @@
-import { useEffect } from "react";
-import { useLocation } from "wouter";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState } from "react";
+import { Redirect } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Loader2, LockKeyhole } from "lucide-react";
-
-// Login form schema
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 export default function AuthPage() {
-  const [, setLocation] = useLocation();
-  const { user, isLoading, loginMutation } = useAuth();
+  const { user, loginMutation } = useAuth();
 
   // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      setLocation("/");
-    }
-  }, [user, setLocation]);
-
-  // Login form
-  const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  });
-
-  // Handle login form submission
-  const onLoginSubmit = (values: LoginFormValues) => {
-    loginMutation.mutate(values);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
-      </div>
-    );
+  if (user) {
+    return <Redirect to="/" />;
   }
 
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    loginMutation.mutate({
+      username: formData.get("username") as string,
+      password: formData.get("password") as string,
+    });
+  };
+
   return (
-    <div className="min-h-screen flex">
-      {/* Form section */}
-      <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
-        <div className="max-w-md mx-auto w-full">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold mb-2">RiverMeadow AI Chat</h1>
-            <p className="text-muted-foreground">
-              Sign in to access your account
-            </p>
+    <div className="container flex h-screen items-center justify-center">
+      <div className="flex flex-col md:flex-row w-full max-w-5xl space-y-6 md:space-y-0 md:space-x-6">
+        {/* Left side - Auth form */}
+        <div className="flex-1">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold tracking-tight text-primary">RiverMeadow AI Chat</h1>
+            <p className="text-muted-foreground mt-2">Sign in to access the intelligent assistant</p>
           </div>
+          
+          <Card>
+            <form onSubmit={handleLogin}>
+              <CardHeader>
+                <CardTitle>Login</CardTitle>
+                <CardDescription>
+                  Enter your credentials to access your account
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input 
+                    id="username" 
+                    name="username" 
+                    placeholder="Username" 
+                    required 
+                    autoComplete="username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input 
+                    id="password" 
+                    name="password" 
+                    type="password" 
+                    placeholder="Password" 
+                    required 
+                    autoComplete="current-password"
+                  />
+                </div>
 
-          <div className="mb-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-              <LockKeyhole className="h-8 w-8 text-primary" />
-            </div>
-            <h2 className="text-2xl font-semibold mb-1">Welcome back</h2>
-            <p className="text-muted-foreground">Please enter your credentials to sign in</p>
-          </div>
-
-          {/* Login Form */}
-          <Form {...loginForm}>
-            <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-              <FormField
-                control={loginForm.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={loginForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="Enter your password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={loginMutation.isPending}
-              >
-                {loginMutation.isPending ? (
-                  <>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loginMutation.isPending}
+                >
+                  {loginMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : "Sign in"}
-              </Button>
-              
-              <p className="text-center text-sm text-muted-foreground mt-4">
-                New user accounts can only be created by an administrator.
-              </p>
+                  )}
+                  Sign In
+                </Button>
+              </CardFooter>
             </form>
-          </Form>
+          </Card>
         </div>
-      </div>
-
-      {/* Hero section */}
-      <div className="hidden md:block md:w-1/2 bg-muted p-8 flex flex-col justify-center">
-        <div className="max-w-lg mx-auto">
-          <h2 className="text-3xl font-bold mb-4">
-            AI-Powered Document Analysis and Visualization
-          </h2>
-          <p className="mb-6 text-muted-foreground">
-            Leverage the power of artificial intelligence to analyze complex
-            documents, create professional diagrams, and get intelligent answers
-            to your questions.
-          </p>
-          <div className="space-y-4">
-            <div className="flex items-start">
-              <div className="bg-primary/10 p-2 rounded-full mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Multimodal Document Analysis</h3>
-                <p className="text-sm text-muted-foreground">
-                  Process documents containing both text and images with semantic connections.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="bg-primary/10 p-2 rounded-full mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Intelligent Diagram Generation</h3>
-                <p className="text-sm text-muted-foreground">
-                  Create professional network diagrams and visualizations powered by Draw.IO.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="bg-primary/10 p-2 rounded-full mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Multi-Chat History</h3>
-                <p className="text-sm text-muted-foreground">
-                  Save and organize your conversations for easy reference and continuity.
-                </p>
-              </div>
-            </div>
+        
+        {/* Right side - Hero section */}
+        <div className="flex-1 flex flex-col justify-center">
+          <div className="space-y-4 p-6 bg-muted rounded-lg">
+            <h2 className="text-2xl font-bold">Intelligent Knowledge Assistant</h2>
+            <p className="text-muted-foreground">
+              Leverage advanced AI to get insights from the RiverMeadow knowledge base. Ask questions and get accurate, 
+              context-aware responses powered by the latest language models.
+            </p>
+            <ul className="space-y-2">
+              <li className="flex items-center">
+                <div className="mr-2 h-4 w-4 rounded-full bg-primary"></div>
+                <span>Instant answers from the knowledge base</span>
+              </li>
+              <li className="flex items-center">
+                <div className="mr-2 h-4 w-4 rounded-full bg-primary"></div>
+                <span>Smart context understanding</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

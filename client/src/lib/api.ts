@@ -94,15 +94,6 @@ export async function chatWithKnowledgeBase(
   return response.json();
 }
 
-// Generate a diagram directly (bypassing chat)
-export async function generateDiagram(prompt: string, context: string = ""): Promise<{imagePath: string, altText: string}> {
-  const response = await apiRequest("POST", "/api/generate-diagram", { 
-    prompt,
-    context
-  });
-  return response.json();
-}
-
 // Convert SVG to PNG using server-side processing
 export async function convertSvgToPng(svgContent: string): Promise<string> {
   const response = await apiRequest("POST", "/api/convert-svg-to-png", { svgContent });

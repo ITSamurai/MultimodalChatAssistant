@@ -21,14 +21,6 @@ export const Navbar = () => {
         
         {user && (
           <div className="flex items-center gap-4">
-            <Link href="/diagram-test">
-              <Button 
-                variant="ghost"
-                className={location === "/diagram-test" ? "bg-accent" : ""}
-              >
-                Diagram Test
-              </Button>
-            </Link>
             <Link href="/config">
               <Button 
                 variant="ghost"

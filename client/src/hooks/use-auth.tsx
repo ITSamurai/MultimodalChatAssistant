@@ -1,11 +1,11 @@
-import { createContext, ReactNode, useContext, useEffect } from "react";
+import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import {
   useQuery,
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { User, type InsertUser } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
+import { User, InsertUser } from "@shared/schema";
+import { queryClient, apiRequest } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
@@ -23,39 +23,55 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  
   const {
     data: user,
     error,
     isLoading,
-  } = useQuery<User, Error>({
+    refetch,
+  } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      try {
+        const res = await apiRequest("GET", "/api/user");
+        if (res.status === 401) {
+          return null;
+        }
+        return await res.json();
+      } catch (error) {
+        return null;
+      }
+    },
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
-      const data = await res.json();
-      return data;
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Login failed");
+      }
+      return await res.json();
     },
-    onSuccess: (userData: any) => {
-      // Extract token and save to localStorage
-      const { token, ...user } = userData;
-      if (token) {
-        localStorage.setItem('auth_token', token);
+    onSuccess: (userData) => {
+      // Save auth token to localStorage if it exists in the response
+      if (userData && userData.token) {
+        localStorage.setItem('auth_token', userData.token);
       }
       
-      queryClient.setQueryData(["/api/user"], user);
+      // Update the user data directly in the cache
+      queryClient.setQueryData(["/api/user"], userData);
+      
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.username}!`,
+        description: "Welcome back!",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Login failed",
-        description: error.message || "Invalid username or password",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -64,26 +80,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation({
     mutationFn: async (userData: InsertUser) => {
       const res = await apiRequest("POST", "/api/register", userData);
-      const data = await res.json();
-      return data;
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Registration failed");
+      }
+      return await res.json();
     },
-    onSuccess: (userData: any) => {
-      // Extract token and save to localStorage
-      const { token, ...user } = userData;
-      if (token) {
-        localStorage.setItem('auth_token', token);
+    onSuccess: (userData) => {
+      // Save auth token to localStorage if it exists in the response
+      if (userData && userData.token) {
+        localStorage.setItem('auth_token', userData.token);
       }
       
-      queryClient.setQueryData(["/api/user"], user);
+      // Update the user data directly in the cache
+      queryClient.setQueryData(["/api/user"], userData);
+      
       toast({
         title: "Registration successful",
-        description: `Welcome to RiverMeadow AI Chat, ${user.username}!`,
+        description: "Your account has been created",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Registration failed",
-        description: error.message || "Could not create account",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -91,13 +111,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      const res = await apiRequest("POST", "/api/logout");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Logout failed");
+      }
     },
     onSuccess: () => {
-      // Remove token from localStorage
+      // Clear auth token from localStorage
       localStorage.removeItem('auth_token');
       
+      // Clear user data from cache
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.setQueryData(["/api/user"], null);
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",
