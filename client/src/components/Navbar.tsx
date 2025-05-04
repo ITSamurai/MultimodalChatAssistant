@@ -29,6 +29,16 @@ export const Navbar = () => {
                 Settings
               </Button>
             </Link>
+            {user.role === 'superadmin' && (
+              <Link href="/admin">
+                <Button 
+                  variant="ghost"
+                  className={location === "/admin" ? "bg-accent" : ""}
+                >
+                  Admin
+                </Button>
+              </Link>
+            )}
             <Button 
               variant="ghost" 
               onClick={handleLogout} 

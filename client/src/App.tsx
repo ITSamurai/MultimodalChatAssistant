@@ -8,6 +8,7 @@ import KnowledgeChatPage from "@/pages/knowledge-chat";
 import ChatPage from "@/pages/chat-page";
 import ConfigPage from "@/pages/config-page";
 import AuthPage from "@/pages/auth-page";
+import AdminPage from "@/pages/admin-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 
@@ -24,6 +25,7 @@ function Router() {
       <ProtectedRoute path="/chat/:id" component={ChatPage} />
       <ProtectedRoute path="/knowledge" component={() => <KnowledgeChatPage />} />
       <ProtectedRoute path="/config" component={() => <ConfigPage />} />
+      <ProtectedRoute path="/admin" component={() => <AdminPage />} />
       <Route path="/auth" component={() => <AuthPage />} />
       <Route component={() => {
         console.log("Not found route triggered for path:", location);
