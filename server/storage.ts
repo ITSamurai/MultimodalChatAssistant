@@ -261,7 +261,8 @@ export class MemStorage implements IStorage {
       ...layout,
       id,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      isDefault: layout.isDefault === undefined ? null : layout.isDefault
     };
     this.userLayouts.set(id, newLayout);
     return newLayout;
