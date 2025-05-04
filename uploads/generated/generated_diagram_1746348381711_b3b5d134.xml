@@ -1,0 +1,82 @@
+<mxfile host="app.diagrams.net" modified="2025-05-04T08:46:21.711Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-b4697f3a-a1fe-45f5-a159-9ba6c629a6c5" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_381710_1" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+  <mxGeometry x="60" y="60" width="80" height="80" as="geometry"/>
+  <mxCell label="Source Server: W2K8R2" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_2" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+  <mxGeometry x="200" y="60" width="80" height="80" as="geometry"/>
+  <mxCell label="RMS Migration Appliance" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_2">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_3" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+  <mxGeometry x="340" y="60" width="80" height="80" as="geometry"/>
+  <mxCell label="Target Cloud Server" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_3">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_4" style="edgeStyle=elbowEdgeStyle;elbow=vertical;orthogonal=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="0" source="1" target="2">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxCell label="Initiate Migration" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_4">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_5" style="edgeStyle=elbowEdgeStyle;elbow=vertical;orthogonal=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="0" source="2" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxCell label="Transfer Data" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_5">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_6" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="60" y="200" width="120" height="60" as="geometry"/>
+  <mxCell label="Migration Summary" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_6">
+    <mxGeometry width="120" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_7" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="0">
+  <mxGeometry x="340" y="200" width="80" height="80" as="geometry"/>
+  <mxCell label="Storage: Block-based" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_7">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_8" style="edgeStyle=elbowEdgeStyle;elbow=vertical;orthogonal=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="0" source="6" target="7">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxCell label="Verify Data" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_8">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_9" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+  <mxGeometry x="200" y="340" width="80" height="80" as="geometry"/>
+  <mxCell label="OS Modernization" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_9">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_10" style="edgeStyle=elbowEdgeStyle;elbow=vertical;orthogonal=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="0" source="7" target="9">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxCell label="Upgrade OS" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_10">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_11" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="60" y="460" width="120" height="60" as="geometry"/>
+  <mxCell label="Shutdown Source" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_11">
+    <mxGeometry width="120" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+<mxCell id="cell_381710_12" style="edgeStyle=elbowEdgeStyle;elbow=vertical;orthogonal=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="0" source="9" target="11">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxCell label="Finalize Migration" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_381710_12">
+    <mxGeometry width="80" height="30" as="geometry" />
+  </mxCell>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

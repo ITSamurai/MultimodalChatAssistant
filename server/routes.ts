@@ -1819,6 +1819,30 @@ Noindex: /`);
         references
       });
       
+      // Check if this is the first user message in the chat and update the chat title if needed
+      if (role === 'user') {
+        const existingMessages = await storage.getChatMessages(chatId);
+        if (existingMessages.length <= 1) { // This is the first or second message (including the one we just added)
+          // Generate a title from the user's first message (using first 5-6 words or 40 chars max)
+          let newTitle = content.trim();
+          
+          // Limit to first 5-6 words or 40 chars
+          if (newTitle.length > 40) {
+            newTitle = newTitle.substring(0, 40).trim() + '...';
+          } else {
+            const words = newTitle.split(' ');
+            if (words.length > 6) {
+              newTitle = words.slice(0, 5).join(' ') + '...';
+            }
+          }
+          
+          // Only update if the title is still "New Conversation"
+          if (chat.title === 'New Conversation') {
+            await storage.updateChatTitle(chatId, newTitle);
+          }
+        }
+      }
+      
       res.status(201).json(newMessage);
     } catch (error) {
       console.error('Error creating chat message:', error);
