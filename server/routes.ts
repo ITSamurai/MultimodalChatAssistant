@@ -4,7 +4,7 @@ import multer from "multer";
 import { storage } from "./storage";
 import { processDocument, getDocumentData } from "./services/document.service";
 import { processMessage } from "./services/openai.service";
-import { chatMessageSchema, insertMessageSchema } from "@shared/schema";
+import { chatMessageSchema, insertMessageSchema, User } from "@shared/schema";
 import { z } from "zod";
 import sharp from 'sharp';
 import fs from 'fs';
@@ -1823,6 +1823,123 @@ Noindex: /`);
     } catch (error) {
       console.error('Error creating chat message:', error);
       res.status(500).json({ message: 'Failed to create chat message' });
+    }
+  });
+
+  // Admin API endpoints for user management
+  const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const user = req.user as User;
+    if (user.role !== 'admin' && user.role !== 'superadmin') {
+      return res.status(403).json({ message: 'Not authorized - admin access required' });
+    }
+    
+    next();
+  };
+  
+  const requireSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const user = req.user as User;
+    if (user.role !== 'superadmin') {
+      return res.status(403).json({ message: 'Not authorized - superadmin access required' });
+    }
+    
+    next();
+  };
+  
+  // Get all users (admin only)
+  app.get('/api/admin/users', requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+  
+  // Create a new user (admin only)
+  app.post('/api/admin/users', requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { username, password, name, role } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: 'Username and password are required' });
+      }
+      
+      // Only superadmin can create another admin/superadmin
+      if ((role === 'admin' || role === 'superadmin') && (req.user as User).role !== 'superadmin') {
+        return res.status(403).json({ message: 'Only superadmins can create admin accounts' });
+      }
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+      
+      // Hash the password
+      const hashedPassword = await hashPassword(password);
+      
+      // Create the user
+      const user = await storage.createUser({
+        username,
+        password: hashedPassword,
+        name: name || null,
+        role: role || 'user',
+        email: req.body.email || null
+      });
+      
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ message: 'Failed to create user' });
+    }
+  });
+  
+  // Delete a user (admin only)
+  app.delete('/api/admin/users/:id', requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Check if user exists
+      const userToDelete = await storage.getUser(userId);
+      if (!userToDelete) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Only superadmin can delete an admin
+      if (userToDelete.role === 'admin' && (req.user as User).role !== 'superadmin') {
+        return res.status(403).json({ message: 'Only superadmins can delete admin accounts' });
+      }
+      
+      // Prevent superadmin from being deleted
+      if (userToDelete.role === 'superadmin') {
+        return res.status(403).json({ message: 'Cannot delete superadmin user' });
+      }
+      
+      // Prevent self-deletion
+      const currentUser = req.user as User;
+      if (userId === currentUser.id) {
+        return res.status(400).json({ message: 'Cannot delete your own account' });
+      }
+      
+      // Delete the user
+      await storage.deleteUser(userId);
+      
+      res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Failed to delete user' });
     }
   });
 

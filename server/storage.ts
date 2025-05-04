@@ -24,6 +24,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   updateUserLastLogin(id: number): Promise<void>;
+  deleteUser(id: number): Promise<void>;
   
   // Chat methods
   getChat(id: number): Promise<Chat | undefined>;
@@ -148,6 +149,25 @@ export class MemStorage implements IStorage {
       user.lastLogin = new Date();
       this.users.set(id, user);
     }
+  }
+  
+  async deleteUser(id: number): Promise<void> {
+    this.users.delete(id);
+    
+    // Delete associated data (chats, messages, layouts)
+    // 1. Get all chats for this user
+    const userChats = Array.from(this.chats.entries())
+      .filter(([_, chat]) => chat.userId === id);
+      
+    // 2. Delete each chat and its messages
+    for (const [chatId, _] of userChats) {
+      await this.deleteChat(chatId);
+    }
+    
+    // 3. Delete user layouts
+    Array.from(this.userLayouts.entries())
+      .filter(([_, layout]) => layout.userId === id)
+      .forEach(([layoutId, _]) => this.userLayouts.delete(layoutId));
   }
   
   // Chat methods
@@ -421,6 +441,22 @@ export class DatabaseStorage implements IStorage {
     await db.update(users)
       .set({ lastLogin: new Date() })
       .where(eq(users.id, id));
+  }
+  
+  async deleteUser(id: number): Promise<void> {
+    // First, get all chats for this user
+    const userChats = await this.getUserChats(id);
+    
+    // Delete each chat and its messages
+    for (const chat of userChats) {
+      await this.deleteChat(chat.id);
+    }
+    
+    // Delete user layouts
+    await db.delete(userLayouts).where(eq(userLayouts.userId, id));
+    
+    // Finally, delete the user
+    await db.delete(users).where(eq(users.id, id));
   }
   
   // Chat methods
