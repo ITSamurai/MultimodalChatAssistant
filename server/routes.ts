@@ -21,7 +21,7 @@ import {
   createChatWithKnowledgeBase
 } from './services/pinecone.service';
 import { generateDiagram } from './services/image-generation.service';
-import { setupAuth, requireTokenAuth } from './auth';
+import { setupAuth, requireTokenAuth, hashPassword } from './auth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for in-memory storage
@@ -29,7 +29,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     storage: multer.memoryStorage(),
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit (increased from 10MB)
   });
-
+  
   // Serve static files - make sure these are early in the middleware chain
   app.use('/uploads', express.static('uploads'));
   app.use(express.static('public'));

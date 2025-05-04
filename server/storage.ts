@@ -205,8 +205,8 @@ export class MemStorage implements IStorage {
     return Array.from(this.chatMessages.values())
       .filter(msg => msg.chatId === chatId)
       .sort((a, b) => {
-        const dateA = new Date(a.timestamp).getTime();
-        const dateB = new Date(b.timestamp).getTime();
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
         return dateA - dateB; // Oldest first
       });
   }
@@ -217,7 +217,7 @@ export class MemStorage implements IStorage {
     const newMessage: ChatMessage = {
       ...message,
       id,
-      timestamp: now,
+      createdAt: now,
       references: message.references || null
     };
     this.chatMessages.set(id, newMessage);
@@ -461,7 +461,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select()
       .from(chatMessages)
       .where(eq(chatMessages.chatId, chatId))
-      .orderBy(chatMessages.timestamp);
+      .orderBy(chatMessages.createdAt);
   }
   
   async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {

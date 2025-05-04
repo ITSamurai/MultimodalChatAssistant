@@ -42,7 +42,7 @@ export default function AuthPage() {
       password: password,
       role: "user", // Default role for new users
       name: formData.get("name") as string || "",
-      last_login: new Date().toISOString(),
+      // Note: last_login is updated automatically by the server
     });
   };
 
@@ -56,52 +56,128 @@ export default function AuthPage() {
             <p className="text-muted-foreground mt-2">Sign in to access the intelligent assistant</p>
           </div>
           
-          <Card>
-            <form onSubmit={handleLogin}>
-              <CardHeader>
-                <CardTitle>Login</CardTitle>
-                <CardDescription>
-                  Enter your credentials to access your account
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input 
-                    id="username" 
-                    name="username" 
-                    placeholder="Username" 
-                    required 
-                    autoComplete="username"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input 
-                    id="password" 
-                    name="password" 
-                    type="password" 
-                    placeholder="Password" 
-                    required 
-                    autoComplete="current-password"
-                  />
-                </div>
-
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={loginMutation.isPending}
-                >
-                  {loginMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Sign In
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
+          <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login">
+              <Card>
+                <form onSubmit={handleLogin}>
+                  <CardHeader>
+                    <CardTitle>Login</CardTitle>
+                    <CardDescription>
+                      Enter your credentials to access your account
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-username">Username</Label>
+                      <Input 
+                        id="login-username" 
+                        name="username" 
+                        placeholder="Username" 
+                        required 
+                        autoComplete="username"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Password</Label>
+                      <Input 
+                        id="login-password" 
+                        name="password" 
+                        type="password" 
+                        placeholder="Password" 
+                        required 
+                        autoComplete="current-password"
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={loginMutation.isPending}
+                    >
+                      {loginMutation.isPending && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Sign In
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="register">
+              <Card>
+                <form onSubmit={handleRegister}>
+                  <CardHeader>
+                    <CardTitle>Register</CardTitle>
+                    <CardDescription>
+                      Create a new account to access the platform
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="register-name">Name</Label>
+                      <Input 
+                        id="register-name" 
+                        name="name" 
+                        placeholder="Your name" 
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-username">Username</Label>
+                      <Input 
+                        id="register-username" 
+                        name="username" 
+                        placeholder="Choose a username" 
+                        required 
+                        autoComplete="username"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-password">Password</Label>
+                      <Input 
+                        id="register-password" 
+                        name="password" 
+                        type="password" 
+                        placeholder="Choose a password" 
+                        required 
+                        autoComplete="new-password"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-confirm-password">Confirm Password</Label>
+                      <Input 
+                        id="register-confirm-password" 
+                        name="confirmPassword" 
+                        type="password" 
+                        placeholder="Confirm your password" 
+                        required 
+                        autoComplete="new-password"
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={registerMutation.isPending}
+                    >
+                      {registerMutation.isPending && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Create Account
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
         
         {/* Right side - Hero section */}
@@ -120,6 +196,14 @@ export default function AuthPage() {
               <li className="flex items-center">
                 <div className="mr-2 h-4 w-4 rounded-full bg-primary"></div>
                 <span>Smart context understanding</span>
+              </li>
+              <li className="flex items-center">
+                <div className="mr-2 h-4 w-4 rounded-full bg-primary"></div>
+                <span>Intelligent diagram generation</span>
+              </li>
+              <li className="flex items-center">
+                <div className="mr-2 h-4 w-4 rounded-full bg-primary"></div>
+                <span>Multiple chats with history</span>
               </li>
             </ul>
           </div>
