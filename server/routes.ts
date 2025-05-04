@@ -1652,6 +1652,180 @@ Noindex: /`);
     }
   });
 
+  // Chat management endpoints
+  app.get('/api/chats', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const chats = await storage.getUserChats(req.user.id);
+      res.json(chats);
+    } catch (error) {
+      console.error('Error retrieving user chats:', error);
+      res.status(500).json({ message: 'Failed to retrieve chats' });
+    }
+  });
+  
+  app.post('/api/chats', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const { title } = req.body;
+      const newChat = await storage.createChat({
+        userId: req.user.id,
+        title: title || 'New Conversation'
+      });
+      
+      res.status(201).json(newChat);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      res.status(500).json({ message: 'Failed to create chat' });
+    }
+  });
+  
+  app.get('/api/chats/:id', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ message: 'Chat not found' });
+      }
+      
+      // Verify the chat belongs to the current user
+      if (chat.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      res.json(chat);
+    } catch (error) {
+      console.error('Error retrieving chat:', error);
+      res.status(500).json({ message: 'Failed to retrieve chat' });
+    }
+  });
+  
+  app.patch('/api/chats/:id', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ message: 'Chat not found' });
+      }
+      
+      // Verify the chat belongs to the current user
+      if (chat.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const { title } = req.body;
+      const updatedChat = await storage.updateChatTitle(chatId, title);
+      
+      res.json(updatedChat);
+    } catch (error) {
+      console.error('Error updating chat:', error);
+      res.status(500).json({ message: 'Failed to update chat' });
+    }
+  });
+  
+  app.delete('/api/chats/:id', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ message: 'Chat not found' });
+      }
+      
+      // Verify the chat belongs to the current user
+      if (chat.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      await storage.deleteChat(chatId);
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      res.status(500).json({ message: 'Failed to delete chat' });
+    }
+  });
+  
+  // Chat messages endpoints
+  app.get('/api/chats/:id/messages', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ message: 'Chat not found' });
+      }
+      
+      // Verify the chat belongs to the current user
+      if (chat.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const messages = await storage.getChatMessages(chatId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error retrieving chat messages:', error);
+      res.status(500).json({ message: 'Failed to retrieve chat messages' });
+    }
+  });
+  
+  app.post('/api/chats/:id/messages', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ message: 'Chat not found' });
+      }
+      
+      // Verify the chat belongs to the current user
+      if (chat.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const { content, role, references } = req.body;
+      const newMessage = await storage.createChatMessage({
+        chatId,
+        content,
+        role,
+        references
+      });
+      
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error('Error creating chat message:', error);
+      res.status(500).json({ message: 'Failed to create chat message' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
