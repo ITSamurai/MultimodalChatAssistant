@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net" modified="2025-05-04T07:05:27.094Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-18062b48-4931-41fd-a058-f7f5be4ef21b" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_327094_1" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+    <mxGeometry x="100" y="100" width="80" height="80" as="geometry"/>
+    <mxCell value="Source Server" style="text;align=center;verticalAlign=middle;" vertex="1" parent="1"/>
+</mxCell>
+<mxCell id="cell_327094_2" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+    <mxGeometry x="300" y="100" width="80" height="80" as="geometry"/>
+    <mxCell value="RMS Migration Appliance" style="text;align=center;verticalAlign=middle;" vertex="1" parent="cell_327094_2"/>
+</mxCell>
+<mxCell id="cell_327094_3" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+    <mxGeometry x="500" y="100" width="80" height="80" as="geometry"/>
+    <mxCell value="Target Cloud" style="text;align=center;verticalAlign=middle;" vertex="1" parent="cell_327094_3"/>
+</mxCell>
+<mxCell id="cell_327094_4" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+    <mxGeometry x="300" y="300" width="80" height="80" as="geometry"/>
+    <mxCell value="RiverMeadow Platform" style="text;align=center;verticalAlign=middle;" vertex="1" parent="cell_327094_4"/>
+</mxCell>
+<mxCell id="cell_327094_5" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+    <mxGeometry x="300" y="500" width="100" height="50" as="geometry"/>
+    <mxCell value="OS Modernization" style="text;align=center;verticalAlign=middle;" vertex="1" parent="cell_327094_5"/>
+</mxCell>
+<mxCell id="cell_327094_6" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;edge" edge="1" parent="0" source="1" target="2">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxCell value="Deploy Appliance" style="text;align=center;verticalAlign=middle;" edge="1" parent="cell_327094_6"/>
+</mxCell>
+<mxCell id="cell_327094_7" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;edge" edge="1" parent="0" source="2" target="3">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxCell value="Migrate Data" style="text;align=center;verticalAlign=middle;" edge="1" parent="cell_327094_7"/>
+</mxCell>
+<mxCell id="cell_327094_8" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;edge" edge="1" parent="0" source="2" target="4">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxCell value="Communicate with Platform" style="text;align=center;verticalAlign=middle;" edge="1" parent="cell_327094_8"/>
+</mxCell>
+<mxCell id="cell_327094_9" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;edge" edge="1" parent="0" source="4" target="5">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxCell value="Perform OS Upgrade" style="text;align=center;verticalAlign=middle;" edge="1" parent="cell_327094_9"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
