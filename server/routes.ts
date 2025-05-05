@@ -1446,6 +1446,100 @@ Noindex: /`);
     }
   });
   
+  // Endpoint for getting the actual Draw.IO diagram content as a direct XML download
+  app.get('/api/diagram-xml-download/:fileName', async (req: Request, res: Response) => {
+    try {
+      const fileName = req.params.fileName;
+      const baseFileName = fileName.replace(/\.(html|xml)$/, '');
+      
+      // Path to the XML file that contains the diagram
+      const xmlFilePath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}.xml`);
+      
+      if (!fs.existsSync(xmlFilePath)) {
+        return res.status(404).json({ error: 'Diagram file not found' });
+      }
+      
+      // Read the XML content
+      const xmlContent = fs.readFileSync(xmlFilePath, 'utf8');
+      
+      // Set headers for direct download
+      res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${baseFileName}.drawio"`);
+      res.setHeader('Content-Type', 'application/xml');
+      
+      return res.status(200).send(xmlContent);
+    } catch (error) {
+      console.error('Error downloading diagram XML:', error);
+      return res.status(500).json({ 
+        error: 'Failed to download diagram XML',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Add a specialized endpoint for extracting SVG without conversion
+  app.get('/api/extract-diagram-svg/:fileName', async (req: Request, res: Response) => {
+    try {
+      const fileName = req.params.fileName;
+      const baseFileName = fileName.replace(/\.(html|xml)$/, '');
+      
+      // Find the HTML version that might contain SVG
+      const htmlFilePath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}.html`);
+      
+      if (fs.existsSync(htmlFilePath)) {
+        console.log(`Found HTML file for diagram: ${htmlFilePath}`);
+        
+        // Read HTML content
+        const htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+        
+        // Extract SVG content if present
+        const svgMatch = htmlContent.match(/<svg[^>]*>[\s\S]*?<\/svg>/i);
+        if (svgMatch && svgMatch[0]) {
+          console.log('Found SVG content in HTML file');
+          
+          // Return the SVG directly for viewing and debugging
+          res.setHeader('Content-Type', 'image/svg+xml');
+          return res.status(200).send(svgMatch[0]);
+        }
+      }
+      
+      // Path to the XML file that contains the diagram
+      const xmlFilePath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}.xml`);
+      
+      if (!fs.existsSync(xmlFilePath)) {
+        return res.status(404).json({ error: 'Diagram file not found' });
+      }
+      
+      // Read the XML content
+      const xmlContent = fs.readFileSync(xmlFilePath, 'utf8');
+      
+      // Convert Draw.IO XML to SVG using simplified approach
+      // This is a minimal SVG wrapper to visualize the diagram for debugging
+      const debugSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+        <foreignObject width="1200" height="800">
+          <body xmlns="http://www.w3.org/1999/xhtml" style="margin:0;padding:0;">
+            <div id="diagram" style="width:1200px;height:800px;background:white;"></div>
+            <script type="text/javascript">
+              var diagramXml = ${JSON.stringify(xmlContent)};
+              document.getElementById('diagram').textContent = 'Draw.IO XML content length: ' + diagramXml.length + ' bytes';
+            </script>
+          </body>
+        </foreignObject>
+      </svg>
+      `;
+      
+      // Set content type for SVG
+      res.setHeader('Content-Type', 'image/svg+xml');
+      return res.status(200).send(debugSvg);
+    } catch (error) {
+      console.error('Error extracting diagram SVG:', error);
+      return res.status(500).json({ 
+        error: 'Failed to extract diagram SVG',
+        message: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
   // Endpoint for downloading the full diagram as PNG
   app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
     try {
@@ -1556,8 +1650,8 @@ Noindex: /`);
           
           const screenshotResponse = await fetch(`http://localhost:${process.env.PORT || 5000}${pngUrl}`);
           if (screenshotResponse.ok) {
-            const pngBuffer = await screenshotResponse.buffer();
-            fs.writeFileSync(outputPath, pngBuffer);
+            const pngBuffer = await screenshotResponse.arrayBuffer();
+            fs.writeFileSync(outputPath, Buffer.from(pngBuffer));
             console.log(`Saved screenshot PNG to ${outputPath}`);
           } else {
             throw new Error('All conversion methods failed');

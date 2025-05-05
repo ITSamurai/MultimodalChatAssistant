@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { chatWithKnowledgeBase, KnowledgeBaseChatMessage, convertSvgToPng, getDiagramScreenshot, convertMermaidToPng } from '../lib/api';
+import { chatWithKnowledgeBase, KnowledgeBaseChatMessage } from '../lib/api';
 import { apiRequest } from '@/lib/queryClient';
 import { getFullUrl } from '@/lib/config';
 import { Loader2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize, Download } from 'lucide-react';
@@ -10,7 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useChatTitles } from '@/hooks/use-chat-titles';
 import { ToastAction } from "@/components/ui/toast";
 import { Progress } from "@/components/ui/progress";
-import * as htmlToImage from 'html-to-image';
 import { AppConfig, defaultConfig } from "@/lib/config-types";
 
 // Add TypeScript interface for mermaid API in Window
@@ -112,23 +111,8 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           await contextUpdateChatTitle(chatId, newTitle);
           
           // Force a targeted update of just this chat after a short delay
-          // This is our new approach that directly fetches the latest data for this chat
           setTimeout(() => {
-            // Import from context - this ensures the sidebar gets updated even if events fail
-            import('@/hooks/use-chat-titles').then(({ useChatTitles }) => {
-              try {
-                // Get the context from the provider and call forceUpdateChat
-                const context = useChatTitles();
-                if (context && context.forceUpdateChat) {
-                  console.log(`Forcing update of chat ${chatId} after title change`);
-                  context.forceUpdateChat(chatId);
-                }
-              } catch (error) {
-                // Outside provider context, fallback to refreshChats
-                console.log('Outside provider context, using refreshChats instead');
-                refreshChats();
-              }
-            });
+            refreshChats();
           }, 500);
         }
       }
@@ -169,7 +153,7 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
     loadChatMessages();
   }, [chatId]);
   
-  // Function to download diagrams or convert them to PNG
+  // Function to download diagrams
   const downloadDiagram = async (imagePath: string, index: number) => {
     try {
       setIsLoading(true);
@@ -195,259 +179,117 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           baseFileName = fileName.replace('.xml', '');
         }
         
-        // PRIMARY METHOD: Use the specialized full diagram download endpoint
-        try {
-          // This endpoint will render the entire diagram as a high-quality PNG
-          const fullDiagramUrl = getFullUrl(`/api/download-full-diagram/${baseFileName}`);
-          console.log(`Downloading full diagram from: ${fullDiagramUrl}`);
-          
-          const response = await fetch(fullDiagramUrl);
-          
-          if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `rivermeadow_diagram_${Date.now()}.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            toast({
-              title: "Success", 
-              description: "Full diagram downloaded as PNG",
-            });
-            
-            setIsLoading(false);
-            return; // Exit early on successful download
-          } else {
-            console.warn("Full diagram download failed, falling back to alternate methods");
-          }
-        } catch (error) {
-          console.error("Error downloading full diagram:", error);
-        }
-        
-        // METHOD 1: Direct SVG approach - convert to PNG in browser
-        try {
-          // Use the SVG API to get the SVG content
-          const svgUrl = getFullUrl(`/api/diagram-svg/${baseFileName}.xml`);
-          console.log(`Fetching diagram SVG from API for PNG conversion: ${svgUrl}`);
-          
-          const response = await fetch(svgUrl);
-          
-          if (response.ok) {
-            const svgText = await response.text();
-            // Create a temporary hidden SVG container
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = svgText.trim();
-            document.body.appendChild(tempDiv);
-            const svgElement = tempDiv.querySelector('svg');
-            
-            if (svgElement) {
-              // Get SVG dimensions
-              const width = parseFloat(svgElement.getAttribute('width') || '800');
-              const height = parseFloat(svgElement.getAttribute('height') || '600');
-              
-              // Create a canvas with higher resolution
-              const canvas = document.createElement('canvas');
-              const scale = 3; // Higher resolution scale factor
-              
-              // Extract viewBox to get the full diagram dimensions
-              let fullWidth = width;
-              let fullHeight = height;
-              const viewBoxAttr = svgElement.getAttribute('viewBox');
-              
-              if (viewBoxAttr) {
-                const viewBoxValues = viewBoxAttr.split(' ').map(parseFloat);
-                if (viewBoxValues.length === 4) {
-                  // viewBox format: minX minY width height
-                  fullWidth = viewBoxValues[2];
-                  fullHeight = viewBoxValues[3];
-                  
-                  // Set width and height attributes to match viewBox for correct rendering
-                  svgElement.setAttribute('width', fullWidth.toString());
-                  svgElement.setAttribute('height', fullHeight.toString());
-                }
-              }
-              
-              // Set canvas size to capture the full diagram with high resolution
-              canvas.width = fullWidth * scale;
-              canvas.height = fullHeight * scale;
-              
-              // Reset viewBox to ensure capturing entire diagram
-              svgElement.setAttribute('viewBox', `0 0 ${fullWidth} ${fullHeight}`);
-              
-              // Convert SVG to string with updated attributes
-              const svgString = new XMLSerializer().serializeToString(svgElement);
-              const svgBlob = new Blob([svgString], {type: 'image/svg+xml'});
-              const url = URL.createObjectURL(svgBlob);
-              
-              // Create image and load the SVG
-              const img = new Image();
-              img.onload = () => {
-                // Set canvas size to match the full diagram size (with high resolution)
-                canvas.width = fullWidth * scale;
-                canvas.height = fullHeight * scale;
-                
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                  // Set white background
-                  ctx.fillStyle = 'white';
-                  ctx.fillRect(0, 0, canvas.width, canvas.height);
-                  
-                  // Reset any previous transform
-                  ctx.setTransform(1, 0, 0, 1, 0, 0);
-                  
-                  // Scale for high resolution
-                  ctx.scale(scale, scale);
-                  
-                  // Draw the complete image, not just the visible part
-                  ctx.drawImage(img, 0, 0, fullWidth, fullHeight);
-                }
-                
-                // Convert to PNG and download
-                canvas.toBlob((blob) => {
-                  if (!blob) {
-                    throw new Error('Canvas to Blob conversion failed');
+        // Provide multiple download options for maximum compatibility
+        toast({
+          title: "Download Options",
+          description: "Choose your preferred download format",
+          action: (
+            <div className="flex flex-col gap-2 mt-2">
+              <ToastAction 
+                altText="Download as PNG" 
+                onClick={async () => {
+                  try {
+                    // Download as PNG
+                    const pngUrl = getFullUrl(`/api/download-full-diagram/${baseFileName}`);
+                    const response = await fetch(pngUrl);
+                    
+                    if (response.ok) {
+                      const blob = await response.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `rivermeadow_diagram_${Date.now()}.png`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      window.URL.revokeObjectURL(url);
+                      
+                      toast({
+                        title: "Success",
+                        description: "Diagram downloaded as PNG",
+                      });
+                    } else {
+                      toast({
+                        title: "Error",
+                        description: "Failed to download diagram as PNG",
+                        variant: "destructive",
+                      });
+                    }
+                  } catch (error) {
+                    console.error("Error downloading PNG:", error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to download diagram as PNG",
+                      variant: "destructive",
+                    });
                   }
-                  
-                  const pngUrl = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = pngUrl;
-                  a.download = `rivermeadow_diagram_${Date.now()}.png`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  
-                  // Clean up
-                  URL.revokeObjectURL(pngUrl);
-                  URL.revokeObjectURL(url);
-                  document.body.removeChild(tempDiv);
+                }}
+              >
+                Download as PNG
+              </ToastAction>
+              
+              <ToastAction 
+                altText="Download as DrawIO" 
+                onClick={async () => {
+                  try {
+                    // Download as DrawIO XML
+                    const xmlUrl = getFullUrl(`/api/diagram-xml-download/${baseFileName}`);
+                    const response = await fetch(xmlUrl);
+                    
+                    if (response.ok) {
+                      const blob = await response.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `rivermeadow_diagram_${Date.now()}.drawio`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      window.URL.revokeObjectURL(url);
+                      
+                      toast({
+                        title: "Success",
+                        description: "Diagram downloaded as DrawIO XML",
+                      });
+                    } else {
+                      toast({
+                        title: "Error",
+                        description: "Failed to download diagram as DrawIO XML",
+                        variant: "destructive",
+                      });
+                    }
+                  } catch (error) {
+                    console.error("Error downloading DrawIO XML:", error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to download diagram as DrawIO XML",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+              >
+                Download as DrawIO XML
+              </ToastAction>
+              
+              <ToastAction 
+                altText="View SVG" 
+                onClick={() => {
+                  // View SVG in a new tab
+                  const svgUrl = getFullUrl(`/api/extract-diagram-svg/${baseFileName}`);
+                  window.open(svgUrl, '_blank');
                   
                   toast({
-                    title: "Success", 
-                    description: "Diagram downloaded as PNG",
+                    title: "Success",
+                    description: "SVG version opened in new tab",
                   });
-                  setIsLoading(false);
-                }, 'image/png', 1.0);
-              };
-              
-              img.onerror = () => {
-                console.error('Failed to load SVG as image');
-                document.body.removeChild(tempDiv);
-                // Continue to fallback methods
-                tryServerPngScreenshot();
-              };
-              
-              img.src = url;
-              return; // Exit early, onload will handle completion
-            } else {
-              document.body.removeChild(tempDiv);
-              console.warn('SVG element not found in response');
-            }
-          }
-        } catch (error) {
-          console.warn("Error converting SVG to PNG in browser:", error);
-        }
-        
-        // METHOD 2: Try server-side screenshot method
-        // Define the function here so it's available for all code paths
-        const tryServerPngScreenshot = async () => {
-          try {
-            // Use the screenshot API to get a PNG version
-            const screenshotUrl = getFullUrl(`/api/screenshot-diagram/${baseFileName}`);
-            console.log(`Attempting to get PNG screenshot from server: ${screenshotUrl}`);
-            
-            const response = await fetch(screenshotUrl);
-            
-            if (response.ok) {
-              const blob = await response.blob();
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `rivermeadow_diagram_${Date.now()}.png`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              window.URL.revokeObjectURL(url);
-              
-              toast({
-                title: "Success", 
-                description: "Diagram downloaded as PNG",
-              });
-              return true;
-            } else {
-              console.warn("PNG screenshot not available from server");
-              return false;
-            }
-          } catch (error) {
-            console.warn("Error getting PNG screenshot from server:", error);
-            return false;
-          }
-        };
-        
-        // METHOD 3: Last resort - download drawio XML
-        const downloadXmlAsFallback = async () => {
-          try {
-            // As a last resort, download the XML file
-            const xmlApiPath = getFullUrl(`/api/diagram-xml/${baseFileName}.xml`);
-            console.log(`Falling back to diagram XML download: ${xmlApiPath}`);
-            
-            const xmlResponse = await fetch(xmlApiPath);
-            
-            if (xmlResponse.ok) {
-              // Create a rendered PNG first using the SVG approach
-              // Then ask user if they want to download the XML instead
-              
-              toast({
-                title: "PNG Conversion Failed", 
-                description: "Would you like to download the diagram source file (drawio) instead?",
-                action: (
-                  <ToastAction altText="Download XML" onClick={async () => {
-                    // Download the XML as a Draw.IO file
-                    const blob = await xmlResponse.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `rivermeadow_diagram_${Date.now()}.drawio`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                  }}>
-                    Download
-                  </ToastAction>
-                ),
-              });
-              
-              // Just open the diagram in a new tab for now
-              window.open(getFullUrl(imagePath), '_blank');
-            } else {
-              // If all else fails, open in a new tab
-              window.open(getFullUrl(imagePath), '_blank');
-              
-              toast({
-                title: "Opening diagram page",
-                description: "Please use your browser to save a screenshot",
-              });
-            }
-          } catch (error) {
-            console.error("Error with all download methods:", error);
-            window.open(getFullUrl(imagePath), '_blank');
-            
-            toast({
-              title: "Diagram opened in new tab",
-              description: "Please use your browser to save a screenshot",
-            });
-          }
-        };
-        
-        // Try server PNG approach, then XML fallback if needed
-        const pngSuccess = await tryServerPngScreenshot();
-        if (!pngSuccess) {
-          await downloadXmlAsFallback();
-        }
+                }}
+              >
+                View SVG Version
+              </ToastAction>
+            </div>
+          ),
+          duration: 10000,
+        });
       } else {
         // For regular images, just create a download link
         const link = document.createElement('a');
@@ -541,7 +383,7 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isLoading, messages]);
+  }, [isLoading, messages, isImageGenerating]);
 
   const scrollToBottom = () => {
     // Use both approaches for more reliable scrolling
@@ -756,211 +598,176 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                             // Render Draw.IO diagram directly in the chat with embedded viewer
                             <div className="relative w-full bg-white p-4">
                               {/* Show the diagram directly as an image */}
-                              <div className="relative">
-                                <div className="text-center mb-4 p-2 bg-blue-50 rounded text-sm text-gray-700">
-                                  <strong>Draw.IO Diagram</strong> - Click the Download button to edit in diagrams.net
+                              <p className="text-sm text-muted-foreground mb-2">{ref.caption || 'Generated Diagram'}</p>
+                            
+                              {/* Diagram container */}
+                              <div className="relative border rounded-lg overflow-hidden bg-white">
+                                {/* Calculate zoom factor from state or default to 50% */}
+                                <div 
+                                  className="relative w-full"
+                                  style={{ height: '400px' }}
+                                >
+                                  <iframe 
+                                    src={getFullUrl(ref.imagePath!)} 
+                                    className="w-full h-full"
+                                    style={{
+                                      transform: `scale(${diagramZooms[ref.imagePath!] || 0.5})`,
+                                      transformOrigin: 'top left',
+                                      width: diagramZooms[ref.imagePath!] ? `${100 / diagramZooms[ref.imagePath!]}%` : '200%',
+                                      height: diagramZooms[ref.imagePath!] ? `${100 / diagramZooms[ref.imagePath!]}%` : '200%',
+                                    }}
+                                  />
                                 </div>
                                 
-                                {/* Load SVG version directly for better performance */}
-                                <div className="diagram-container overflow-x-auto border border-gray-200 rounded h-[450px]">
-                                  {/* Simply display the iframe directly */}
-                                    {/* Always use the SVG endpoint for better performance and reliability */}
-                                    <iframe 
-                                      src={getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`)}
-                                      title="RiverMeadow Diagram" 
-                                      className="min-w-full min-h-full"
-                                      style={{ 
-                                        minWidth: '1000px', 
-                                        height: '450px',
-                                        // Improve text rendering
-                                        WebkitFontSmoothing: 'antialiased',
-                                        MozOsxFontSmoothing: 'grayscale',
-                                        textRendering: 'optimizeLegibility',
-                                        // Prevent zoom during drag but allow panning
-                                        touchAction: 'pan-x pan-y',
-                                        // Prevent text selection during drag
-                                        userSelect: 'none'
-                                      }}
-                                      loading="lazy"
-                                      sandbox="allow-scripts allow-same-origin allow-popups"
-                                    />
+                                {/* Controls overlay */}
+                                <div className="absolute top-2 right-2 bg-white/70 backdrop-blur-sm rounded-md shadow p-1 flex gap-1">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      // Decrease zoom: current * 0.9 or default * 0.9
+                                      const currentZoom = diagramZooms[ref.imagePath!] || 0.5;
+                                      const newZoom = Math.max(0.1, currentZoom * 0.9);
+                                      setDiagramZooms({
+                                        ...diagramZooms,
+                                        [ref.imagePath!]: newZoom
+                                      });
+                                      // Store zoom preference
+                                      localStorage.setItem(`diagram_zoom_${ref.imagePath}`, newZoom.toString());
+                                    }}
+                                  >
+                                    <ZoomOut className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      // Increase zoom: current * 1.1 or default * 1.1
+                                      const currentZoom = diagramZooms[ref.imagePath!] || 0.5;
+                                      const newZoom = Math.min(2, currentZoom * 1.1);
+                                      setDiagramZooms({
+                                        ...diagramZooms,
+                                        [ref.imagePath!]: newZoom
+                                      });
+                                      // Store zoom preference
+                                      localStorage.setItem(`diagram_zoom_${ref.imagePath}`, newZoom.toString());
+                                    }}
+                                  >
+                                    <ZoomIn className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      // Reset to default 50% zoom or full view
+                                      const defaultZoom = 0.5;
+                                      setDiagramZooms({
+                                        ...diagramZooms,
+                                        [ref.imagePath!]: defaultZoom
+                                      });
+                                      // Store zoom preference
+                                      localStorage.setItem(`diagram_zoom_${ref.imagePath}`, defaultZoom.toString());
+                                    }}
+                                  >
+                                    <Maximize className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => downloadDiagram(ref.imagePath!, index)}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               </div>
-                              
-                              {/* Diagram controls */}
-                              <div className="absolute bottom-2 right-2 bg-white rounded shadow-md flex items-center">
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    const currentZoom = diagramZooms[ref.imagePath!] || 0.7;
-                                    const newZoom = Math.max(0.4, currentZoom - 0.1);
-                                    setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
-                                    
-                                    // Send zoom message to iframe
-                                    const iframe = e.currentTarget.closest('.relative')?.querySelector('iframe');
-                                    if (iframe?.contentWindow) {
-                                      // Send simple message format for better compatibility
-                                      iframe.contentWindow.postMessage({
-                                        action: 'zoom',
-                                        scale: newZoom
-                                      }, '*');
-                                    }
-                                  }}
-                                  className="p-1 hover:bg-gray-100 text-gray-700"
-                                  title="Zoom out"
-                                >
-                                  <ZoomOut size={16} />
-                                </button>
-                                
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    const defaultZoom = 0.7; // Initial scale value (70%)
-                                    setDiagramZooms({...diagramZooms, [ref.imagePath!]: defaultZoom});
-                                    
-                                    // Send zoom message to iframe
-                                    const iframe = e.currentTarget.closest('.relative')?.querySelector('iframe');
-                                    if (iframe?.contentWindow) {
-                                      // Send simple message format for better compatibility
-                                      iframe.contentWindow.postMessage({
-                                        action: 'zoom',
-                                        scale: defaultZoom
-                                      }, '*');
-                                    }
-                                  }}
-                                  className="p-1 hover:bg-gray-100 text-gray-700"
-                                  title="Reset zoom"
-                                >
-                                  <span className="text-xs px-1">
-                                    {Math.round((diagramZooms[ref.imagePath!] || 0.7) * 100)}%
-                                  </span>
-                                </button>
-                                
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    const currentZoom = diagramZooms[ref.imagePath!] || 0.7;
-                                    const newZoom = Math.min(1.5, currentZoom + 0.1);
-                                    setDiagramZooms({...diagramZooms, [ref.imagePath!]: newZoom});
-                                    
-                                    // Send zoom message to iframe
-                                    const iframe = e.currentTarget.closest('.relative')?.querySelector('iframe');
-                                    if (iframe?.contentWindow) {
-                                      // Send simple message format for better compatibility
-                                      iframe.contentWindow.postMessage({
-                                        action: 'zoom',
-                                        scale: newZoom
-                                      }, '*');
-                                    }
-                                  }}
-                                  className="p-1 hover:bg-gray-100 text-gray-700"
-                                  title="Zoom in"
-                                >
-                                  <ZoomIn size={16} />
-                                </button>
-                                
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    
-                                    // Open diagram in new tab for full view
-                                    window.open(getFullUrl(ref.imagePath || ''), '_blank');
-                                  }}
-                                  className="p-1 hover:bg-gray-100 text-gray-700"
-                                  title="View full screen"
-                                >
-                                  <Maximize size={16} />
-                                </button>
-                                
-                                <button
-                                  onClick={() => downloadDiagram(ref.imagePath!, index)}
-                                  className="p-1 hover:bg-gray-100 text-gray-700 ml-1 border-l border-gray-200"
-                                  title="Download diagram"
-                                >
-                                  <Download size={16} />
-                                </button>
-                              </div>
-                              
-                              {/* Caption if available */}
-                              {ref.caption && (
-                                <div className="p-2 text-sm text-gray-500">
-                                  {ref.caption}
-                                </div>
-                              )}
                             </div>
                           ) : (
                             // Regular image
-                            <div className="relative">
+                            <div>
                               <img 
-                                src={getFullUrl(ref.imagePath || '')} 
-                                alt={ref.caption || "Generated Image"} 
-                                className="w-full h-auto" 
-                                loading="lazy"
+                                src={getFullUrl(ref.imagePath!)} 
+                                alt={ref.caption || 'Generated image'} 
+                                className="w-full" 
                               />
-                              <div className="absolute bottom-2 right-2 bg-white rounded shadow-md">
-                                <button
-                                  onClick={() => downloadDiagram(ref.imagePath!, index)}
-                                  className="p-1 hover:bg-gray-100 text-gray-700"
-                                  title="Download image"
-                                >
-                                  <Download size={16} />
-                                </button>
-                              </div>
+                              
                               {ref.caption && (
-                                <div className="p-2 text-sm text-gray-500">
+                                <div className="p-2 text-sm text-muted-foreground">
                                   {ref.caption}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 ml-2"
+                                    onClick={() => downloadDiagram(ref.imagePath!, index)}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               )}
                             </div>
                           )}
                         </div>
                       );
-                    })
-                  }
+                    })}
                 </div>
               )}
             </CardContent>
           </Card>
         ))}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-[1px] w-full" />
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="border-b p-4">
-        <h2 className="text-lg font-medium">RiverMeadow Knowledge Base Chat</h2>
-        <p className="text-sm text-gray-500">Ask questions about RiverMeadow documentation</p>
-      </div>
-      
+    <div className="flex flex-col h-full">
       <div className="flex-1 p-4 overflow-auto">
-        {renderMessages()}
-      </div>
-      
-      {isImageGenerating && currentRequestIsDiagram && (
-        <div className="p-4 pt-0">
-          <div className="flex items-center mb-2">
-            <ImageIcon className="h-4 w-4 mr-2 animate-pulse" />
-            <span className="text-sm">
-              Generating diagram{loadingProgress < 100 ? '...' : ' complete!'}
-            </span>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            {isImageGenerating ? (
+              <>
+                <p className="mb-3 text-center">
+                  {currentRequestIsDiagram 
+                    ? "Generating diagram based on request..." 
+                    : "Thinking..."}
+                </p>
+                <Progress value={loadingProgress} className="w-[60%] mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  {loadingProgress < 30 
+                    ? "Analyzing request and retrieving context..." 
+                    : loadingProgress < 60
+                      ? "Designing diagram structure..." 
+                      : loadingProgress < 90
+                        ? "Finalizing diagram..." 
+                        : "Almost ready..."}
+                </p>
+              </>
+            ) : (
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            )}
           </div>
-          <Progress value={loadingProgress} className="w-full h-2" />
-        </div>
-      )}
+        ) : (
+          renderMessages()
+        )}
+      </div>
       
       <div className="p-4 border-t">
-        <form onSubmit={handleSubmit} className="flex space-x-2">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your question here..."
+            placeholder="Ask a question about the knowledge base..."
             disabled={isLoading}
             className="flex-1"
           />
-          <Button type="submit" disabled={isLoading || !input.trim()}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}
+          <Button type="submit" disabled={isLoading}>
+            Send
           </Button>
         </form>
       </div>
