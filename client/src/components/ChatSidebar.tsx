@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useChatTitles } from '@/hooks/use-chat-titles';
 import { apiRequest } from '@/lib/queryClient';
 import { Chat } from '@shared/schema';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,85 +32,38 @@ interface ChatSidebarProps {
 export function ChatSidebar({ className }: ChatSidebarProps) {
   const { user } = useAuth();
   const [_, setLocation] = useLocation();
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { chats, isLoading, refreshChats, updateChatTitle } = useChatTitles();
   const [editingChatId, setEditingChatId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const { toast } = useToast();
 
-  // Function to load chats
-  const loadChats = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await apiRequest('GET', '/api/chats');
-      if (response.ok) {
-        const data = await response.json();
-        setChats(data);
-      } else {
-        console.error('Failed to load chats');
-      }
-    } catch (error) {
-      console.error('Error loading chats:', error);
-    } finally {
-      setIsLoading(false);
+  // Load chats for the current user initially
+  useEffect(() => {
+    if (user) {
+      console.log("User changed, refreshing chats");
+      refreshChats();
     }
-  };
-
-  // Load chats for the current user
-  useEffect(() => {
-    loadChats();
-  }, [user]);
+  }, [user, refreshChats]);
   
-  // Listen for chat title updates
+  // Listen for chat title update events
   useEffect(() => {
-    // Handle global refresh event
-    const handleChatTitleUpdate = (event: Event) => {
-      // Check if the event has detail data
-      const customEvent = event as CustomEvent<{chatId: number, newTitle: string}>;
-      if (customEvent.detail) {
-        // Update the chat title in state without refetching just like the local event
-        setChats(prevChats => prevChats.map(chat => 
-          chat.id === customEvent.detail.chatId 
-            ? { ...chat, title: customEvent.detail.newTitle } 
-            : chat
-        ));
-      } else {
-        // Fallback to full refresh if no detail is provided
-        loadChats();
-      }
+    // Listen for the 'chat-title-changed' event from our context
+    const handleChatTitleChanged = (event: Event) => {
+      console.log('Received chat-title-changed event, refreshing chats');
+      refreshChats();
     };
-    
-    // Handle local title update (immediate UI update without server refetch)
-    const handleLocalChatTitleUpdate = (event: Event) => {
-      const customEvent = event as CustomEvent<{chatId: number, newTitle: string}>;
-      if (customEvent.detail) {
-        // Update the chat title in state without refetching
-        setChats(prevChats => prevChats.map(chat => 
-          chat.id === customEvent.detail.chatId 
-            ? { ...chat, title: customEvent.detail.newTitle } 
-            : chat
-        ));
-      }
-    };
-    
-    // Add explicit reload handler for fallback
-    const handleReloadChats = () => {
-      console.log('Received reload-chats event, explicitly reloading chats');
-      loadChats();
-    };
-    
-    window.addEventListener('chat-title-updated', handleChatTitleUpdate);
-    window.addEventListener('chat-title-updated-local', handleLocalChatTitleUpdate);
-    window.addEventListener('reload-chats', handleReloadChats);
+
+    // Also handle the older event types for backwards compatibility
+    window.addEventListener('chat-title-updated', handleChatTitleChanged);
+    window.addEventListener('chat-title-changed', handleChatTitleChanged);
+    window.addEventListener('reload-chats', handleChatTitleChanged);
     
     return () => {
-      window.removeEventListener('chat-title-updated', handleChatTitleUpdate);
-      window.removeEventListener('chat-title-updated-local', handleLocalChatTitleUpdate);
-      window.removeEventListener('reload-chats', handleReloadChats);
+      window.removeEventListener('chat-title-updated', handleChatTitleChanged);
+      window.removeEventListener('chat-title-changed', handleChatTitleChanged);
+      window.removeEventListener('reload-chats', handleChatTitleChanged);
     };
-  }, []);
+  }, [refreshChats]);
 
   const createNewChat = async () => {
     if (!user) return;
@@ -122,8 +76,10 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
       
       if (response.ok) {
         const newChat = await response.json();
-        setChats(prev => [newChat, ...prev]);
         setLocation(`/chat/${newChat.id}`);
+        
+        // Refresh chats via context
+        refreshChats();
         
         toast({
           title: 'New chat created',
@@ -145,8 +101,10 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
       const response = await apiRequest('DELETE', `/api/chats/${chatId}`);
       
       if (response.ok) {
-        setChats(prev => prev.filter(chat => chat.id !== chatId));
         setLocation('/chat');
+        
+        // Refresh chats via context
+        refreshChats();
         
         toast({
           title: 'Chat deleted',
@@ -176,20 +134,13 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
     }
     
     try {
-      const response = await apiRequest('PATCH', `/api/chats/${chatId}`, {
-        title: editTitle
-      });
+      // Use our context's updateChatTitle function
+      await updateChatTitle(chatId, editTitle);
       
-      if (response.ok) {
-        setChats(prev => prev.map(chat => 
-          chat.id === chatId ? { ...chat, title: editTitle } : chat
-        ));
-        
-        toast({
-          title: 'Chat updated',
-          description: 'Chat name has been updated',
-        });
-      }
+      toast({
+        title: 'Chat updated',
+        description: 'Chat name has been updated',
+      });
     } catch (error) {
       console.error('Error updating chat:', error);
       toast({
