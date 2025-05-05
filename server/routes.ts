@@ -1625,10 +1625,11 @@ Noindex: /`);
       console.log(`Created temporary HTML file for diagram export: ${tempHtmlFile}`);
       
       // Use puppeteer to render the HTML and take a screenshot (similar to draw.io --export)
+      let browser;
       try {
         // Launch headless browser
-        const browser = await puppeteer.launch({
-          headless: 'new',
+        browser = await puppeteer.launch({
+          headless: true, // Use boolean instead of 'new'
           args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         
@@ -1655,7 +1656,9 @@ Noindex: /`);
             'document.title === "Ready for export"',
             { timeout: 5000 }
           );
-        } catch (waitError) {
+        } catch (error) {
+          // Properly type the error
+          const waitError = error instanceof Error ? error : new Error(String(error));
           console.log(`Timeout waiting for diagram title: ${waitError.message}`);
           // Continue anyway, the diagram might still be usable
         }
@@ -1683,8 +1686,13 @@ Noindex: /`);
         // Get the size of the diagram container
         const dimensions = await page.evaluate(() => {
           const container = document.getElementById('graphContainer');
-          let width = container.scrollWidth;
-          let height = container.scrollHeight;
+          // Add null check
+          if (!container) {
+            return { width: 1200, height: 800 }; // Default values if container not found
+          }
+          
+          let width = container.scrollWidth || 1200;
+          let height = container.scrollHeight || 800;
           
           // If we can detect the actual diagram size, use that
           const diagrams = container.querySelectorAll('svg, .geDiagramContainer');
