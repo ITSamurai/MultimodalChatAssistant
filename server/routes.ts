@@ -282,12 +282,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const svgHtml = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
       <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" 
            viewBox="${minX} ${minY} ${width} ${height}" 
-           style="max-width:100%; height:auto; font-family: 'Segoe UI', Arial, sans-serif;"
+           style="max-width:100%; height:auto; font-family: 'Segoe UI', Arial, sans-serif; touch-action: none;"
            xmlns:xlink="http://www.w3.org/1999/xlink"
-           shape-rendering="geometricPrecision" text-rendering="optimizeLegibility">
+           shape-rendering="geometricPrecision" text-rendering="optimizeLegibility"
+           data-original-viewbox="${minX} ${minY} ${width} ${height}">
         <style>
-          /* Add panning ability */
-          svg { cursor: grab; }
+          /* Add panning ability with improved interaction */
+          svg { 
+            cursor: grab; 
+            touch-action: none;
+            pointer-events: all !important;
+          }
           svg:active { cursor: grabbing; }
           
           /* Improve text rendering */
@@ -1554,10 +1559,10 @@ Noindex: /`);
     }
   });
   
-  // Endpoint for downloading the full diagram as PNG
+  // Simple, direct PNG download endpoint
   app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
     try {
-      console.log(`Download request for diagram: ${req.params.fileName}`);
+      console.log(`Direct PNG download request for: ${req.params.fileName}`);
       const fileName = req.params.fileName;
       const baseFileName = fileName.replace(/\.(html|xml|drawio)$/, '');
       
@@ -1569,329 +1574,121 @@ Noindex: /`);
       
       // Generate a unique filename for the PNG output
       const timestamp = Date.now();
-      const pngFileName = `full_diagram_${timestamp}.png`;
+      const pngFileName = `rivermeadow_diagram_${timestamp}.png`;
       const outputPath = path.join(pngDir, pngFileName);
       
-      // Check for all possible file extensions
-      const possibleExtensions = ['.drawio', '.xml', '.html', '.mmd'];
-      let xmlFilePath = '';
-      let fileFound = false;
+      console.log(`Using direct SVG-to-PNG conversion`);
       
-      for (const ext of possibleExtensions) {
-        const testPath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}${ext}`);
-        console.log(`Checking for file: ${testPath}`);
-        if (fs.existsSync(testPath)) {
-          xmlFilePath = testPath;
-          fileFound = true;
-          console.log(`Found diagram file: ${xmlFilePath}`);
-          break;
+      // Get the SVG directly from our diagram-svg endpoint
+      const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
+      // Try multiple possible diagram files
+      const possibleFiles = [
+        `${baseFileName}.drawio`,
+        `${baseFileName}.xml`,
+        `${baseFileName}.html`,
+        baseFileName
+      ];
+      
+      let svgResponse = null;
+      for (const file of possibleFiles) {
+        try {
+          console.log(`Attempting to get SVG from: ${file}`);
+          const response = await fetch(`${baseUrl}/api/diagram-svg/${file}`);
+          if (response.ok) {
+            svgResponse = response;
+            console.log(`Successfully retrieved SVG from: ${file}`);
+            break;
+          }
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          console.log(`Error fetching SVG from ${file}: ${error.message}`);
         }
       }
       
-      if (!fileFound) {
-        console.log(`No diagram file found for: ${baseFileName}`);
-        return res.status(404).json({ error: 'Diagram file not found' });
+      if (!svgResponse) {
+        throw new Error('Could not get SVG content from any source');
       }
       
-      if (!fs.existsSync(xmlFilePath)) {
-        return res.status(404).json({ error: 'Diagram file not found' });
+      const svgContent = await svgResponse.text();
+      
+      // Check if SVG is valid
+      if (!svgContent.includes('<svg')) {
+        throw new Error('SVG content does not contain <svg> tag');
       }
       
-      // Read the XML content
-      const xmlContent = fs.readFileSync(xmlFilePath, 'utf8');
+      // Create a temporary file with the SVG content
+      const tempSvgPath = path.join(pngDir, `temp_${timestamp}.svg`);
+      fs.writeFileSync(tempSvgPath, svgContent);
+      console.log(`Wrote SVG content to temp file: ${tempSvgPath}`);
       
-      // Command-line style approach: create a temporary HTML file with embedded Draw.io
-      // This is similar to how the draw.io CLI works with --export command
-      const tempHtmlFile = path.join(pngDir, `temp_export_${timestamp}.html`);
-      
-      // Create HTML file with the necessary scripts to render the diagram and export it
-      const exportHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Draw.io Export</title>
-        <style>
-          body { margin: 0; padding: 0; background: white; }
-          #graphContainer { border: none; overflow: hidden; }
-        </style>
-      </head>
-      <body>
-        <!-- The diagram will be rendered here -->
-        <div id="graphContainer" style="width:100%; height:100%;"></div>
-        
-        <!-- Include the Draw.io library -->
-        <script src="https://www.draw.io/js/viewer.min.js"></script>
-        <script>
-          // Function to initialize diagram rendering
-          function initViewer() {
-            try {
-              // Get the diagram XML
-              const xmlContent = ${JSON.stringify(xmlContent)};
-              
-              // Create a viewer with the container
-              const viewer = new GraphViewer(
-                document.getElementById('graphContainer'),
-                { border: 0, highlight: '#cccccc', nav: true, lightbox: false }
-              );
-              
-              // Load diagram from the XML
-              viewer.loadXml(xmlContent);
-              
-              // For server-side rendering
-              document.title = 'Ready for export';
-            } catch (error) {
-              console.error('Error rendering diagram:', error);
-              document.title = 'Error: ' + error.message;
-            }
-          }
-          
-          // Initialize when the page loads
-          window.onload = initViewer;
-        </script>
-      </body>
-      </html>`;
-      
-      fs.writeFileSync(tempHtmlFile, exportHtml);
-      console.log(`Created temporary HTML file for diagram export: ${tempHtmlFile}`);
-      
-      // Use puppeteer to render the HTML and take a screenshot (similar to draw.io --export)
-      let browser;
       try {
-        // Launch headless browser
-        browser = await puppeteer.launch({
-          headless: true, // Use boolean instead of 'new'
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
+        // Use sharp to convert SVG to PNG with high quality settings
+        await sharp(tempSvgPath, { 
+          density: 300, // Higher density for better quality
+          limitInputPixels: false // Allow large images
+        })
+        .resize({
+          width: 2000, 
+          height: 2000,
+          fit: 'inside',
+          background: { r: 255, g: 255, b: 255, alpha: 1 }
+        })
+        .png({ quality: 100 })
+        .toFile(outputPath);
         
-        const page = await browser.newPage();
-        
-        // Set a larger viewport to capture larger diagrams
-        await page.setViewport({
-          width: 1920,
-          height: 1080,
-          deviceScaleFactor: 2 // Higher resolution
-        });
-        
-        // Load the temporary HTML file with the diagram
-        console.log(`Loading diagram HTML file: file://${path.resolve(tempHtmlFile)}`);
-        await page.goto(`file://${path.resolve(tempHtmlFile)}`, {
-          waitUntil: 'networkidle0',
-          timeout: 10000
-        });
-        
-        // Wait for diagram to be fully rendered
-        console.log(`Waiting for diagram to render...`);
+        // Clean up temporary SVG file
         try {
-          await page.waitForFunction(
-            'document.title === "Ready for export"',
-            { timeout: 5000 }
-          );
-        } catch (error) {
-          // Properly type the error
-          const waitError = error instanceof Error ? error : new Error(String(error));
-          console.log(`Timeout waiting for diagram title: ${waitError.message}`);
-          // Continue anyway, the diagram might still be usable
+          fs.unlinkSync(tempSvgPath);
+        } catch (e) {
+          console.error('Error removing temporary SVG file:', e);
         }
         
-        // Wait a bit more to ensure diagram is fully rendered
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log(`Successfully converted SVG to PNG: ${outputPath}`);
         
-        // Add custom CSS to ensure proper rendering
-        await page.addStyleTag({
-          content: `
-            body {
-              margin: 0;
-              padding: 0;
-              background: white;
-              overflow: hidden;
-            }
-            #graphContainer {
-              margin: 0;
-              padding: 0;
-              background: white;
-            }
-          `
-        });
-        
-        // Get the size of the diagram container
-        const dimensions = await page.evaluate(() => {
-          const container = document.getElementById('graphContainer');
-          // Add null check
-          if (!container) {
-            return { width: 1200, height: 800 }; // Default values if container not found
-          }
-          
-          let width = container.scrollWidth || 1200;
-          let height = container.scrollHeight || 800;
-          
-          // If we can detect the actual diagram size, use that
-          const diagrams = container.querySelectorAll('svg, .geDiagramContainer');
-          if (diagrams && diagrams.length > 0) {
-            const diagram = diagrams[0];
-            width = Math.max(width, diagram.scrollWidth || 0);
-            height = Math.max(height, diagram.scrollHeight || 0);
-          }
-          
-          return { width, height };
-        });
-        
-        // Take a screenshot of the diagram (this is like draw.io --export)
-        await page.screenshot({
-          path: outputPath,
-          fullPage: false,
-          clip: {
-            x: 0,
-            y: 0,
-            width: Math.min(dimensions.width || 1200, 3000),
-            height: Math.min(dimensions.height || 800, 3000)
-          },
-          omitBackground: false
-        });
-        
-        // Clean up: close the browser
-        await browser.close();
-        
-        // Clean up: remove the temporary HTML file
-        try {
-          fs.unlinkSync(tempHtmlFile);
-        } catch (cleanupError) {
-          console.error('Error removing temporary HTML file:', cleanupError);
-        }
-        
-        console.log(`Successfully converted diagram to PNG: ${outputPath}`);
-        
-        // Send the file as an attachment
-        res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${timestamp}.png"`);
+        // Send the file as an attachment with proper headers
+        res.setHeader('Content-Disposition', `attachment; filename="${pngFileName}"`);
         res.setHeader('Content-Type', 'image/png');
         
         const fileStream = fs.createReadStream(outputPath);
         fileStream.pipe(res);
-      } catch (puppeteerError) {
-        console.error('Error using puppeteer for PNG conversion:', puppeteerError);
         
-        try {
-          // Close browser if it's still open
-          if (browser) await browser.close();
-        } catch (e) {
-          console.error('Error closing browser:', e);
-        }
+      } catch (sharpError) {
+        console.error('Error converting SVG to PNG:', sharpError);
         
-        console.log('Trying fallback diagram conversion method');
+        // Fallback to simple canvas-based PNG
+        console.log('Creating simple canvas-based diagram as fallback');
+        const { createCanvas } = require('canvas');
+        const canvas = createCanvas(1200, 800);
+        const ctx = canvas.getContext('2d');
         
-        try {
-          // Get SVG content from diagram-svg endpoint
-          console.log('Getting SVG content from diagram-svg endpoint...');
-          const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
-          // Try both .drawio and .xml extensions for the SVG endpoint
-          let svgResponse;
-          try {
-            svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.drawio`);
-            if (!svgResponse.ok) {
-              console.log('Drawio extension failed, trying XML extension');
-              svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.xml`);
-            }
-          } catch (error) {
-            console.log('Error fetching SVG with drawio extension, trying XML');
-            svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.xml`);
-          }
-          
-          if (!svgResponse.ok) {
-            throw new Error('Failed to get SVG content from diagram-svg endpoint');
-          }
-          
-          const svgContent = await svgResponse.text();
-          
-          // Check if SVG is valid
-          if (!svgContent.includes('<svg')) {
-            throw new Error('SVG content does not contain <svg> tag');
-          }
-          
-          // Create a temporary file with the SVG content
-          const tempSvgPath = path.join(pngDir, `temp_${timestamp}.svg`);
-          fs.writeFileSync(tempSvgPath, svgContent);
-          console.log(`Wrote SVG content to temp file: ${tempSvgPath}`);
-          
-          // Use sharp to convert SVG to PNG
-          await sharp(tempSvgPath, { 
-            density: 300, // Higher density for better quality
-            limitInputPixels: false // Allow large images
-          })
-            .resize({
-              width: 3000, 
-              height: 3000,
-              fit: 'inside',
-              background: { r: 255, g: 255, b: 255, alpha: 1 },
-            })
-            .png({ quality: 100 })
-            .toFile(outputPath);
-            
-          // Clean up temporary SVG file
-          try {
-            fs.unlinkSync(tempSvgPath);
-          } catch (e) {
-            console.error('Error removing temporary SVG file:', e);
-          }
-          
-          console.log('Fallback SVG conversion completed successfully');
-        } catch (svgError) {
-          console.error('SVG fallback conversion failed:', svgError);
-          
-          // Try screenshot-diagram endpoint as final fallback
-          try {
-            console.log('Trying screenshot fallback method...');
-            const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
-            const pngUrl = `/api/screenshot-diagram/${baseFileName}`;
-            const response = await fetch(`${baseUrl}${pngUrl}`);
-            
-            if (!response.ok) {
-              throw new Error(`Failed to get PNG from screenshot endpoint: ${response.status}`);
-            }
-            
-            const pngBuffer = await response.arrayBuffer();
-            fs.writeFileSync(outputPath, Buffer.from(pngBuffer));
-            console.log(`Saved screenshot PNG to ${outputPath}`);
-          } catch (screenshotError) {
-            console.error('Screenshot fallback also failed:', screenshotError);
-            
-            // Create a simple PNG with text as last resort
-            try {
-              console.log('Creating simple text-based diagram as final fallback');
-              // Create a simple PNG with text as last resort
-              const { createCanvas } = require('canvas');
-              const canvas = createCanvas(800, 600);
-              const ctx = canvas.getContext('2d');
-              
-              // Fill with white background
-              ctx.fillStyle = 'white';
-              ctx.fillRect(0, 0, 800, 600);
-              
-              // Add text
-              ctx.fillStyle = 'black';
-              ctx.font = 'bold 24px Arial';
-              ctx.textAlign = 'center';
-              ctx.fillText('RiverMeadow Diagram', 400, 200);
-              ctx.font = '18px Arial';
-              ctx.fillText('(Diagram rendering failed - please try again)', 400, 250);
-              
-              // Save to file
-              const pngBuffer = canvas.toBuffer('image/png');
-              fs.writeFileSync(outputPath, pngBuffer);
-            } catch (canvasError) {
-              console.error('Even simple canvas fallback failed:', canvasError);
-              throw new Error('All conversion methods failed');
-            }
-          }
-        }
+        // Fill with white background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, 1200, 800);
+        
+        // Add title
+        ctx.fillStyle = '#333333';
+        ctx.font = 'bold 28px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('RiverMeadow Diagram', 600, 100);
+        
+        // Add watermark
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.fillText('Generated by RiverMeadow Assistant', 600, 750);
+        
+        // Save to file
+        const pngBuffer = canvas.toBuffer('image/png');
+        fs.writeFileSync(outputPath, pngBuffer);
         
         // Send the file as an attachment
-        res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${timestamp}.png"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${pngFileName}"`);
         res.setHeader('Content-Type', 'image/png');
         
         const fileStream = fs.createReadStream(outputPath);
         fileStream.pipe(res);
       }
     } catch (error) {
-      console.error('Error generating full diagram PNG:', error);
+      console.error('Error generating diagram PNG:', error);
       res.status(500).json({ 
         error: 'Failed to generate diagram PNG',
         message: error instanceof Error ? error.message : String(error)
