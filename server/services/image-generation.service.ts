@@ -311,12 +311,11 @@ export const generateDiagram = async (
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border-radius: 4px;
       padding: 16px;
-      /* Enable dragging */
-      touch-action: none;
+      position: relative;
     }
     
-    /* Make sure all SVG elements have pointer events enabled */
-    #svg-container svg * {
+    /* Make sure all SVG elements are interactable */
+    #svg-container svg, #svg-container svg * {
       pointer-events: auto;
     }
     
@@ -465,7 +464,7 @@ export const generateDiagram = async (
     }
     
     // Load SVG content directly - no iframe
-    fetch('/api/diagram-svg/${xmlFilename}')
+    fetch('/api/diagram-svg/' + xmlFilename)
       .then(response => {
         if (!response.ok) {
           throw new Error('Failed to load diagram');
