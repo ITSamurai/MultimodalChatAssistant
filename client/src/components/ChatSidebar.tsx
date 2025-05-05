@@ -65,8 +65,20 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
   // Listen for chat title updates
   useEffect(() => {
     // Handle global refresh event
-    const handleChatTitleUpdate = () => {
-      loadChats();
+    const handleChatTitleUpdate = (event: Event) => {
+      // Check if the event has detail data
+      const customEvent = event as CustomEvent<{chatId: number, newTitle: string}>;
+      if (customEvent.detail) {
+        // Update the chat title in state without refetching just like the local event
+        setChats(prevChats => prevChats.map(chat => 
+          chat.id === customEvent.detail.chatId 
+            ? { ...chat, title: customEvent.detail.newTitle } 
+            : chat
+        ));
+      } else {
+        // Fallback to full refresh if no detail is provided
+        loadChats();
+      }
     };
     
     // Handle local title update (immediate UI update without server refetch)

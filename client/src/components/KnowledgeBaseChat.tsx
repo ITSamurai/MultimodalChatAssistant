@@ -114,8 +114,10 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           });
           window.dispatchEvent(localUpdateEvent);
           
-          // Also dispatch global refresh event as a fallback
-          const globalEvent = new CustomEvent('chat-title-updated');
+          // Also dispatch global refresh event with the same data
+          const globalEvent = new CustomEvent('chat-title-updated', {
+            detail: { chatId, newTitle }
+          });
           window.dispatchEvent(globalEvent);
         }
       }

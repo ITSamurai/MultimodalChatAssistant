@@ -1,0 +1,69 @@
+<mxfile host="app.diagrams.net" modified="2025-05-05T14:26:49.118Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-15ace1e4-a2ff-4fad-a14c-2c42754ce15a" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell parent="1" id="cell_209118_0" />
+<mxCell id="cell_209118_1" parent="0" />
+<mxCell id="cell_209118_2" value="Source Server" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="1">
+  <mxGeometry x="100" y="100" width="80" height="80" as="geometry" />
+</mxCell>
+<mxCell id="cell_209118_3" value="Migration Appliance" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="1">
+  <mxGeometry x="300" y="100" width="80" height="80" as="geometry" />
+</mxCell>
+<mxCell id="cell_209118_4" value="Target Cloud Server" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="1">
+  <mxGeometry x="500" y="100" width="80" height="80" as="geometry" />
+</mxCell>
+<mxCell id="cell_209118_5" value="OS Modernization" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="300" y="250" width="120" height="60" as="geometry" />
+</mxCell>
+<mxCell id="cell_209118_6" value="Storage" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="1">
+  <mxGeometry x="500" y="250" width="80" height="80" as="geometry" />
+</mxCell>
+<mxCell id="cell_209118_7" value="View Migrations" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="100" y="250" width="120" height="60" as="geometry" />
+</mxCell>
+<mxCell id="cell_209118_8" value="Migration Summary" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="300" y="400" width="120" height="60" as="geometry" />
+</mxCell>
+<mxCell id="cell_209118_9" value="Shutdown Source" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="100" y="400" width="120" height="60" as="geometry" />
+</mxCell>
+<mxCell id="cell_209118_10" value="Shutdown Target" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="500" y="400" width="120" height="60" as="geometry" />
+</mxCell>
+<mxCell id="cell_209118_11" value="OS/System Component" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="1">
+  <mxGeometry x="500" y="550" width="80" height="80" as="geometry" />
+</mxCell>
+<mxCell parent="1" id="cell_209118_12" edge="1" source="2" target="3">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+<mxCell parent="1" id="cell_209118_13" edge="1" source="3" target="4">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+<mxCell parent="1" id="cell_209118_14" edge="1" source="3" target="5">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+<mxCell parent="1" id="cell_209118_15" edge="1" source="5" target="6">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+<mxCell parent="1" id="cell_209118_16" edge="1" source="2" target="7">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+<mxCell parent="1" id="cell_209118_17" edge="1" source="7" target="8">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+<mxCell parent="1" id="cell_209118_18" edge="1" source="8" target="9">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+<mxCell parent="1" id="cell_209118_19" edge="1" source="8" target="10">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+<mxCell parent="1" id="cell_209118_20" edge="1" source="10" target="11">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
