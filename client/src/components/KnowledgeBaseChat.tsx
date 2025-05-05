@@ -153,7 +153,7 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
     loadChatMessages();
   }, [chatId]);
   
-  // Function to download diagrams
+  // Function to download diagrams - simple version that directly gets PNG
   const downloadDiagram = async (imagePath: string, index: number) => {
     try {
       setIsLoading(true);
@@ -179,117 +179,34 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           baseFileName = fileName.replace('.xml', '');
         }
         
-        // Provide multiple download options for maximum compatibility
-        toast({
-          title: "Download Options",
-          description: "Choose your preferred download format",
-          action: (
-            <div className="flex flex-col gap-2 mt-2">
-              <ToastAction 
-                altText="Download as PNG" 
-                onClick={async () => {
-                  try {
-                    // Download as PNG
-                    const pngUrl = getFullUrl(`/api/download-full-diagram/${baseFileName}`);
-                    const response = await fetch(pngUrl);
-                    
-                    if (response.ok) {
-                      const blob = await response.blob();
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `rivermeadow_diagram_${Date.now()}.png`;
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                      window.URL.revokeObjectURL(url);
-                      
-                      toast({
-                        title: "Success",
-                        description: "Diagram downloaded as PNG",
-                      });
-                    } else {
-                      toast({
-                        title: "Error",
-                        description: "Failed to download diagram as PNG",
-                        variant: "destructive",
-                      });
-                    }
-                  } catch (error) {
-                    console.error("Error downloading PNG:", error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to download diagram as PNG",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                Download as PNG
-              </ToastAction>
-              
-              <ToastAction 
-                altText="Download as DrawIO" 
-                onClick={async () => {
-                  try {
-                    // Download as DrawIO XML
-                    const xmlUrl = getFullUrl(`/api/diagram-xml-download/${baseFileName}`);
-                    const response = await fetch(xmlUrl);
-                    
-                    if (response.ok) {
-                      const blob = await response.blob();
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `rivermeadow_diagram_${Date.now()}.drawio`;
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                      window.URL.revokeObjectURL(url);
-                      
-                      toast({
-                        title: "Success",
-                        description: "Diagram downloaded as DrawIO XML",
-                      });
-                    } else {
-                      toast({
-                        title: "Error",
-                        description: "Failed to download diagram as DrawIO XML",
-                        variant: "destructive",
-                      });
-                    }
-                  } catch (error) {
-                    console.error("Error downloading DrawIO XML:", error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to download diagram as DrawIO XML",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                Download as DrawIO XML
-              </ToastAction>
-              
-              <ToastAction 
-                altText="View SVG" 
-                onClick={() => {
-                  // View SVG in a new tab
-                  const svgUrl = getFullUrl(`/api/extract-diagram-svg/${baseFileName}`);
-                  window.open(svgUrl, '_blank');
-                  
-                  toast({
-                    title: "Success",
-                    description: "SVG version opened in new tab",
-                  });
-                }}
-              >
-                View SVG Version
-              </ToastAction>
-            </div>
-          ),
-          duration: 10000,
-        });
+        // Just download as PNG directly without options
+        const pngUrl = getFullUrl(`/api/download-full-diagram/${baseFileName}`);
+        console.log(`Downloading diagram from: ${pngUrl}`);
+        
+        const response = await fetch(pngUrl);
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `rivermeadow_diagram_${Date.now()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          
+          toast({
+            title: "Success", 
+            description: "Diagram downloaded as PNG",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to download diagram as PNG",
+            variant: "destructive",
+          });
+        }
       } else {
         // For regular images, just create a download link
         const link = document.createElement('a');
