@@ -132,9 +132,10 @@ export const generateDiagram = async (
         drawioHtml += "    .header { background: white; padding: 10px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; z-index: 10; }";
         drawioHtml += "    h1 { color: #0078d4; margin: 0; font-size: 18px; }";
         drawioHtml += "    .content-area { flex: 1; padding: 20px; overflow: auto; background: white; display: flex; flex-direction: column; align-items: center; position: relative; }";
-        drawioHtml += "    #svg-container { max-width: 100%; transition: transform 0.3s; transform-origin: center top; margin: 0 auto; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px; padding: 16px; position: relative; cursor: grab; }";
-        drawioHtml += "    #svg-container:active { cursor: grabbing; }";
-        drawioHtml += "    #svg-container svg, #svg-container svg * { pointer-events: auto; }";
+        drawioHtml += "    #svg-container { max-width: 100%; transition: transform 0.3s; transform-origin: center top; margin: 0 auto; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px; padding: 16px; position: relative; cursor: grab; pointer-events: all; }";
+        drawioHtml += "    #svg-container:active { cursor: grabbing; }"; 
+        drawioHtml += "    #svg-container svg { pointer-events: none; width: 100%; height: 100%; }";
+        drawioHtml += "    #svg-container svg * { pointer-events: none; }";
         drawioHtml += "    svg { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }";
         drawioHtml += "    .actions { display: flex; gap: 10px; }";
         drawioHtml += "    .button { background-color: #0078d4; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; }";
@@ -156,7 +157,9 @@ export const generateDiagram = async (
         drawioHtml += "    <div class=\"header\">";
         drawioHtml += "      <h1>" + titleText + "</h1>";
         drawioHtml += "      <div class=\"actions\">";
-        drawioHtml += "        <a href=\"/api/diagram-xml/" + xmlFilename + "\" download=\"rivermeadow_diagram.drawio\" class=\"button button-download\">Download Diagram</a>";
+        const baseFileName = xmlFilename.replace(/\.(xml|drawio)$/, '');
+        drawioHtml += "        <a href=\"/api/download-full-diagram/" + baseFileName + "\" download=\"rivermeadow_diagram.png\" class=\"button button-download\">Download PNG</a>";
+        drawioHtml += "        <a href=\"/api/diagram-xml/" + xmlFilename + "\" download=\"rivermeadow_diagram.drawio\" class=\"button\">Download Source</a>";
         drawioHtml += "      </div>";
         drawioHtml += "    </div>";
         drawioHtml += "    <div class=\"content-area\">";

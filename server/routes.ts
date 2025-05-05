@@ -1564,7 +1564,8 @@ Noindex: /`);
     try {
       console.log(`Direct PNG download request for: ${req.params.fileName}`);
       const fileName = req.params.fileName;
-      const baseFileName = fileName.replace(/\.(html|xml|drawio)$/, '');
+      // Handle various possible input formats
+      const baseFileName = fileName.replace(/\.(html|xml|drawio|png)$/, '');
       
       // Create uploads/png directory if it doesn't exist
       const pngDir = path.join(process.cwd(), 'uploads', 'png');
@@ -1572,20 +1573,19 @@ Noindex: /`);
         fs.mkdirSync(pngDir, { recursive: true });
       }
       
-      // Generate a unique filename for the PNG output
+      // Generate a unique filename for the PNG output (avoids caching issues)
       const timestamp = Date.now();
       const pngFileName = `rivermeadow_diagram_${timestamp}.png`;
       const outputPath = path.join(pngDir, pngFileName);
       
-      console.log(`Using direct SVG-to-PNG conversion`);
+      console.log(`Using direct SVG-to-PNG conversion for: ${baseFileName}`);
       
       // Get the SVG directly from our diagram-svg endpoint
       const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
-      // Try multiple possible diagram files
+      // Try multiple possible diagram files with all potential extensions
       const possibleFiles = [
         `${baseFileName}.drawio`,
         `${baseFileName}.xml`,
-        `${baseFileName}.html`,
         baseFileName
       ];
       
