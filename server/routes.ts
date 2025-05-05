@@ -1564,69 +1564,160 @@ Noindex: /`);
         return res.status(404).json({ error: 'Diagram file not found' });
       }
       
-      // Read the XML content and generate SVG
-      let svgContent = '';
+      // Read the XML content
+      const xmlContent = fs.readFileSync(xmlFilePath, 'utf8');
+      
+      // Command-line style approach: create a temporary HTML file with embedded Draw.io
+      // This is similar to how the draw.io CLI works with --export command
+      const tempHtmlFile = path.join(pngDir, `temp_export_${timestamp}.html`);
+      
+      // Create HTML file with the necessary scripts to render the diagram and export it
+      const exportHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Draw.io Export</title>
+        <style>
+          body { margin: 0; padding: 0; background: white; }
+          #graphContainer { border: none; overflow: hidden; }
+        </style>
+      </head>
+      <body>
+        <!-- The diagram will be rendered here -->
+        <div id="graphContainer" style="width:100%; height:100%;"></div>
+        
+        <!-- Include the Draw.io library -->
+        <script src="https://www.draw.io/js/viewer.min.js"></script>
+        <script>
+          // Function to initialize diagram rendering
+          function initViewer() {
+            try {
+              // Get the diagram XML
+              const xmlContent = ${JSON.stringify(xmlContent)};
+              
+              // Create a viewer with the container
+              const viewer = new GraphViewer(
+                document.getElementById('graphContainer'),
+                { border: 0, highlight: '#cccccc', nav: true, lightbox: false }
+              );
+              
+              // Load diagram from the XML
+              viewer.loadXml(xmlContent);
+              
+              // For server-side rendering
+              document.title = 'Ready for export';
+            } catch (error) {
+              console.error('Error rendering diagram:', error);
+              document.title = 'Error: ' + error.message;
+            }
+          }
+          
+          // Initialize when the page loads
+          window.onload = initViewer;
+        </script>
+      </body>
+      </html>`;
+      
+      fs.writeFileSync(tempHtmlFile, exportHtml);
+      console.log(`Created temporary HTML file for diagram export: ${tempHtmlFile}`);
+      
+      // Use puppeteer to render the HTML and take a screenshot (similar to draw.io --export)
       try {
-        // Read the XML and extract DrawIO content
-        const xmlContent = fs.readFileSync(xmlFilePath, 'utf8');
+        // Launch headless browser
+        const browser = await puppeteer.launch({
+          headless: 'new',
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
         
-        // Instead of trying to directly convert to SVG, use the diagram-svg endpoint
-        // Get base URL for internal requests
-        const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
+        const page = await browser.newPage();
         
-        // Make a request to the diagram-svg endpoint
-        const svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.xml`);
+        // Set a larger viewport to capture larger diagrams
+        await page.setViewport({
+          width: 1920,
+          height: 1080,
+          deviceScaleFactor: 2 // Higher resolution
+        });
         
-        if (!svgResponse.ok) {
-          return res.status(500).json({ error: 'Failed to get SVG content from diagram-svg endpoint' });
+        // Load the temporary HTML file with the diagram
+        console.log(`Loading diagram HTML file: file://${path.resolve(tempHtmlFile)}`);
+        await page.goto(`file://${path.resolve(tempHtmlFile)}`, {
+          waitUntil: 'networkidle0',
+          timeout: 10000
+        });
+        
+        // Wait for diagram to be fully rendered
+        console.log(`Waiting for diagram to render...`);
+        try {
+          await page.waitForFunction(
+            'document.title === "Ready for export"',
+            { timeout: 5000 }
+          );
+        } catch (waitError) {
+          console.log(`Timeout waiting for diagram title: ${waitError.message}`);
+          // Continue anyway, the diagram might still be usable
         }
         
-        // Get the SVG content from the response
-        svgContent = await svgResponse.text();
-      } catch (error) {
-        console.error('Error extracting SVG from diagram XML:', error);
-        return res.status(500).json({ error: 'Failed to extract SVG content from diagram' });
-      }
-      
-      // Create a temporary file with the SVG content to use with sharp
-      const tempSvgPath = path.join(pngDir, `temp_${timestamp}.svg`);
-      fs.writeFileSync(tempSvgPath, svgContent);
-      
-      // Use sharp to convert to PNG with high quality settings for full diagram
-      try {
-        console.log(`Starting PNG conversion of SVG (length: ${svgContent.length} bytes)`);
-        console.log(`SVG preview: ${svgContent.substring(0, 200)}...`);
+        // Wait a bit more to ensure diagram is fully rendered
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Check if SVG is valid
-        if (!svgContent.includes('<svg')) {
-          console.error('SVG content does not contain <svg> tag');
-          throw new Error('Invalid SVG content');
+        // Add custom CSS to ensure proper rendering
+        await page.addStyleTag({
+          content: `
+            body {
+              margin: 0;
+              padding: 0;
+              background: white;
+              overflow: hidden;
+            }
+            #graphContainer {
+              margin: 0;
+              padding: 0;
+              background: white;
+            }
+          `
+        });
+        
+        // Get the size of the diagram container
+        const dimensions = await page.evaluate(() => {
+          const container = document.getElementById('graphContainer');
+          let width = container.scrollWidth;
+          let height = container.scrollHeight;
+          
+          // If we can detect the actual diagram size, use that
+          const diagrams = container.querySelectorAll('svg, .geDiagramContainer');
+          if (diagrams && diagrams.length > 0) {
+            const diagram = diagrams[0];
+            width = Math.max(width, diagram.scrollWidth || 0);
+            height = Math.max(height, diagram.scrollHeight || 0);
+          }
+          
+          return { width, height };
+        });
+        
+        // Take a screenshot of the diagram (this is like draw.io --export)
+        await page.screenshot({
+          path: outputPath,
+          fullPage: false,
+          clip: {
+            x: 0,
+            y: 0,
+            width: Math.min(dimensions.width || 1200, 3000),
+            height: Math.min(dimensions.height || 800, 3000)
+          },
+          omitBackground: false
+        });
+        
+        // Clean up: close the browser
+        await browser.close();
+        
+        // Clean up: remove the temporary HTML file
+        try {
+          fs.unlinkSync(tempHtmlFile);
+        } catch (cleanupError) {
+          console.error('Error removing temporary HTML file:', cleanupError);
         }
         
-        // Verify temp SVG file exists and has content
-        const fileStats = fs.statSync(tempSvgPath);
-        console.log(`Temp SVG file size: ${fileStats.size} bytes`);
-        
-        await sharp(tempSvgPath, { 
-          density: 300, // Higher density for better text rendering
-          limitInputPixels: false // Remove size limit to handle large diagrams
-        })
-          .resize({
-            width: 3000, // Very large width to ensure we capture everything
-            height: 3000, // Very large height
-            fit: 'inside', // Keep everything in frame
-            background: { r: 255, g: 255, b: 255, alpha: 1 },
-            withoutEnlargement: false
-          })
-          .flatten({ background: { r: 255, g: 255, b: 255, alpha: 1 } })
-          .sharpen()
-          .png({ quality: 100 })
-          .toFile(outputPath);
-        
-        // Clean up temp SVG file
-        fs.unlinkSync(tempSvgPath);
-        
-        console.log(`Successfully converted full diagram to PNG: ${outputPath}`);
+        console.log(`Successfully converted diagram to PNG: ${outputPath}`);
         
         // Send the file as an attachment
         res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${timestamp}.png"`);
@@ -1634,37 +1725,110 @@ Noindex: /`);
         
         const fileStream = fs.createReadStream(outputPath);
         fileStream.pipe(res);
-      } catch (error) {
-        console.error('Error using sharp for PNG conversion:', error);
+      } catch (puppeteerError) {
+        console.error('Error using puppeteer for PNG conversion:', puppeteerError);
         
-        // Fallback to simpler conversion method
-        console.log('Trying fallback SVG to PNG conversion');
+        try {
+          // Close browser if it's still open
+          if (browser) await browser.close();
+        } catch (e) {
+          console.error('Error closing browser:', e);
+        }
         
-        // Verify SVG content again for fallback
-        if (!svgContent.includes('<svg')) {
-          console.error('Fallback: SVG content does not contain <svg> tag');
+        console.log('Trying fallback diagram conversion method');
+        
+        try {
+          // Get SVG content from diagram-svg endpoint
+          console.log('Getting SVG content from diagram-svg endpoint...');
+          const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
+          const svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.xml`);
           
-          // Try alternative approach - use diagram-png endpoint instead as final fallback
-          const pngUrl = `/api/screenshot-diagram/${baseFileName}`;
-          console.log(`Using screenshot fallback: ${pngUrl}`);
-          
-          const screenshotResponse = await fetch(`http://localhost:${process.env.PORT || 5000}${pngUrl}`);
-          if (screenshotResponse.ok) {
-            const pngBuffer = await screenshotResponse.arrayBuffer();
-            fs.writeFileSync(outputPath, Buffer.from(pngBuffer));
-            console.log(`Saved screenshot PNG to ${outputPath}`);
-          } else {
-            throw new Error('All conversion methods failed');
+          if (!svgResponse.ok) {
+            throw new Error('Failed to get SVG content from diagram-svg endpoint');
           }
-        } else {
-          // Use simple SVG to PNG conversion without scaling
-          await sharp(Buffer.from(svgContent), { 
-            density: 300
+          
+          const svgContent = await svgResponse.text();
+          
+          // Check if SVG is valid
+          if (!svgContent.includes('<svg')) {
+            throw new Error('SVG content does not contain <svg> tag');
+          }
+          
+          // Create a temporary file with the SVG content
+          const tempSvgPath = path.join(pngDir, `temp_${timestamp}.svg`);
+          fs.writeFileSync(tempSvgPath, svgContent);
+          console.log(`Wrote SVG content to temp file: ${tempSvgPath}`);
+          
+          // Use sharp to convert SVG to PNG
+          await sharp(tempSvgPath, { 
+            density: 300, // Higher density for better quality
+            limitInputPixels: false // Allow large images
           })
+            .resize({
+              width: 3000, 
+              height: 3000,
+              fit: 'inside',
+              background: { r: 255, g: 255, b: 255, alpha: 1 },
+            })
             .png({ quality: 100 })
             .toFile(outputPath);
+            
+          // Clean up temporary SVG file
+          try {
+            fs.unlinkSync(tempSvgPath);
+          } catch (e) {
+            console.error('Error removing temporary SVG file:', e);
+          }
           
-          console.log('Fallback SVG conversion completed');
+          console.log('Fallback SVG conversion completed successfully');
+        } catch (svgError) {
+          console.error('SVG fallback conversion failed:', svgError);
+          
+          // Try screenshot-diagram endpoint as final fallback
+          try {
+            console.log('Trying screenshot fallback method...');
+            const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
+            const pngUrl = `/api/screenshot-diagram/${baseFileName}`;
+            const response = await fetch(`${baseUrl}${pngUrl}`);
+            
+            if (!response.ok) {
+              throw new Error(`Failed to get PNG from screenshot endpoint: ${response.status}`);
+            }
+            
+            const pngBuffer = await response.arrayBuffer();
+            fs.writeFileSync(outputPath, Buffer.from(pngBuffer));
+            console.log(`Saved screenshot PNG to ${outputPath}`);
+          } catch (screenshotError) {
+            console.error('Screenshot fallback also failed:', screenshotError);
+            
+            // Create a simple PNG with text as last resort
+            try {
+              console.log('Creating simple text-based diagram as final fallback');
+              // Create a simple PNG with text as last resort
+              const { createCanvas } = require('canvas');
+              const canvas = createCanvas(800, 600);
+              const ctx = canvas.getContext('2d');
+              
+              // Fill with white background
+              ctx.fillStyle = 'white';
+              ctx.fillRect(0, 0, 800, 600);
+              
+              // Add text
+              ctx.fillStyle = 'black';
+              ctx.font = 'bold 24px Arial';
+              ctx.textAlign = 'center';
+              ctx.fillText('RiverMeadow Diagram', 400, 200);
+              ctx.font = '18px Arial';
+              ctx.fillText('(Diagram rendering failed - please try again)', 400, 250);
+              
+              // Save to file
+              const pngBuffer = canvas.toBuffer('image/png');
+              fs.writeFileSync(outputPath, pngBuffer);
+            } catch (canvasError) {
+              console.error('Even simple canvas fallback failed:', canvasError);
+              throw new Error('All conversion methods failed');
+            }
+          }
         }
         
         // Send the file as an attachment
