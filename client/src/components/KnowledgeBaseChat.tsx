@@ -7,6 +7,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { getFullUrl } from '@/lib/config';
 import { Loader2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useChatTitles } from '@/hooks/use-chat-titles';
 import { ToastAction } from "@/components/ui/toast";
 import { Progress } from "@/components/ui/progress";
 import * as htmlToImage from 'html-to-image';
@@ -49,6 +50,7 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
   const [diagramZooms, setDiagramZooms] = useState<Record<string, number>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { updateChatTitle: contextUpdateChatTitle, refreshChats } = useChatTitles();
   
   // Function to generate a suitable chat title based on conversation content
   const generateChatTitle = (messages: Message[]): string => {
@@ -104,27 +106,16 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
         
         // Only update if the title is still default or if we have a better title
         if (chat.title === 'New Conversation' || chat.title.length < newTitle.length) {
-          // Update the chat title in the database
-          await apiRequest('PATCH', `/api/chats/${chatId}`, { title: newTitle });
+          console.log(`Updating chat title for chat ${chatId} with title "${newTitle}"`);
           
-          // First immediately update the UI with the new title via local events
-          console.log(`Creating chat-title-updated-local event for chat ${chatId} with title "${newTitle}"`);
-          const localUpdateEvent = new CustomEvent('chat-title-updated-local', { 
-            detail: { chatId, newTitle } 
-          });
-          window.dispatchEvent(localUpdateEvent);
+          // Use the centralized context's updateChatTitle function
+          await contextUpdateChatTitle(chatId, newTitle);
           
-          // Also dispatch global refresh event with the same data
-          console.log(`Creating chat-title-updated global event for chat ${chatId} with title "${newTitle}"`);
-          const globalEvent = new CustomEvent('chat-title-updated', {
-            detail: { chatId, newTitle }
-          });
-          window.dispatchEvent(globalEvent);
-          
-          // Force reload chats in sidebar by triggering another explicit event
-          console.log(`Dispatching extra reload-chats event for fallback`);
-          const reloadEvent = new CustomEvent('reload-chats');
-          window.dispatchEvent(reloadEvent);
+          // Also trigger a refresh to ensure all components update
+          setTimeout(() => {
+            console.log("Forcing refresh of chats list");
+            refreshChats();
+          }, 300);
         }
       }
     } catch (error) {
