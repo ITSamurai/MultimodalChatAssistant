@@ -357,14 +357,14 @@ export const generateDiagram = async (
       cleanMermaidCode = 'flowchart TD\n' + cleanMermaidCode;
     }
     
-    // Check if this is an OS-based migration diagram request
-    const isOsMigrationRequest = prompt.toLowerCase().includes('os') && 
-                                (prompt.toLowerCase().includes('migration') || 
-                                 prompt.toLowerCase().includes('migrate'));
+    // Check if this is a specific OS-based migration diagram request
+    const lowercasePrompt = prompt.toLowerCase();
+    const isExplicitOsMigrationRequest = lowercasePrompt.includes('os based migration') || 
+                                       (lowercasePrompt.includes('os migration') && !lowercasePrompt.includes('type'));
                                  
-    // Add a specific OS migration diagram or fallback diagram for empty/invalid code
-    if (isOsMigrationRequest || prompt.toLowerCase().includes('os based migration')) {
-      console.log('OS-based migration diagram request detected, using specific diagram');
+    // Only use the specific OS migration diagram for explicit OS migration requests
+    if (isExplicitOsMigrationRequest) {
+      console.log('Explicit OS-based migration diagram request detected, using specific diagram');
       
       // Use a simpler version of the OS migration diagram that's guaranteed to render
       cleanMermaidCode = `graph TD
@@ -700,6 +700,13 @@ cleanMermaidCode +
 function detectNetworkDiagramRequest(prompt: string): boolean {
   // Convert to lowercase for case-insensitive matching
   const lowercasePrompt = prompt.toLowerCase();
+  
+  // Exclude general diagram prompts that might match keywords but aren't network-specific
+  if (lowercasePrompt.includes('os migration') || 
+      lowercasePrompt.includes('os-based migration') || 
+      lowercasePrompt.includes('migration type')) {
+    return false;
+  }
   
   // Keywords that indicate a network diagram request
   const networkKeywords = [
