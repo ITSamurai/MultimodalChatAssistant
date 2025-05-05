@@ -311,12 +311,11 @@ export const generateDiagram = async (
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border-radius: 4px;
       padding: 16px;
-      /* Disable unwanted auto-zoom behavior */
-      pointer-events: none; 
+      /* Enable dragging */
       touch-action: none;
     }
     
-    /* But allow pointer events on child SVG elements for links */
+    /* Make sure all SVG elements have pointer events enabled */
     #svg-container svg * {
       pointer-events: auto;
     }
