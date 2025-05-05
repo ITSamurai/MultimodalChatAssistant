@@ -259,7 +259,120 @@ export const generateDiagram = async (
         await writeFile(xmlPath, drawioXml);
         
         // Create a direct SVG viewer that is more reliable - NO iframe approach
-        const drawioHtml = `<!DOCTYPE html>
+        // Create HTML for the Draw.IO diagram using string concatenation
+        const titleText = isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram';
+        let drawioHtml = "<!DOCTYPE html>";
+        drawioHtml += "<html lang=\"en\">";
+        drawioHtml += "<head>";
+        drawioHtml += "  <meta charset=\"UTF-8\">";
+        drawioHtml += "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
+        drawioHtml += "  <title>RiverMeadow Diagram</title>";
+        drawioHtml += "  <style>";
+        drawioHtml += "    body, html { height: 100%; margin: 0; padding: 0; overflow: auto; font-family: Arial, sans-serif; }";
+        drawioHtml += "    .diagram-container { display: flex; flex-direction: column; height: 100vh; }";
+        drawioHtml += "    .header { background: white; padding: 10px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; z-index: 10; }";
+        drawioHtml += "    h1 { color: #0078d4; margin: 0; font-size: 18px; }";
+        drawioHtml += "    .content-area { flex: 1; padding: 20px; overflow: auto; background: white; display: flex; flex-direction: column; align-items: center; position: relative; }";
+        drawioHtml += "    #svg-container { max-width: 100%; transition: transform 0.3s; transform-origin: center top; margin: 0 auto; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px; padding: 16px; position: relative; }";
+        drawioHtml += "    #svg-container svg, #svg-container svg * { pointer-events: auto; }";
+        drawioHtml += "    svg { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }";
+        drawioHtml += "    .actions { display: flex; gap: 10px; }";
+        drawioHtml += "    .button { background-color: #0078d4; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; }";
+        drawioHtml += "    .button:hover { background-color: #005a9e; }";
+        drawioHtml += "    .button-download { background-color: #28a745; }";
+        drawioHtml += "    .button-download:hover { background-color: #218838; }";
+        drawioHtml += "    .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #666; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; }";
+        drawioHtml += "    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #0078d4; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 15px; }";
+        drawioHtml += "    .hidden { display: none; }";
+        drawioHtml += "    .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: white; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); display: flex; overflow: hidden; z-index: 100; }";
+        drawioHtml += "    .zoom-button { background: none; border: none; border-right: 1px solid #eee; padding: 8px 12px; cursor: pointer; font-size: 14px; }";
+        drawioHtml += "    .zoom-button:last-child { border-right: none; }";
+        drawioHtml += "    .zoom-button:hover { background: #f5f5f5; }";
+        drawioHtml += "    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }";
+        drawioHtml += "  </style>";
+        drawioHtml += "</head>";
+        drawioHtml += "<body>";
+        drawioHtml += "  <div class=\"diagram-container\">";
+        drawioHtml += "    <div class=\"header\">";
+        drawioHtml += "      <h1>" + titleText + "</h1>";
+        drawioHtml += "      <div class=\"actions\">";
+        drawioHtml += "        <a href=\"/api/diagram-xml/" + xmlFilename + "\" download=\"rivermeadow_diagram.drawio\" class=\"button button-download\">Download Diagram</a>";
+        drawioHtml += "      </div>";
+        drawioHtml += "    </div>";
+        drawioHtml += "    <div class=\"content-area\">";
+        drawioHtml += "      <div id=\"loading\" class=\"loading\">";
+        drawioHtml += "        <div class=\"spinner\"></div>";
+        drawioHtml += "        <div>Loading diagram...</div>";
+        drawioHtml += "      </div>";
+        drawioHtml += "      <div id=\"svg-container\"></div>";
+        drawioHtml += "    </div>";
+        drawioHtml += "    <div class=\"zoom-controls\">";
+        drawioHtml += "      <button class=\"zoom-button\" id=\"zoom-out\">−</button>";
+        drawioHtml += "      <button class=\"zoom-button\" id=\"zoom-reset\">100%</button>";
+        drawioHtml += "      <button class=\"zoom-button\" id=\"zoom-in\">+</button>";
+        drawioHtml += "    </div>";
+        drawioHtml += "  </div>";
+        drawioHtml += "  <script>";
+        drawioHtml += "    const svgContainer = document.getElementById('svg-container');";
+        drawioHtml += "    const loading = document.getElementById('loading');";
+        drawioHtml += "    const zoomResetButton = document.getElementById('zoom-reset');";
+        drawioHtml += "    let currentZoom = 0.5;";
+        drawioHtml += "    try {";
+        drawioHtml += "      const savedZoom = localStorage.getItem('diagram_zoom_level');";
+        drawioHtml += "      if (savedZoom && !isNaN(parseFloat(savedZoom))) {";
+        drawioHtml += "        currentZoom = parseFloat(savedZoom);";
+        drawioHtml += "      }";
+        drawioHtml += "    } catch (e) {}";
+        drawioHtml += "    if (zoomResetButton) {";
+        drawioHtml += "      zoomResetButton.textContent = Math.round(currentZoom * 100) + '%';";
+        drawioHtml += "    }";
+        drawioHtml += "    fetch('/api/diagram-svg/" + xmlFilename + "')";
+        drawioHtml += "      .then(response => {";
+        drawioHtml += "        if (!response.ok) throw new Error('Failed to load diagram');";
+        drawioHtml += "        return response.text();";
+        drawioHtml += "      })";
+        drawioHtml += "      .then(svgText => {";
+        drawioHtml += "        svgContainer.innerHTML = svgText;";
+        drawioHtml += "        loading.classList.add('hidden');";
+        drawioHtml += "        const svg = svgContainer.querySelector('svg');";
+        drawioHtml += "        if (svg) {";
+        drawioHtml += "          svg.style.maxWidth = '100%';";
+        drawioHtml += "          svg.style.height = 'auto';";
+        drawioHtml += "          svg.style.transformOrigin = 'center';";
+        drawioHtml += "        }";
+        drawioHtml += "        applyZoom();";
+        drawioHtml += "      })";
+        drawioHtml += "      .catch(error => {";
+        drawioHtml += "        console.error('Error loading SVG:', error);";
+        drawioHtml += "        loading.innerHTML = '<div style=\"color:red\">Error loading diagram</div>';";
+        drawioHtml += "      });";
+        drawioHtml += "    document.getElementById('zoom-in').addEventListener('click', () => {";
+        drawioHtml += "      currentZoom = Math.min(2.5, currentZoom + 0.1);";
+        drawioHtml += "      applyZoom();";
+        drawioHtml += "    });";
+        drawioHtml += "    document.getElementById('zoom-out').addEventListener('click', () => {";
+        drawioHtml += "      currentZoom = Math.max(0.2, currentZoom - 0.1);";
+        drawioHtml += "      applyZoom();";
+        drawioHtml += "    });";
+        drawioHtml += "    document.getElementById('zoom-reset').addEventListener('click', () => {";
+        drawioHtml += "      currentZoom = 1.0;";
+        drawioHtml += "      applyZoom();";
+        drawioHtml += "    });";
+        drawioHtml += "    function applyZoom() {";
+        drawioHtml += "      if (svgContainer) {";
+        drawioHtml += "        svgContainer.style.transform = 'scale(' + currentZoom + ')';";
+        drawioHtml += "        const resetButton = document.getElementById('zoom-reset');";
+        drawioHtml += "        if (resetButton) {";
+        drawioHtml += "          resetButton.textContent = Math.round(currentZoom * 100) + '%';";
+        drawioHtml += "        }";
+        drawioHtml += "        try {";
+        drawioHtml += "          localStorage.setItem('diagram_zoom_level', currentZoom.toString());";
+        drawioHtml += "        } catch (e) {}";
+        drawioHtml += "      }";
+        drawioHtml += "    }";
+        drawioHtml += "  </script>";
+        drawioHtml += "</body>";
+        drawioHtml += "</html>";
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -410,10 +523,10 @@ export const generateDiagram = async (
 <body>
   <div class="diagram-container">
     <div class="header">
-      <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
+      <h1>' + (isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram') + '</h1>
       
       <div class="actions">
-        <a href="/api/diagram-xml/${xmlFilename}" download="rivermeadow_diagram.drawio" 
+        <a href="/api/diagram-xml/' + xmlFilename + '" download="rivermeadow_diagram.drawio" 
            class="button button-download">Download Diagram</a>
       </div>
     </div>
@@ -591,25 +704,24 @@ export const generateDiagram = async (
     let mermaidPrompt;
     
     if (isNetworkDiagram) {
-      mermaidPrompt = `Create a mermaid.js network diagram code for: ${enhancedPrompt}
-Use the appropriate syntax for network diagrams. In Mermaid, you can represent networks using:
-1. flowchart LR - for left-to-right network diagrams
-2. Use different node shapes to represent network components:
-   - ((Database)) for databases
-   - [Server] for servers
-   - {{Firewall}} for firewalls
-   - (Router) for routers
-   - [/Load Balancer/] for load balancers
-   - [(Storage)] for storage
-   - [Cloud] for cloud services
-
-Keep the diagram focused on the key network components and their connections.
-Only generate valid mermaid.js code wrapped in a code block, nothing else. Use proper RiverMeadow terminology.`;
+      mermaidPrompt = "Create a mermaid.js network diagram code for: " + enhancedPrompt + "\n" +
+      "Use the appropriate syntax for network diagrams. In Mermaid, you can represent networks using:\n" +
+      "1. flowchart LR - for left-to-right network diagrams\n" +
+      "2. Use different node shapes to represent network components:\n" +
+      "   - ((Database)) for databases\n" +
+      "   - [Server] for servers\n" +
+      "   - {{Firewall}} for firewalls\n" +
+      "   - (Router) for routers\n" +
+      "   - [/Load Balancer/] for load balancers\n" +
+      "   - [(Storage)] for storage\n" +
+      "   - [Cloud] for cloud services\n\n" +
+      "Keep the diagram focused on the key network components and their connections.\n" +
+      "Only generate valid mermaid.js code wrapped in a code block, nothing else. Use proper RiverMeadow terminology.";
     } else {
-      mermaidPrompt = `Create a mermaid.js diagram code for: ${enhancedPrompt}
-The diagram should be a flowchart (use flowchart TD syntax). Keep it simple and focused on the main steps.
-For example, if it's about OS migration steps, show the main 5-7 steps in the process.
-Only generate valid mermaid.js code wrapped in a code block, nothing else. Use RiverMeadow terminology.`;
+      mermaidPrompt = "Create a mermaid.js diagram code for: " + enhancedPrompt + "\n" +
+      "The diagram should be a flowchart (use flowchart TD syntax). Keep it simple and focused on the main steps.\n" +
+      "For example, if it's about OS migration steps, show the main 5-7 steps in the process.\n" +
+      "Only generate valid mermaid.js code wrapped in a code block, nothing else. Use RiverMeadow terminology.";
     }
 
     const diagramResponse = await openai.chat.completions.create({
@@ -713,200 +825,186 @@ Only generate valid mermaid.js code wrapped in a code block, nothing else. Use R
       }
     }
     
-    // Create an HTML file with the mermaid diagram
-    const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RiverMeadow Diagram</title>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'neutral',
-      flowchart: { 
-        useMaxWidth: false,
-        htmlLabels: true,
-        curve: 'basis' 
-      },
-      securityLevel: 'loose', // This allows for downloading the SVG properly
-      fontFamily: 'Arial, sans-serif', // Use basic, widely supported font
-      themeVariables: {
-        fontFamily: 'Arial, sans-serif',
-        primaryTextColor: '#333333',
-        primaryColor: '#2196f3',
-        primaryBorderColor: '#2196f3',
-        lineColor: '#333333',
-        fontSize: '16px'
-      }
-    });
-    
-    // Notify parent when loaded
-    window.addEventListener('load', function() {
-      if (window.parent) {
-        window.parent.postMessage('diagramLoaded', '*');
-      }
-    });
-    
-    // Make diagram fit better in iframe when embedded
-    window.addEventListener('message', function(event) {
-      // Handle zoom-in, zoom-out, and reset messages from parent
-      if (event.data && typeof event.data === 'object') {
-        if (event.data.action === 'zoom') {
-          const diagram = document.querySelector('.diagram-container');
-          if (diagram) {
-            // Apply zoom to the actual diagram
-            const mermaidDiv = document.querySelector('.mermaid svg');
-            if (mermaidDiv) {
-              // Apply zoom to the SVG element
-              mermaidDiv.style.transform = 'scale(' + event.data.scale + ')';
-              mermaidDiv.style.transformOrigin = '50% 0';
-              mermaidDiv.style.transition = 'transform 0.2s ease';
-            }
-          }
-        }
-        // Handle forceRedraw message for screenshots
-        if (event.data.action === 'forceRedraw') {
-          console.log('Forcing diagram redraw...');
-          try {
-            // Get the mermaid element and re-render
-            const mermaidElement = document.querySelector('.mermaid');
-            if (mermaidElement) {
-              const code = mermaidElement.textContent || '';
-              // Clear the element
-              mermaidElement.innerHTML = '';
-              // Force redraw
-              setTimeout(function() {
-                mermaidElement.textContent = code;
-                mermaid.init(undefined, document.querySelectorAll('.mermaid'));
-              }, 50);
-            }
-          } catch (e) {
-            console.error('Error redrawing diagram:', e);
-          }
-        }
-      }
-    });
-  </script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f5f5f5;
-    }
-    .diagram-container {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-      max-width: 2400px;
-      width: 100%;
-      margin: 0 auto;
-      overflow: visible;
-      position: relative;
-    }
-    .mermaid {
-      text-align: center;
-      width: 100%;
-      overflow: visible;
-      min-height: 500px;
-    }
-    .mermaid svg {
-      max-width: 100%;
-      width: auto !important;
-      height: auto !important;
-      font-family: Arial, sans-serif !important;
-      display: block;
-      margin: 0 auto;
-    }
-    /* Force basic fonts on all text elements in the SVG */
-    .mermaid svg text, .mermaid svg tspan {
-      font-family: Arial, sans-serif !important;
-      font-weight: normal;
-    }
-    h1 {
-      text-align: center;
-      color: #0078d4;
-      margin-bottom: 20px;
-    }
-    /* Add styles for the code view in case mermaid fails */
-    pre.code-fallback {
-      white-space: pre-wrap;
-      font-size: 12px;
-      padding: 10px;
-      background: #f5f5f5;
-      border-radius: 4px;
-      margin-top: 20px;
-      overflow: auto;
-      max-height: 300px;
-      display: none; /* Hide by default */
-    }
-    .error-message {
-      color: #d32f2f;
-      padding: 15px;
-      text-align: center;
-      font-weight: bold;
-      display: none; /* Hide by default */
-    }
-    
-    /* Print styles */
-    @media print {
-      body {
-        background: white;
-        padding: 0;
-        margin: 0;
-      }
-      .diagram-container {
-        box-shadow: none;
-        width: 100%;
-        padding: 0;
-        margin: 0;
-      }
-      .action-buttons {
-        display: none !important;
-      }
-      .mermaid svg {
-        max-width: 100% !important;
-        width: 100% !important;
-        height: auto !important;
-        page-break-inside: avoid;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="diagram-container">
-    <h1>${isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram'}</h1>
-    <div class="mermaid">
-${cleanMermaidCode}
-    </div>
-    <div class="error-message">Failed to render diagram</div>
-    <pre class="code-fallback">${cleanMermaidCode}</pre>
-  </div>
-  <script>
-    // Add error handling in case mermaid fails to parse
-    mermaid.parseError = function(err, hash) {
-      console.error('Mermaid error:', err);
-      document.querySelector('.error-message').style.display = 'block';
-      document.querySelector('.code-fallback').style.display = 'block';
-    };
-    
-    // Render mermaid diagram with a delay to ensure DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(function() {
-        try {
-          console.log('Initializing mermaid diagram...');
-          mermaid.init(undefined, document.querySelectorAll('.mermaid'));
-        } catch (e) {
-          console.error('Error initializing mermaid:', e);
-        }
-      }, 1000);
-    });
-  </script>
-</body>
-</html>`;
+    // Create an HTML file with the mermaid diagram using string concatenation
+    const diagramTitle = isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram';
+    const htmlContent = '<!DOCTYPE html>' +
+'<html lang="en">' +
+'<head>' +
+'  <meta charset="UTF-8">' +
+'  <meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+'  <title>RiverMeadow Diagram</title>' +
+'  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>' +
+'  <script>' +
+'    mermaid.initialize({' +
+'      startOnLoad: true,' +
+'      theme: "neutral",' +
+'      flowchart: { ' +
+'        useMaxWidth: false,' +
+'        htmlLabels: true,' +
+'        curve: "basis" ' +
+'      },' +
+'      securityLevel: "loose",' +
+'      fontFamily: "Arial, sans-serif",' +
+'      themeVariables: {' +
+'        fontFamily: "Arial, sans-serif",' +
+'        primaryTextColor: "#333333",' +
+'        primaryColor: "#2196f3",' +
+'        primaryBorderColor: "#2196f3",' +
+'        lineColor: "#333333",' +
+'        fontSize: "16px"' +
+'      }' +
+'    });' +
+'    ' +
+'    window.addEventListener("load", function() {' +
+'      if (window.parent) {' +
+'        window.parent.postMessage("diagramLoaded", "*");' +
+'      }' +
+'    });' +
+'    ' +
+'    window.addEventListener("message", function(event) {' +
+'      if (event.data && typeof event.data === "object") {' +
+'        if (event.data.action === "zoom") {' +
+'          const diagram = document.querySelector(".diagram-container");' +
+'          if (diagram) {' +
+'            const mermaidDiv = document.querySelector(".mermaid svg");' +
+'            if (mermaidDiv) {' +
+'              mermaidDiv.style.transform = "scale(" + event.data.scale + ")";' +
+'              mermaidDiv.style.transformOrigin = "50% 0";' +
+'              mermaidDiv.style.transition = "transform 0.2s ease";' +
+'            }' +
+'          }' +
+'        }' +
+'        if (event.data.action === "forceRedraw") {' +
+'          console.log("Forcing diagram redraw...");' +
+'          try {' +
+'            const mermaidElement = document.querySelector(".mermaid");' +
+'            if (mermaidElement) {' +
+'              const code = mermaidElement.textContent || "";' +
+'              mermaidElement.innerHTML = "";' +
+'              setTimeout(function() {' +
+'                mermaidElement.textContent = code;' +
+'                mermaid.init(undefined, document.querySelectorAll(".mermaid"));' +
+'              }, 50);' +
+'            }' +
+'          } catch (e) {' +
+'            console.error("Error redrawing diagram:", e);' +
+'          }' +
+'        }' +
+'      }' +
+'    });' +
+'  </script>' +
+'  <style>' +
+'    body {' +
+'      font-family: Arial, sans-serif;' +
+'      margin: 0;' +
+'      padding: 20px;' +
+'      background: #f5f5f5;' +
+'    }' +
+'    .diagram-container {' +
+'      background: white;' +
+'      padding: 20px;' +
+'      border-radius: 8px;' +
+'      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);' +
+'      max-width: 2400px;' +
+'      width: 100%;' +
+'      margin: 0 auto;' +
+'      overflow: visible;' +
+'      position: relative;' +
+'    }' +
+'    .mermaid {' +
+'      text-align: center;' +
+'      width: 100%;' +
+'      overflow: visible;' +
+'      min-height: 500px;' +
+'    }' +
+'    .mermaid svg {' +
+'      max-width: 100%;' +
+'      width: auto !important;' +
+'      height: auto !important;' +
+'      font-family: Arial, sans-serif !important;' +
+'      display: block;' +
+'      margin: 0 auto;' +
+'    }' +
+'    .mermaid svg text, .mermaid svg tspan {' +
+'      font-family: Arial, sans-serif !important;' +
+'      font-weight: normal;' +
+'    }' +
+'    h1 {' +
+'      text-align: center;' +
+'      color: #0078d4;' +
+'      margin-bottom: 20px;' +
+'    }' +
+'    pre.code-fallback {' +
+'      white-space: pre-wrap;' +
+'      font-size: 12px;' +
+'      padding: 10px;' +
+'      background: #f5f5f5;' +
+'      border-radius: 4px;' +
+'      margin-top: 20px;' +
+'      overflow: auto;' +
+'      max-height: 300px;' +
+'      display: none;' +
+'    }' +
+'    .error-message {' +
+'      color: #d32f2f;' +
+'      padding: 15px;' +
+'      text-align: center;' +
+'      font-weight: bold;' +
+'      display: none;' +
+'    }' +
+'    @media print {' +
+'      body {' +
+'        background: white;' +
+'        padding: 0;' +
+'        margin: 0;' +
+'      }' +
+'      .diagram-container {' +
+'        box-shadow: none;' +
+'        width: 100%;' +
+'        padding: 0;' +
+'        margin: 0;' +
+'      }' +
+'      .action-buttons {' +
+'        display: none !important;' +
+'      }' +
+'      .mermaid svg {' +
+'        max-width: 100% !important;' +
+'        width: 100% !important;' +
+'        height: auto !important;' +
+'        page-break-inside: avoid;' +
+'      }' +
+'    }' +
+'  </style>' +
+'</head>' +
+'<body>' +
+'  <div class="diagram-container">' +
+'    <h1>' + diagramTitle + '</h1>' +
+'    <div class="mermaid">' +
+cleanMermaidCode +
+'    </div>' +
+'    <div class="error-message">Failed to render diagram</div>' +
+'    <pre class="code-fallback">' + cleanMermaidCode + '</pre>' +
+'  </div>' +
+'  <script>' +
+'    mermaid.parseError = function(err, hash) {' +
+'      console.error("Mermaid error:", err);' +
+'      document.querySelector(".error-message").style.display = "block";' +
+'      document.querySelector(".code-fallback").style.display = "block";' +
+'    };' +
+'    ' +
+'    document.addEventListener("DOMContentLoaded", function() {' +
+'      setTimeout(function() {' +
+'        try {' +
+'          console.log("Initializing mermaid diagram...");' +
+'          mermaid.init(undefined, document.querySelectorAll(".mermaid"));' +
+'        } catch (e) {' +
+'          console.error("Error initializing mermaid:", e);' +
+'        }' +
+'      }, 1000);' +
+'    });' +
+'  </script>' +
+'</body>' +
+'</html>';
 
     // Create timestamp & unique filename with a common base
     const timestamp = Date.now();
