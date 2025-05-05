@@ -37,31 +37,42 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
   const [editTitle, setEditTitle] = useState('');
   const { toast } = useToast();
 
-  // Load chats for the current user initially
+  // Load chats for the current user initially - but only once when the user first loads
   useEffect(() => {
-    if (user) {
-      console.log("User changed, refreshing chats");
-      refreshChats();
+    const userDidChange = user !== null && user !== undefined;
+    if (userDidChange) {
+      console.log("User authenticated, initial chats load");
+      const loadOnce = setTimeout(() => refreshChats(), 100);
+      return () => clearTimeout(loadOnce);
     }
-  }, [user, refreshChats]);
+  }, [user?.id]);
   
   // Listen for chat title update events
   useEffect(() => {
     // Listen for the 'chat-title-changed' event from our context
-    const handleChatTitleChanged = (event: Event) => {
-      console.log('Received chat-title-changed event, refreshing chats');
-      refreshChats();
+    const handleChatTitleChanged = (event: CustomEvent) => {
+      console.log('Received chat title event:', event.type);
+      
+      // Instead of calling refreshChats which makes a network request,
+      // we can directly update the specific chat's title locally
+      if (event.type === 'chat-title-changed' || event.type === 'chat-title-updated') {
+        // The context already handles this state update, no need to do anything here
+      } else if (event.type === 'reload-chats') {
+        // Only reload from server on explicit reload event
+        console.log('Explicit reload-chats event received');
+        refreshChats();
+      }
     };
 
     // Also handle the older event types for backwards compatibility
-    window.addEventListener('chat-title-updated', handleChatTitleChanged);
-    window.addEventListener('chat-title-changed', handleChatTitleChanged);
-    window.addEventListener('reload-chats', handleChatTitleChanged);
+    window.addEventListener('chat-title-updated', handleChatTitleChanged as EventListener);
+    window.addEventListener('chat-title-changed', handleChatTitleChanged as EventListener);
+    window.addEventListener('reload-chats', handleChatTitleChanged as EventListener);
     
     return () => {
-      window.removeEventListener('chat-title-updated', handleChatTitleChanged);
-      window.removeEventListener('chat-title-changed', handleChatTitleChanged);
-      window.removeEventListener('reload-chats', handleChatTitleChanged);
+      window.removeEventListener('chat-title-updated', handleChatTitleChanged as EventListener);
+      window.removeEventListener('chat-title-changed', handleChatTitleChanged as EventListener);
+      window.removeEventListener('reload-chats', handleChatTitleChanged as EventListener);
     };
   }, [refreshChats]);
 
