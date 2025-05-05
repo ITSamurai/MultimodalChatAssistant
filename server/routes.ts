@@ -65,14 +65,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Rendering diagram as SVG: ${filePath}`);
       
-      // If fileName ends with .xml but .xml doesn't exist, try without .xml extension
-      if (fileName.endsWith('.xml') && !fs.existsSync(filePath)) {
-        const baseFileName = fileName.slice(0, -4);
-        const alternateFilePath = path.join(process.cwd(), 'uploads', 'generated', baseFileName);
+      // If we can't find the file, try multiple extensions and variations
+      if (!fs.existsSync(filePath)) {
+        console.log(`File not found at original path: ${filePath}`);
         
-        if (fs.existsSync(alternateFilePath)) {
-          console.log(`File not found at ${filePath}, using alternate path: ${alternateFilePath}`);
-          filePath = alternateFilePath;
+        // Try with different extensions or without extension
+        const baseFileName = fileName.replace(/\.(xml|drawio|html)$/, '');
+        
+        // Try these possible paths in order
+        const possiblePaths = [
+          path.join(process.cwd(), 'uploads', 'generated', baseFileName + '.drawio'),
+          path.join(process.cwd(), 'uploads', 'generated', baseFileName + '.xml'),
+          path.join(process.cwd(), 'uploads', 'generated', baseFileName),
+          path.join(process.cwd(), 'uploads', 'generated', baseFileName + '.html')
+        ];
+        
+        for (const testPath of possiblePaths) {
+          console.log(`Checking for file at: ${testPath}`);
+          if (fs.existsSync(testPath)) {
+            console.log(`Found file at alternate path: ${testPath}`);
+            filePath = testPath;
+            break;
+          }
         }
       }
       
@@ -1543,6 +1557,7 @@ Noindex: /`);
   // Endpoint for downloading the full diagram as PNG
   app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
     try {
+      console.log(`Download request for diagram: ${req.params.fileName}`);
       const fileName = req.params.fileName;
       const baseFileName = fileName.replace(/\.(html|xml|drawio)$/, '');
       
@@ -1557,10 +1572,25 @@ Noindex: /`);
       const pngFileName = `full_diagram_${timestamp}.png`;
       const outputPath = path.join(pngDir, pngFileName);
       
-      // Try multiple possible file extensions - .drawio first, then .xml as fallback
-      let xmlFilePath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}.drawio`);
-      if (!fs.existsSync(xmlFilePath)) {
-        xmlFilePath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}.xml`);
+      // Check for all possible file extensions
+      const possibleExtensions = ['.drawio', '.xml', '.html', '.mmd'];
+      let xmlFilePath = '';
+      let fileFound = false;
+      
+      for (const ext of possibleExtensions) {
+        const testPath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}${ext}`);
+        console.log(`Checking for file: ${testPath}`);
+        if (fs.existsSync(testPath)) {
+          xmlFilePath = testPath;
+          fileFound = true;
+          console.log(`Found diagram file: ${xmlFilePath}`);
+          break;
+        }
+      }
+      
+      if (!fileFound) {
+        console.log(`No diagram file found for: ${baseFileName}`);
+        return res.status(404).json({ error: 'Diagram file not found' });
       }
       
       if (!fs.existsSync(xmlFilePath)) {
@@ -1752,7 +1782,18 @@ Noindex: /`);
           // Get SVG content from diagram-svg endpoint
           console.log('Getting SVG content from diagram-svg endpoint...');
           const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
-          const svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.xml`);
+          // Try both .drawio and .xml extensions for the SVG endpoint
+          let svgResponse;
+          try {
+            svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.drawio`);
+            if (!svgResponse.ok) {
+              console.log('Drawio extension failed, trying XML extension');
+              svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.xml`);
+            }
+          } catch (error) {
+            console.log('Error fetching SVG with drawio extension, trying XML');
+            svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.xml`);
+          }
           
           if (!svgResponse.ok) {
             throw new Error('Failed to get SVG content from diagram-svg endpoint');
