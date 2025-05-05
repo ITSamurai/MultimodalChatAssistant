@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net" modified="2025-05-05T15:15:02.197Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-545660ed-15cf-4b33-87b1-46216c602670" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_102196_1" value="Source Server" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+    <mxGeometry x="100" y="100" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_102196_2" value="RMS Migration Appliance" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+    <mxGeometry x="300" y="100" width="100" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_102196_3" value="Target Cloud Server" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+    <mxGeometry x="500" y="100" width="80" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="cell_102196_4" value="Deploy RMS Migration Appliance" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+    <mxGeometry x="300" y="200" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_102196_5" value="Communicate with RiverMeadow Platform" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+    <mxGeometry x="300" y="300" width="220" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_102196_6" value="Migration Details" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+    <mxGeometry x="300" y="400" width="100" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cell_102196_7" value="Storage/Disks" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="0">
+    <mxGeometry x="500" y="400" width="100" height="60" as="geometry"/>
+</mxCell>
+<mxCell parent="1" id="cell_102196_8" edge="1" source="1" target="2" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel x="0.5" y="-20" as="geometry" value="Migrate Data"/>
+</mxCell>
+<mxCell parent="1" id="cell_102196_9" edge="1" source="2" target="3" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel x="0.5" y="-20" as="geometry" value="Transfer to Target"/>
+</mxCell>
+<mxCell parent="1" id="cell_102196_10" edge="1" source="2" target="4" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel x="0.5" y="-20" as="geometry" value="Deployment"/>
+</mxCell>
+<mxCell parent="1" id="cell_102196_11" edge="1" source="4" target="5" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel x="0.5" y="-20" as="geometry" value="Communication"/>
+</mxCell>
+<mxCell parent="1" id="cell_102196_12" edge="1" source="5" target="6" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel x="0.5" y="-20" as="geometry" value="Migration Details"/>
+</mxCell>
+<mxCell parent="1" id="cell_102196_13" edge="1" source="6" target="7" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;orthogonal=0;">
+    <mxGeometry relative="1" as="geometry"/>
+    <mxLabel x="0.5" y="-20" as="geometry" value="Storage Details"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

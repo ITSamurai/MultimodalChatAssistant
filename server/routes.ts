@@ -1366,24 +1366,19 @@ Noindex: /`);
         // Read the XML and extract DrawIO content
         const xmlContent = fs.readFileSync(xmlFilePath, 'utf8');
         
-        // Extract SVG content from the XML
-        // First try to parse as mxGraphModel
-        const graphModelMatch = xmlContent.match(/<mxGraphModel[^>]*>([\s\S]*?)<\/mxGraphModel>/);
+        // Instead of trying to directly convert to SVG, use the diagram-svg endpoint
+        // Get base URL for internal requests
+        const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
         
-        if (graphModelMatch) {
-          // Generate SVG from the mxGraphModel content
-          // This is a simple conversion - for a more robust solution we would use a library
-          svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3000" height="3000" viewBox="0 0 3000 3000">
-          <g>
-            <!-- Extracted from Draw.IO diagram -->
-            <rect width="100%" height="100%" fill="white" />
-            ${xmlContent}
-          </g>
-        </svg>`;
-        } else {
-          // If we can't extract mxGraphModel, just use the raw XML
-          svgContent = xmlContent;
+        // Make a request to the diagram-svg endpoint
+        const svgResponse = await fetch(`${baseUrl}/api/diagram-svg/${baseFileName}.xml`);
+        
+        if (!svgResponse.ok) {
+          return res.status(500).json({ error: 'Failed to get SVG content from diagram-svg endpoint' });
         }
+        
+        // Get the SVG content from the response
+        svgContent = await svgResponse.text();
       } catch (error) {
         console.error('Error extracting SVG from diagram XML:', error);
         return res.status(500).json({ error: 'Failed to extract SVG content from diagram' });
@@ -1395,6 +1390,19 @@ Noindex: /`);
       
       // Use sharp to convert to PNG with high quality settings for full diagram
       try {
+        console.log(`Starting PNG conversion of SVG (length: ${svgContent.length} bytes)`);
+        console.log(`SVG preview: ${svgContent.substring(0, 200)}...`);
+        
+        // Check if SVG is valid
+        if (!svgContent.includes('<svg')) {
+          console.error('SVG content does not contain <svg> tag');
+          throw new Error('Invalid SVG content');
+        }
+        
+        // Verify temp SVG file exists and has content
+        const fileStats = fs.statSync(tempSvgPath);
+        console.log(`Temp SVG file size: ${fileStats.size} bytes`);
+        
         await sharp(tempSvgPath, { 
           density: 300, // Higher density for better text rendering
           limitInputPixels: false // Remove size limit to handle large diagrams
@@ -1426,12 +1434,34 @@ Noindex: /`);
         console.error('Error using sharp for PNG conversion:', error);
         
         // Fallback to simpler conversion method
-        // Use simple SVG to PNG conversion without scaling
-        await sharp(Buffer.from(svgContent), { 
-          density: 300
-        })
-          .png({ quality: 100 })
-          .toFile(outputPath);
+        console.log('Trying fallback SVG to PNG conversion');
+        
+        // Verify SVG content again for fallback
+        if (!svgContent.includes('<svg')) {
+          console.error('Fallback: SVG content does not contain <svg> tag');
+          
+          // Try alternative approach - use diagram-png endpoint instead as final fallback
+          const pngUrl = `/api/screenshot-diagram/${baseFileName}`;
+          console.log(`Using screenshot fallback: ${pngUrl}`);
+          
+          const screenshotResponse = await fetch(`http://localhost:${process.env.PORT || 5000}${pngUrl}`);
+          if (screenshotResponse.ok) {
+            const pngBuffer = await screenshotResponse.buffer();
+            fs.writeFileSync(outputPath, pngBuffer);
+            console.log(`Saved screenshot PNG to ${outputPath}`);
+          } else {
+            throw new Error('All conversion methods failed');
+          }
+        } else {
+          // Use simple SVG to PNG conversion without scaling
+          await sharp(Buffer.from(svgContent), { 
+            density: 300
+          })
+            .png({ quality: 100 })
+            .toFile(outputPath);
+          
+          console.log('Fallback SVG conversion completed');
+        }
         
         // Send the file as an attachment
         res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${timestamp}.png"`);
