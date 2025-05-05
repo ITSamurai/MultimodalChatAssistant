@@ -999,13 +999,8 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
   // Convert to lowercase for case-insensitive matching
   const lowercasePrompt = prompt.toLowerCase();
   
-  // Special case: if prompt is directly asking for an OS migration diagram,
-  // but with stricter conditions to prevent unwanted diagram generation
-  if (/\bos\s*(?:based|-)?\s*migration\b/i.test(lowercasePrompt) && 
-      (lowercasePrompt.includes('diagram') || 
-       lowercasePrompt.includes('chart') || 
-       lowercasePrompt.includes('visual') || 
-       lowercasePrompt.includes('graph'))) {
+  // Special case: if prompt is related to OS migration, consider it a diagram request
+  if (/\bos\s*(?:based|-)?\s*migration\b/i.test(lowercasePrompt)) {
     console.log('Direct OS migration diagram request detected');
     return true;
   }
@@ -1028,20 +1023,13 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
     }
   }
   
-  // Check for commands that EXPLICITLY ask for OS migration diagrams/visuals
-  // with much stricter conditions to prevent false positives
-  const explicitlyAsksForMigrationDiagram = 
-    // Requires diagram/visual words together with an action verb for migrations
-    (lowercasePrompt.includes('migration') && 
-     lowercasePrompt.includes('diagram') && 
-     (lowercasePrompt.includes('create') || 
-      lowercasePrompt.includes('draw') || 
-      lowercasePrompt.includes('show') || 
-      lowercasePrompt.includes('generate') || 
-      lowercasePrompt.includes('make')));
-      
-  if (explicitlyAsksForMigrationDiagram) {
-    console.log('Explicit OS Migration or RiverMeadow diagram request detected');
+  // Check for commands that explicitly ask for OS migration diagrams/visuals
+  if (
+    (lowercasePrompt.includes('os migration') && lowercasePrompt.includes('diagram')) ||
+    (lowercasePrompt.includes('rivermeadow') && lowercasePrompt.includes('diagram')) ||
+    (lowercasePrompt.includes('migration') && lowercasePrompt.includes('diagram'))
+  ) {
+    console.log('OS Migration or RiverMeadow diagram request detected');
     return true;
   }
   
@@ -1089,8 +1077,8 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
     /network\s+(?:diagram|architecture|topology)/i,
     /infrastructure\s+(?:diagram|architecture|map)/i,
     
-    // Very specific rivermeadow diagram requests - MUST have both create/show + diagram words
-    /(?:create|show|draw|make|generate)\s+(?:a|an)?\s*(?:rivermeadow|migration)\s+(?:diagram|architecture|flow|process)/i,
+    // Very specific rivermeadow diagram requests
+    /(?:rivermeadow|migration)\s+(?:diagram|architecture|flow|process)/i,
     
     // Special case for OS-based migration tool - consider it a diagram request
     /(?:create|make|generate|build)?\s*(?:os|operating system)?\s*(?:based|-)?\s*migration\s*(?:tool|solution|application|process)/i

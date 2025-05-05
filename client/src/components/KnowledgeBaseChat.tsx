@@ -632,22 +632,19 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                                 </div>
                                 
                                 {/* Load SVG version directly for better performance */}
-                                <div className="diagram-container overflow-hidden border border-gray-200 rounded h-[450px] bg-gray-50">
+                                <div className="diagram-container overflow-x-auto border border-gray-200 rounded h-[450px]">
                                   {/* Always use the SVG endpoint for better performance and reliability */}
                                   <iframe 
                                     src={getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`)}
                                     title="RiverMeadow Diagram" 
-                                    className="w-full h-full pointer-events-none"
+                                    className="min-w-full min-h-full"
                                     style={{ 
-                                      // Fixed width/height to ensure diagram stays within container
-                                      width: '100%', 
+                                      minWidth: '1000px', 
                                       height: '450px',
                                       // Improve text rendering
                                       WebkitFontSmoothing: 'antialiased',
                                       MozOsxFontSmoothing: 'grayscale',
-                                      textRendering: 'optimizeLegibility',
-                                      // Prevent interaction with diagram (handled by controls only)
-                                      pointerEvents: 'none'
+                                      textRendering: 'optimizeLegibility'
                                     }}
                                     loading="lazy"
                                     sandbox="allow-scripts allow-same-origin allow-popups"

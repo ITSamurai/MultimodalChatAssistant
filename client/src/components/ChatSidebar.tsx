@@ -252,7 +252,7 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
                       onClick={() => setLocation(`/chat/${chat.id}`)}
                     >
                       <MessageSquare className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                      <span className="truncate max-w-[180px]" title={chat.title}>{chat.title}</span>
+                      <span className="truncate max-w-[160px] overflow-hidden text-ellipsis" title={chat.title}>{chat.title}</span>
                     </div>
                     
                     <DropdownMenu>
