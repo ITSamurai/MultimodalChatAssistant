@@ -132,7 +132,8 @@ export const generateDiagram = async (
         drawioHtml += "    .header { background: white; padding: 10px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; z-index: 10; }";
         drawioHtml += "    h1 { color: #0078d4; margin: 0; font-size: 18px; }";
         drawioHtml += "    .content-area { flex: 1; padding: 20px; overflow: auto; background: white; display: flex; flex-direction: column; align-items: center; position: relative; }";
-        drawioHtml += "    #svg-container { max-width: 100%; transition: transform 0.3s; transform-origin: center top; margin: 0 auto; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px; padding: 16px; position: relative; }";
+        drawioHtml += "    #svg-container { max-width: 100%; transition: transform 0.3s; transform-origin: center top; margin: 0 auto; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px; padding: 16px; position: relative; cursor: grab; }";
+        drawioHtml += "    #svg-container:active { cursor: grabbing; }";
         drawioHtml += "    #svg-container svg, #svg-container svg * { pointer-events: auto; }";
         drawioHtml += "    svg { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }";
         drawioHtml += "    .actions { display: flex; gap: 10px; }";
@@ -217,9 +218,61 @@ export const generateDiagram = async (
         drawioHtml += "      currentZoom = 1.0;";
         drawioHtml += "      applyZoom();";
         drawioHtml += "    });";
+        drawioHtml += "    // Initialize drag functionality";
+        drawioHtml += "    let isDragging = false;";
+        drawioHtml += "    let startX, startY, initialOffsetX = 0, initialOffsetY = 0;";
+        drawioHtml += "    ";
+        drawioHtml += "    if (svgContainer) {";
+        drawioHtml += "      svgContainer.addEventListener('mousedown', (e) => {";
+        drawioHtml += "        // Only start dragging on primary button (usually left button)";
+        drawioHtml += "        if (e.button === 0) {";
+        drawioHtml += "          isDragging = true;";
+        drawioHtml += "          startX = e.clientX;";
+        drawioHtml += "          startY = e.clientY;";
+        drawioHtml += "          // Extract current transform values";
+        drawioHtml += "          const style = window.getComputedStyle(svgContainer);";
+        drawioHtml += "          const transform = style.transform || 'translate(0px, 0px) scale(1)';";
+        drawioHtml += "          const translateMatch = transform.match(/translate\\(([-\\d.]+)px,\\s*([-\\d.]+)px\\)/);";
+        drawioHtml += "          if (translateMatch) {";
+        drawioHtml += "            initialOffsetX = parseFloat(translateMatch[1]) || 0;";
+        drawioHtml += "            initialOffsetY = parseFloat(translateMatch[2]) || 0;";
+        drawioHtml += "          } else {";
+        drawioHtml += "            initialOffsetX = 0;";
+        drawioHtml += "            initialOffsetY = 0;";
+        drawioHtml += "          }";
+        drawioHtml += "          e.preventDefault();";
+        drawioHtml += "        }";
+        drawioHtml += "      });";
+        drawioHtml += "    }";
+        drawioHtml += "    ";
+        drawioHtml += "    document.addEventListener('mousemove', (e) => {";
+        drawioHtml += "      if (isDragging) {";
+        drawioHtml += "        const dx = e.clientX - startX;";
+        drawioHtml += "        const dy = e.clientY - startY;";
+        drawioHtml += "        const newX = initialOffsetX + dx;";
+        drawioHtml += "        const newY = initialOffsetY + dy;";
+        drawioHtml += "        svgContainer.style.transform = 'translate(' + newX + 'px, ' + newY + 'px) scale(' + currentZoom + ')';";
+        drawioHtml += "      }";
+        drawioHtml += "    });";
+        drawioHtml += "    ";
+        drawioHtml += "    document.addEventListener('mouseup', () => {";
+        drawioHtml += "      isDragging = false;";
+        drawioHtml += "    });";
+        drawioHtml += "    ";
+        drawioHtml += "    document.addEventListener('mouseleave', () => {";
+        drawioHtml += "      isDragging = false;";
+        drawioHtml += "    });";
+        drawioHtml += "    ";
         drawioHtml += "    function applyZoom() {";
         drawioHtml += "      if (svgContainer) {";
-        drawioHtml += "        svgContainer.style.transform = 'scale(' + currentZoom + ')';";
+        drawioHtml += "        // Keep the transform position when changing zoom";
+        drawioHtml += "        const style = window.getComputedStyle(svgContainer);";
+        drawioHtml += "        const transform = style.transform || 'translate(0px, 0px) scale(1)';";
+        drawioHtml += "        const translateMatch = transform.match(/translate\\(([-\\d.]+)px,\\s*([-\\d.]+)px\\)/);";
+        drawioHtml += "        const translateX = translateMatch ? parseFloat(translateMatch[1]) : 0;";
+        drawioHtml += "        const translateY = translateMatch ? parseFloat(translateMatch[2]) : 0;";
+        drawioHtml += "        ";
+        drawioHtml += "        svgContainer.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + currentZoom + ')';";
         drawioHtml += "        const resetButton = document.getElementById('zoom-reset');";
         drawioHtml += "        if (resetButton) {";
         drawioHtml += "          resetButton.textContent = Math.round(currentZoom * 100) + '%';";
@@ -463,6 +516,10 @@ export const generateDiagram = async (
 '      margin: 0 auto;' +
 '      overflow: visible;' +
 '      position: relative;' +
+'      cursor: grab;' +
+'    }' +
+'    .diagram-container:active {' +
+'      cursor: grabbing;' +
 '    }' +
 '    .mermaid {' +
 '      text-align: center;' +
@@ -554,6 +611,50 @@ cleanMermaidCode +
 '          console.error("Error initializing mermaid:", e);' +
 '        }' +
 '      }, 1000);' +
+'    });' +
+'    ' +
+'    // Initialize drag functionality' +
+'    let isDragging = false;' +
+'    let startX, startY, initialOffsetX = 0, initialOffsetY = 0;' +
+'    const container = document.querySelector(".diagram-container");' +
+'    ' +
+'    if (container) {' +
+'      container.addEventListener("mousedown", function(e) {' +
+'        if (e.button === 0) {' +
+'          isDragging = true;' +
+'          startX = e.clientX;' +
+'          startY = e.clientY;' +
+'          const style = window.getComputedStyle(container);' +
+'          const transform = style.transform || "translate(0px, 0px)";' +
+'          const translateMatch = transform.match(/translate\\(([-\\d.]+)px,\\s*([-\\d.]+)px\\)/);' +
+'          if (translateMatch) {' +
+'            initialOffsetX = parseFloat(translateMatch[1]) || 0;' +
+'            initialOffsetY = parseFloat(translateMatch[2]) || 0;' +
+'          } else {' +
+'            initialOffsetX = 0;' +
+'            initialOffsetY = 0;' +
+'          }' +
+'          e.preventDefault();' +
+'        }' +
+'      });' +
+'    }' +
+'    ' +
+'    document.addEventListener("mousemove", function(e) {' +
+'      if (isDragging && container) {' +
+'        const dx = e.clientX - startX;' +
+'        const dy = e.clientY - startY;' +
+'        const newX = initialOffsetX + dx;' +
+'        const newY = initialOffsetY + dy;' +
+'        container.style.transform = "translate(" + newX + "px, " + newY + "px)";' +
+'      }' +
+'    });' +
+'    ' +
+'    document.addEventListener("mouseup", function() {' +
+'      isDragging = false;' +
+'    });' +
+'    ' +
+'    document.addEventListener("mouseleave", function() {' +
+'      isDragging = false;' +
 '    });' +
 '  </script>' +
 '</body>' +

@@ -1544,7 +1544,7 @@ Noindex: /`);
   app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
     try {
       const fileName = req.params.fileName;
-      const baseFileName = fileName.replace(/\.(html|xml)$/, '');
+      const baseFileName = fileName.replace(/\.(html|xml|drawio)$/, '');
       
       // Create uploads/png directory if it doesn't exist
       const pngDir = path.join(process.cwd(), 'uploads', 'png');
@@ -1557,8 +1557,11 @@ Noindex: /`);
       const pngFileName = `full_diagram_${timestamp}.png`;
       const outputPath = path.join(pngDir, pngFileName);
       
-      // Path to the XML file that contains the diagram
-      const xmlFilePath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}.xml`);
+      // Try multiple possible file extensions - .drawio first, then .xml as fallback
+      let xmlFilePath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}.drawio`);
+      if (!fs.existsSync(xmlFilePath)) {
+        xmlFilePath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}.xml`);
+      }
       
       if (!fs.existsSync(xmlFilePath)) {
         return res.status(404).json({ error: 'Diagram file not found' });
