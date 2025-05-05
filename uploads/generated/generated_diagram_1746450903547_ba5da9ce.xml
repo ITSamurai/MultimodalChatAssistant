@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net" modified="2025-05-05T13:15:03.546Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-aae61496-b16d-4402-8e18-c4b0098724d9" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_903546_1" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="0">
+  <mxGeometry x="100" y="100" width="80" height="80" as="geometry"/>
+  <mxLabel value="Source Server"/>
+</mxCell>
+<mxCell id="cell_903546_2" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="0">
+  <mxGeometry x="300" y="100" width="80" height="80" as="geometry"/>
+  <mxLabel value="RMS Migration Appliance"/>
+</mxCell>
+<mxCell id="cell_903546_3" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="0">
+  <mxGeometry x="500" y="100" width="80" height="80" as="geometry"/>
+  <mxLabel value="Target Cloud"/>
+</mxCell>
+<mxCell id="cell_903546_4" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="300" y="250" width="120" height="60" as="geometry"/>
+  <mxLabel value="Deploy Migration Appliance"/>
+</mxCell>
+<mxCell id="cell_903546_5" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="300" y="350" width="120" height="60" as="geometry"/>
+  <mxLabel value="Communicate with RiverMeadow Platform"/>
+</mxCell>
+<mxCell id="cell_903546_6" style="shape=mxgraph.flowchart.process" vertex="1" parent="0">
+  <mxGeometry x="300" y="450" width="120" height="60" as="geometry"/>
+  <mxLabel value="Migrate OS and Data"/>
+</mxCell>
+<mxCell id="cell_903546_7" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="0">
+  <mxGeometry x="500" y="450" width="80" height="80" as="geometry"/>
+  <mxLabel value="Virtual Machine"/>
+</mxCell>
+<mxCell id="cell_903546_8" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="0">
+  <mxGeometry x="500" y="550" width="80" height="80" as="geometry"/>
+  <mxLabel value="Storage"/>
+</mxCell>
+<mxCell id="cell_903546_9" edge="1" parent="0" source="1" target="2">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel value="Initiate Migration"/>
+</mxCell>
+<mxCell id="cell_903546_10" edge="1" parent="0" source="2" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel value="Deploy to Target Cloud"/>
+</mxCell>
+<mxCell id="cell_903546_11" edge="1" parent="0" source="2" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel value=""/>
+</mxCell>
+<mxCell id="cell_903546_12" edge="1" parent="0" source="4" target="5">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel value=""/>
+</mxCell>
+<mxCell id="cell_903546_13" edge="1" parent="0" source="5" target="6">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel value=""/>
+</mxCell>
+<mxCell id="cell_903546_14" edge="1" parent="0" source="6" target="7">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel value="OS Migration"/>
+</mxCell>
+<mxCell id="cell_903546_15" edge="1" parent="0" source="6" target="8">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxLabel value="Data Migration"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

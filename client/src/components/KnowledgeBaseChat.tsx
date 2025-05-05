@@ -634,30 +634,35 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                                 {/* Load SVG version directly for better performance */}
                                 <div className="diagram-container overflow-x-auto border border-gray-200 rounded h-[450px]">
                                   {/* Always use the SVG endpoint for better performance and reliability */}
-                                  <div className="relative" style={{ pointerEvents: 'none' }}>
-                                    <iframe 
-                                      src={getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`)}
-                                      title="RiverMeadow Diagram" 
-                                      className="min-w-full min-h-full"
-                                      style={{ 
-                                        minWidth: '1000px', 
-                                        height: '450px',
-                                        // Improve text rendering
-                                        WebkitFontSmoothing: 'antialiased',
-                                        MozOsxFontSmoothing: 'grayscale',
-                                        textRendering: 'optimizeLegibility'
-                                      }}
-                                      loading="lazy"
-                                      sandbox="allow-scripts allow-same-origin allow-popups"
-                                    />
-                                    <div 
-                                      className="absolute inset-0" 
-                                      style={{ 
-                                        pointerEvents: 'none', 
-                                        cursor: 'default' 
-                                      }}
-                                    />
-                                  </div>
+                                  <iframe 
+                                    src={getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`)}
+                                    title="RiverMeadow Diagram" 
+                                    className="min-w-full min-h-full"
+                                    style={{ 
+                                      minWidth: '1000px', 
+                                      height: '450px',
+                                      // Improve text rendering
+                                      WebkitFontSmoothing: 'antialiased',
+                                      MozOsxFontSmoothing: 'grayscale',
+                                      textRendering: 'optimizeLegibility'
+                                    }}
+                                    loading="lazy"
+                                    sandbox="allow-scripts allow-same-origin allow-popups"
+                                    onLoad={(e) => {
+                                      // Prevent zooming on double-click inside iframe
+                                      const iframe = e.currentTarget;
+                                      if (iframe.contentWindow) {
+                                        try {
+                                          iframe.contentWindow.postMessage({
+                                            action: 'disable-zoom-on-drag',
+                                            enabled: true
+                                          }, '*');
+                                        } catch (err) {
+                                          console.error('Failed to send message to iframe:', err);
+                                        }
+                                      }
+                                    }}
+                                  />
                                 </div>
                               </div>
                               
