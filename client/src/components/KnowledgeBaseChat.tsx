@@ -195,6 +195,39 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           baseFileName = fileName.replace('.xml', '');
         }
         
+        // PRIMARY METHOD: Use the specialized full diagram download endpoint
+        try {
+          // This endpoint will render the entire diagram as a high-quality PNG
+          const fullDiagramUrl = getFullUrl(`/api/download-full-diagram/${baseFileName}`);
+          console.log(`Downloading full diagram from: ${fullDiagramUrl}`);
+          
+          const response = await fetch(fullDiagramUrl);
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rivermeadow_diagram_${Date.now()}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            toast({
+              title: "Success", 
+              description: "Full diagram downloaded as PNG",
+            });
+            
+            setIsLoading(false);
+            return; // Exit early on successful download
+          } else {
+            console.warn("Full diagram download failed, falling back to alternate methods");
+          }
+        } catch (error) {
+          console.error("Error downloading full diagram:", error);
+        }
+        
         // METHOD 1: Direct SVG approach - convert to PNG in browser
         try {
           // Use the SVG API to get the SVG content

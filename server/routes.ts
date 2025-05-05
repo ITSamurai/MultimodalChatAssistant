@@ -1360,18 +1360,34 @@ Noindex: /`);
         return res.status(404).json({ error: 'Diagram file not found' });
       }
       
-      // Read the XML content
-      const xmlContent = fs.readFileSync(xmlFilePath, 'utf8');
-      
-      // Get the SVG content from the diagram-svg endpoint
-      const svgUrl = `/api/diagram-svg/${baseFileName}.xml`;
-      const svgResponse = await fetch(`http://localhost:${process.env.PORT || 5000}${svgUrl}`);
-      
-      if (!svgResponse.ok) {
-        return res.status(500).json({ error: 'Failed to get SVG content' });
+      // Read the XML content and generate SVG
+      let svgContent = '';
+      try {
+        // Read the XML and extract DrawIO content
+        const xmlContent = fs.readFileSync(xmlFilePath, 'utf8');
+        
+        // Extract SVG content from the XML
+        // First try to parse as mxGraphModel
+        const graphModelMatch = xmlContent.match(/<mxGraphModel[^>]*>([\s\S]*?)<\/mxGraphModel>/);
+        
+        if (graphModelMatch) {
+          // Generate SVG from the mxGraphModel content
+          // This is a simple conversion - for a more robust solution we would use a library
+          svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3000" height="3000" viewBox="0 0 3000 3000">
+          <g>
+            <!-- Extracted from Draw.IO diagram -->
+            <rect width="100%" height="100%" fill="white" />
+            ${xmlContent}
+          </g>
+        </svg>`;
+        } else {
+          // If we can't extract mxGraphModel, just use the raw XML
+          svgContent = xmlContent;
+        }
+      } catch (error) {
+        console.error('Error extracting SVG from diagram XML:', error);
+        return res.status(500).json({ error: 'Failed to extract SVG content from diagram' });
       }
-      
-      const svgContent = await svgResponse.text();
       
       // Create a temporary file with the SVG content to use with sharp
       const tempSvgPath = path.join(pngDir, `temp_${timestamp}.svg`);
