@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles for diagram iframe behavior */
+.diagram-container iframe {
+  /* Enable panning/dragging but prevent zooming */
+  touch-action: pan-x pan-y;
+}
+
 /* Improve text rendering throughout the application */
 :root {
   -webkit-font-smoothing: antialiased;
