@@ -1,0 +1,45 @@
+
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Draw.io Export</title>
+        <style>
+          body { margin: 0; padding: 0; background: white; }
+          #graphContainer { border: none; overflow: hidden; }
+        </style>
+      </head>
+      <body>
+        <!-- The diagram will be rendered here -->
+        <div id="graphContainer" style="width:100%; height:100%;"></div>
+        
+        <!-- Include the Draw.io library -->
+        <script src="https://www.draw.io/js/viewer.min.js"></script>
+        <script>
+          // Function to initialize diagram rendering
+          function initViewer() {
+            try {
+              // Get the diagram XML
+              const xmlContent = "<mxfile host=\"app.diagrams.net\" modified=\"2025-05-05T16:05:34.554Z\" agent=\"RiverMeadow AI\" version=\"21.3.7\">\n  <diagram id=\"diagram-b16a01c3-f33f-464f-972f-5362ac6c447a\" name=\"RiverMeadow Diagram\">\n    <mxGraphModel dx=\"1000\" dy=\"600\" grid=\"1\" gridSize=\"10\" guides=\"1\" tooltips=\"1\" connect=\"1\" arrows=\"1\" fold=\"1\" page=\"1\" pageScale=\"1\" pageWidth=\"827\" pageHeight=\"1169\" math=\"0\" shadow=\"0\">\n      <root>\n        <mxCell id=\"0\" />\n        <mxCell id=\"1\" parent=\"0\" />\n        <mxCell id=\"cell_134553_1\" value=\"Source Server\" style=\"shape=mxgraph.cisco.servers.server\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"40\" y=\"60\" width=\"80\" height=\"80\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_2\" value=\"Migrate\" style=\"shape=mxgraph.flowchart.process\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"160\" y=\"80\" width=\"100\" height=\"40\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_3\" value=\"Migration Appliance\" style=\"shape=mxgraph.cisco.misc.bridge\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"320\" y=\"60\" width=\"80\" height=\"80\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_4\" value=\"Target Cloud Server\" style=\"shape=mxgraph.cisco.cloud.cloud\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"500\" y=\"60\" width=\"80\" height=\"80\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_5\" value=\"OS Modernization\" style=\"shape=mxgraph.cisco.computers_and_peripherals.virtual_pc\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"680\" y=\"60\" width=\"80\" height=\"80\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_6\" value=\"View Migrations\" style=\"shape=mxgraph.flowchart.process\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"160\" y=\"160\" width=\"100\" height=\"40\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_7\" value=\"Migration Summary\" style=\"shape=mxgraph.flowchart.process\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"160\" y=\"240\" width=\"100\" height=\"40\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_8\" value=\"Storage\" style=\"shape=mxgraph.cisco.storage.storage\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"320\" y=\"160\" width=\"80\" height=\"80\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_9\" value=\"Plan: W2K8R2-Demo\" style=\"shape=mxgraph.flowchart.process\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"320\" y=\"260\" width=\"100\" height=\"40\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_10\" value=\"Transfer Method: Block-based\" style=\"shape=mxgraph.flowchart.process\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"500\" y=\"160\" width=\"100\" height=\"40\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_11\" value=\"Success\" style=\"shape=mxgraph.flowchart.process\" vertex=\"1\" parent=\"0\">\n    <mxGeometry x=\"680\" y=\"160\" width=\"100\" height=\"40\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_12\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"1\" target=\"2\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_13\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"2\" target=\"3\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_14\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"3\" target=\"4\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_15\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"4\" target=\"5\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_16\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"2\" target=\"6\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_17\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"6\" target=\"7\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_18\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"3\" target=\"8\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_19\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"8\" target=\"9\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_20\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"9\" target=\"10\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n<mxCell id=\"cell_134553_21\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;\" edge=\"1\" parent=\"0\" source=\"10\" target=\"11\">\n    <mxGeometry relative=\"1\" as=\"geometry\"/>\n</mxCell>\n      </root>\n    </mxGraphModel>\n  </diagram>\n</mxfile>";
+              
+              // Create a viewer with the container
+              const viewer = new GraphViewer(
+                document.getElementById('graphContainer'),
+                { border: 0, highlight: '#cccccc', nav: true, lightbox: false }
+              );
+              
+              // Load diagram from the XML
+              viewer.loadXml(xmlContent);
+              
+              // For server-side rendering
+              document.title = 'Ready for export';
+            } catch (error) {
+              console.error('Error rendering diagram:', error);
+              document.title = 'Error: ' + error.message;
+            }
+          }
+          
+          // Initialize when the page loads
+          window.onload = initViewer;
+        </script>
+      </body>
+      </html>
