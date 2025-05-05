@@ -94,12 +94,20 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
       }
     };
     
+    // Add explicit reload handler for fallback
+    const handleReloadChats = () => {
+      console.log('Received reload-chats event, explicitly reloading chats');
+      loadChats();
+    };
+    
     window.addEventListener('chat-title-updated', handleChatTitleUpdate);
     window.addEventListener('chat-title-updated-local', handleLocalChatTitleUpdate);
+    window.addEventListener('reload-chats', handleReloadChats);
     
     return () => {
       window.removeEventListener('chat-title-updated', handleChatTitleUpdate);
       window.removeEventListener('chat-title-updated-local', handleLocalChatTitleUpdate);
+      window.removeEventListener('reload-chats', handleReloadChats);
     };
   }, []);
 

@@ -115,10 +115,16 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           window.dispatchEvent(localUpdateEvent);
           
           // Also dispatch global refresh event with the same data
+          console.log(`Creating chat-title-updated global event for chat ${chatId} with title "${newTitle}"`);
           const globalEvent = new CustomEvent('chat-title-updated', {
             detail: { chatId, newTitle }
           });
           window.dispatchEvent(globalEvent);
+          
+          // Force reload chats in sidebar by triggering another explicit event
+          console.log(`Dispatching extra reload-chats event for fallback`);
+          const reloadEvent = new CustomEvent('reload-chats');
+          window.dispatchEvent(reloadEvent);
         }
       }
     } catch (error) {
@@ -532,8 +538,11 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           
           // If this is the first message in the chat, update the title right away
           if (messages.length === 0) {
-            // Just use our updateChatTitle function for consistency
-            await updateChatTitle(chatId, [userMessage]);
+            console.log("First message in chat - updating title immediately");
+            // Give a slight delay to ensure all DOM events are processed
+            setTimeout(async () => {
+              await updateChatTitle(chatId, [userMessage]);
+            }, 300);
           }
         } catch (error) {
           console.error('Error saving user message to chat:', error);
@@ -598,7 +607,11 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           });
           
           // Update chat title based on the conversation after receiving assistant response
-          await updateChatTitle(chatId, [...messages, userMessage, assistantMessage]);
+          console.log("Updating chat title after receiving AI response");
+          // Small delay to ensure message is processed first
+          setTimeout(async () => {
+            await updateChatTitle(chatId, [...messages, userMessage, assistantMessage]);
+          }, 500);
         } catch (error) {
           console.error('Error saving assistant message to chat:', error);
         }
