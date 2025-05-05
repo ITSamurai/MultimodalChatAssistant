@@ -108,14 +108,30 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
         if (chat.title === 'New Conversation' || chat.title.length < newTitle.length) {
           console.log(`Updating chat title for chat ${chatId} with title "${newTitle}"`);
           
-          // Use the centralized context's updateChatTitle function
-          await contextUpdateChatTitle(chatId, newTitle);
+          // First update the title on the server directly
+          const updateResponse = await apiRequest('PATCH', `/api/chats/${chatId}`, { title: newTitle });
           
-          // Also trigger a refresh to ensure all components update
-          setTimeout(() => {
-            console.log("Forcing refresh of chats list");
-            refreshChats();
-          }, 300);
+          if (updateResponse.ok) {
+            // Then use the context's updateChatTitle to sync the state
+            await contextUpdateChatTitle(chatId, newTitle);
+            
+            // Dispatch both events to ensure proper updates across components
+            // New centralized event
+            window.dispatchEvent(new CustomEvent('chat-title-changed', { 
+              detail: { chatId, newTitle } 
+            }));
+            
+            // Legacy event for backward compatibility
+            window.dispatchEvent(new CustomEvent('chat-title-updated', {
+              detail: { chatId, newTitle }
+            }));
+            
+            // Also explicitly trigger a reload with short delay to ensure it happens after state updates
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('reload-chats'));
+              refreshChats();
+            }, 300);
+          }
         }
       }
     } catch (error) {

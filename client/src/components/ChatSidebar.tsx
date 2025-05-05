@@ -31,10 +31,11 @@ interface ChatSidebarProps {
 
 export function ChatSidebar({ className }: ChatSidebarProps) {
   const { user } = useAuth();
-  const [_, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { chats, isLoading, refreshChats, updateChatTitle } = useChatTitles();
   const [editingChatId, setEditingChatId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
   const { toast } = useToast();
 
   // Load chats for the current user initially - but only once when the user first loads
@@ -46,6 +47,20 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
       return () => clearTimeout(loadOnce);
     }
   }, [user?.id]);
+  
+  // Refresh chats when location changes to chat routes
+  useEffect(() => {
+    // Only refresh if entering or switching between chat routes
+    if (location.startsWith('/chat')) {
+      const now = Date.now();
+      // Debounce refreshes to prevent too many API calls
+      if (now - lastRefresh > 1500) {
+        console.log("Location changed to chat route, refreshing sidebar");
+        refreshChats();
+        setLastRefresh(now);
+      }
+    }
+  }, [location, refreshChats]);
   
   // Listen for chat title update events
   useEffect(() => {
