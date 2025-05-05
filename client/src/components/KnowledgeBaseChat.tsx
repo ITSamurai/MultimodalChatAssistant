@@ -131,15 +131,7 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
               
               // Create a canvas with higher resolution
               const canvas = document.createElement('canvas');
-              const scale = 2; // Higher resolution scale factor
-              canvas.width = width * scale;
-              canvas.height = height * scale;
-              
-              // Convert SVG to string
-              const svgString = new XMLSerializer().serializeToString(svgElement);
-              const encodedSvg = encodeURIComponent(svgString);
-              const svgBlob = new Blob([svgText], {type: 'image/svg+xml'});
-              const url = URL.createObjectURL(svgBlob);
+              const scale = 3; // Higher resolution scale factor
               
               // Extract viewBox to get the full diagram dimensions
               let fullWidth = width;
@@ -152,8 +144,24 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                   // viewBox format: minX minY width height
                   fullWidth = viewBoxValues[2];
                   fullHeight = viewBoxValues[3];
+                  
+                  // Set width and height attributes to match viewBox for correct rendering
+                  svgElement.setAttribute('width', fullWidth.toString());
+                  svgElement.setAttribute('height', fullHeight.toString());
                 }
               }
+              
+              // Set canvas size to capture the full diagram with high resolution
+              canvas.width = fullWidth * scale;
+              canvas.height = fullHeight * scale;
+              
+              // Reset viewBox to ensure capturing entire diagram
+              svgElement.setAttribute('viewBox', `0 0 ${fullWidth} ${fullHeight}`);
+              
+              // Convert SVG to string with updated attributes
+              const svgString = new XMLSerializer().serializeToString(svgElement);
+              const svgBlob = new Blob([svgString], {type: 'image/svg+xml'});
+              const url = URL.createObjectURL(svgBlob);
               
               // Create image and load the SVG
               const img = new Image();
@@ -624,19 +632,22 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                                 </div>
                                 
                                 {/* Load SVG version directly for better performance */}
-                                <div className="diagram-container overflow-x-auto border border-gray-200 rounded h-[450px]">
+                                <div className="diagram-container overflow-hidden border border-gray-200 rounded h-[450px] bg-gray-50">
                                   {/* Always use the SVG endpoint for better performance and reliability */}
                                   <iframe 
                                     src={getFullUrl(`/api/diagram-svg/${ref.imagePath?.split('/').pop()?.replace('.html', '.xml')}`)}
                                     title="RiverMeadow Diagram" 
-                                    className="min-w-full min-h-full"
+                                    className="w-full h-full pointer-events-none"
                                     style={{ 
-                                      minWidth: '1000px', 
+                                      // Fixed width/height to ensure diagram stays within container
+                                      width: '100%', 
                                       height: '450px',
                                       // Improve text rendering
                                       WebkitFontSmoothing: 'antialiased',
                                       MozOsxFontSmoothing: 'grayscale',
-                                      textRendering: 'optimizeLegibility'
+                                      textRendering: 'optimizeLegibility',
+                                      // Prevent interaction with diagram (handled by controls only)
+                                      pointerEvents: 'none'
                                     }}
                                     loading="lazy"
                                     sandbox="allow-scripts allow-same-origin allow-popups"

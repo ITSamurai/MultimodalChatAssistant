@@ -251,8 +251,8 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
                       className="flex items-center flex-1 gap-2"
                       onClick={() => setLocation(`/chat/${chat.id}`)}
                     >
-                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                      <span className="truncate">{chat.title}</span>
+                      <MessageSquare className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                      <span className="truncate max-w-[180px]" title={chat.title}>{chat.title}</span>
                     </div>
                     
                     <DropdownMenu>
