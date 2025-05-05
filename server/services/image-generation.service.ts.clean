@@ -5,13 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 import OpenAI from "openai";
 import { storage } from '../storage';
 
-// Initialize OpenAI client
+// Initialize OpenAI client directly
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 
 // Define the directories for storing images
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 const GENERATED_IMAGES_DIR = path.join(UPLOADS_DIR, 'generated');
-const PNG_DIR = path.join(UPLOADS_DIR, 'png');
 
 /**
  * Create necessary directories for storing images
@@ -19,114 +18,253 @@ const PNG_DIR = path.join(UPLOADS_DIR, 'png');
 const ensureDirectoriesExist = async () => {
   try {
     if (!fs.existsSync(UPLOADS_DIR)) {
-      await mkdir(UPLOADS_DIR);
+      await mkdir(UPLOADS_DIR, { recursive: true });
     }
+    
     if (!fs.existsSync(GENERATED_IMAGES_DIR)) {
-      await mkdir(GENERATED_IMAGES_DIR);
+      await mkdir(GENERATED_IMAGES_DIR, { recursive: true });
     }
-    if (!fs.existsSync(PNG_DIR)) {
-      await mkdir(PNG_DIR);
-    }
-  } catch (error) {
+  } catch (e: unknown) {
+    const error = e instanceof Error ? e : new Error(String(e));
     console.error('Error creating directories:', error);
+    throw new Error(`Failed to create directories: ${error.message}`);
   }
 };
 
 /**
- * Enhance prompt with specific diagram language
+ * Generate a diagram image using DALL-E based on a text prompt
  */
-const enhancePrompt = (prompt: string, isNetworkDiagram: boolean): string => {
-  // Add RiverMeadow terminology and diagram-specific enhancements
-  let enhancedPrompt = prompt;
-  
-  if (isNetworkDiagram) {
-    enhancedPrompt += " Include source systems, target systems, and RiverMeadow Migration Server in the architecture.";
-  } else {
-    enhancedPrompt += " Show the key steps in RiverMeadow's migration process.";
-  }
-  
-  return enhancedPrompt;
-};
-
 /**
- * Generate a diagram based on a prompt
+ * Generate a Draw.IO compatible diagram XML
  */
-export const generateDiagram = async (
+async function generateDrawIODiagram(
   prompt: string,
-  useDrawIO: boolean = true
-): Promise<{
-  imagePath: string;
-  mmdPath: string;
-  mmdFilename: string;
-  altText: string;
-}> => {
+  enhancedPrompt: string,
+  isNetworkDiagram: boolean
+): Promise<string> {
   try {
-    // Make sure necessary directories exist
+    // Get configuration
+    const config = await storage.getConfig();
+    const drawioTheme = config?.drawio_theme || 'default';
+    
+    // Prompt for Draw.IO diagram - requesting only the CELLS not the full XML
+    const drawioPrompt = isNetworkDiagram 
+      ? `Create cell elements for a Draw.IO (diagrams.net) diagram that shows a detailed network diagram for: ${enhancedPrompt}
+         IMPORTANT:
+         1. Use built-in Draw.IO library icons for hardware and networking components such as:
+            - Servers (use style="shape=mxgraph.cisco.servers.server")
+            - Routers (use style="shape=mxgraph.cisco.routers.router")
+            - Firewalls (use style="shape=mxgraph.cisco.security.firewall")
+            - Cloud services (use style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud")
+            - Database (use style="shape=mxgraph.cisco.storage.relational_database")
+            - Virtual machines (use style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc")
+            - End-user device (use style="shape=mxgraph.cisco.computers_and_peripherals.pc")
+         2. Do NOT include <mxfile>, <diagram>, <mxGraphModel>, or <root> tags. ONLY return the individual <mxCell> elements.
+         3. Ensure proper connections between components with clearly labeled arrows.
+         4. Use the ${drawioTheme} theme style with visually distinct components and logical grouping.
+         5. Add descriptive text labels for each component.`
+      : `Create cell elements for a Draw.IO (diagrams.net) diagram that shows a professional OS-based migration flowchart for: ${enhancedPrompt}
+         IMPORTANT:
+         1. Use appropriate built-in Draw.IO library icons:
+            - For source servers (use style="shape=mxgraph.cisco.servers.server")
+            - For target/cloud servers (use style="shape=mxgraph.cisco.cloud.cloud")
+            - For migration appliance (use style="shape=mxgraph.cisco.misc.bridge")
+            - For OS/system components (use style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc")
+            - For storage/disks (use style="shape=mxgraph.cisco.storage.storage")
+            - For process/action steps (use style="shape=mxgraph.flowchart.process")
+         2. Do NOT include <mxfile>, <diagram>, <mxGraphModel>, or <root> tags. ONLY return the individual <mxCell> elements.
+         3. Ensure proper flow connections between steps with clearly labeled arrows.
+         4. Use the ${drawioTheme} theme style with visual hierarchy.
+         5. Add descriptive text labels for each step in the migration process.`;
+         
+    // Use OpenAI to generate Draw.IO XML
+    const diagramResponse = await openai.chat.completions.create({
+      model: "gpt-4o", 
+      messages: [
+        {role: "system", content: "You are a diagram creation assistant that generates Draw.IO (diagrams.net) XML cell elements with professional, visually-rich diagrams. For tech and network diagrams, use industry-standard iconography through the mxGraph shape libraries (style=\"shape=mxgraph.xxx\") to create more visually informative diagrams rather than simple rectangles and ellipses. Respond ONLY with <mxCell> elements without any outer container tags like <mxfile>, <diagram>, <mxGraphModel>, or <root>. Do not include markdown formatting or explanations. Use descriptive text labels and proper connection arrows between elements."},
+        {role: "user", content: drawioPrompt}
+      ],
+      max_tokens: 2500,
+      temperature: 0.5,
+    });
+    
+    // Extract the Draw.IO XML cells
+    const messageContent = diagramResponse.choices[0].message.content || "";
+    
+    // Clean the XML (remove any markdown code block formatting)
+    let cellsXml = messageContent.trim()
+      .replace(/```xml/g, '')
+      .replace(/```/g, '')
+      .trim();
+      
+    // Remove any xml declarations if they exist
+    cellsXml = cellsXml.replace(/<\?xml[^>]*\?>/g, '');
+    
+    // Remove any mxfile, diagram, mxGraphModel or root tags if they exist
+    cellsXml = cellsXml
+      .replace(/<\/?mxfile[^>]*>/g, '')
+      .replace(/<\/?diagram[^>]*>/g, '')
+      .replace(/<\/?mxGraphModel[^>]*>/g, '')
+      .replace(/<\/?root[^>]*>/g, '')
+      .trim();
+    
+    // Fix IDs to ensure uniqueness - replace any id="0" or id="1" with unique IDs
+    // This prevents conflicts with the standard root cells
+    const baseId = Date.now().toString().slice(-6); // Use timestamp as base for unique IDs
+    
+    // Replace ID attributes (both id="X" and parent="X") with unique values
+    // Avoid replacing ID 0 and 1 in parent attributes first by temporarily marking them
+    cellsXml = cellsXml
+      .replace(/parent="0"/g, 'parent="ROOT_PLACEHOLDER"')
+      .replace(/parent="1"/g, 'parent="CANVAS_PLACEHOLDER"');
+      
+    // Now replace all cell IDs to ensure uniqueness
+    cellsXml = cellsXml
+      .replace(/id="0"/g, `id="cell_${baseId}_0"`)
+      .replace(/id="1"/g, `id="cell_${baseId}_1"`)
+      .replace(/id="2"/g, `id="cell_${baseId}_2"`)
+      .replace(/id="3"/g, `id="cell_${baseId}_3"`)
+      .replace(/id="4"/g, `id="cell_${baseId}_4"`)
+      .replace(/id="5"/g, `id="cell_${baseId}_5"`)
+      .replace(/id="6"/g, `id="cell_${baseId}_6"`)
+      .replace(/id="7"/g, `id="cell_${baseId}_7"`)
+      .replace(/id="8"/g, `id="cell_${baseId}_8"`)
+      .replace(/id="9"/g, `id="cell_${baseId}_9"`);
+      
+    // For IDs 10 and above, use a more general regex
+    cellsXml = cellsXml.replace(/id="(\d+)"/g, (match, id) => {
+      // Only replace IDs that are pure numbers and above 9
+      if (!isNaN(id) && parseInt(id) > 9) {
+        return `id="cell_${baseId}_${id}"`;
+      }
+      return match;
+    });
+    
+    // Now update all parent references to match the new IDs
+    cellsXml = cellsXml
+      .replace(/parent="ROOT_PLACEHOLDER"/g, 'parent="0"') // Root cell reference
+      .replace(/parent="CANVAS_PLACEHOLDER"/g, 'parent="1"') // Canvas cell reference
+      .replace(/parent="2"/g, `parent="cell_${baseId}_2"`)
+      .replace(/parent="3"/g, `parent="cell_${baseId}_3"`)
+      .replace(/parent="4"/g, `parent="cell_${baseId}_4"`)
+      .replace(/parent="5"/g, `parent="cell_${baseId}_5"`)
+      .replace(/parent="6"/g, `parent="cell_${baseId}_6"`)
+      .replace(/parent="7"/g, `parent="cell_${baseId}_7"`)
+      .replace(/parent="8"/g, `parent="cell_${baseId}_8"`)
+      .replace(/parent="9"/g, `parent="cell_${baseId}_9"`);
+      
+    // For parents 10 and above, use a general regex
+    cellsXml = cellsXml.replace(/parent="(\d+)"/g, (match, id) => {
+      // Only replace parents that are pure numbers and above 9
+      if (!isNaN(id) && parseInt(id) > 9) {
+        return `parent="cell_${baseId}_${id}"`;
+      }
+      return match;
+    });
+    
+    // Force all remaining cells to be children of the canvas cell (id="1")
+    // Replace any mxCell that doesn't have a parent attribute with parent="1"
+    cellsXml = cellsXml.replace(/<mxCell\s+([^>]*?)\s*(?:\/?>|><\/mxCell>)/g, (match, attrs) => {
+      if (!attrs.includes('parent=')) {
+        return match.replace('<mxCell', '<mxCell parent="1"');
+      }
+      return match;
+    });
+    
+    // Create proper Draw.IO XML structure with the cells
+    // Add a unique diagram ID and ensure cells have proper parent references
+    const diagramId = `diagram-${uuidv4()}`;
+    const drawioXml = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="${diagramId}" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        ${cellsXml}
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>`;
+    
+    return drawioXml;
+  } catch (error) {
+    console.error('Error generating Draw.IO diagram:', error);
+    throw error;
+  }
+}
+
+export const generateDiagram = async (
+  prompt: string, 
+  context?: string
+): Promise<{ imagePath: string, mmdPath: string, mmdFilename: string, altText: string }> => {
+  try {
+    console.log('Starting diagram generation process');
     await ensureDirectoriesExist();
+    console.log('Directories for image storage confirmed');
     
-    // Determine if this is a network diagram request
+    // Enhance the prompt with context if provided, but limit the context length
+    let enhancedPrompt = prompt;
+    if (context) {
+      console.log('Context provided for diagram generation, length:', context.length);
+      // Limit context to about 1000 characters to avoid exceeding DALL-E's limit
+      const limitedContext = context.length > 1000 
+        ? context.substring(0, 1000) + "..." 
+        : context;
+      
+      enhancedPrompt = `Create a clear technical diagram based on this information: ${limitedContext}\n\nSpecifically showing: ${prompt}\n\nMake it a simple, clean, professional diagram with clear labels.`;
+    } else {
+      console.log('No context provided for diagram generation');
+      enhancedPrompt = `Create a clear technical diagram showing: ${prompt}\n\nMake it a simple, clean, professional diagram with clear labels.`;
+    }
+    
+    // Ensure the prompt doesn't exceed DALL-E's 4000 character limit
+    const originalLength = enhancedPrompt.length;
+    if (enhancedPrompt.length > 3800) {
+      enhancedPrompt = enhancedPrompt.substring(0, 3800) + "...";
+      console.log(`Prompt truncated from ${originalLength} to ${enhancedPrompt.length} characters`);
+    }
+    
+    console.log(`Generating diagram with prompt: ${enhancedPrompt.substring(0, 100)}...`);
+    console.log('Final prompt length:', enhancedPrompt.length);
+    
+    // Generate a text-based mermaid diagram that browsers can render
+    console.log('Generating mermaid diagram instead of DALL-E image (API access issues)');
+    
+    // Determine if we need a network diagram instead of a flowchart
     const isNetworkDiagram = detectNetworkDiagramRequest(prompt);
-    console.log(`Network diagram detection: ${isNetworkDiagram ? 'Yes' : 'No'}`);
     
-    // Enhance the prompt with specific diagram language
-    const enhancedPrompt = enhancePrompt(prompt, isNetworkDiagram);
+    // Get configuration to determine which diagram engine to use
+    const config = await storage.getConfig();
+    const diagramEngine = config?.diagram_engine || 'drawio';
     
-    // Try to use Draw.IO first if requested
-    if (useDrawIO) {
+    // Check if we should use Draw.IO
+    if (diagramEngine === 'drawio') {
+      console.log('Using Draw.IO for diagram generation');
+      
       try {
-        console.log('Attempting to generate Draw.IO diagram');
-        
-        // Define the system prompt for Draw.IO XML generation
-        const systemMessage = isNetworkDiagram
-          ? "You are an expert at creating network architecture diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow migration architecture."
-          : "You are an expert at creating flowchart diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow migration processes.";
-        
-        const userMessage = isNetworkDiagram
-          ? `Create a network architecture diagram in Draw.IO XML format for: ${enhancedPrompt}\n\nInclude these elements in your design:\n1. Source servers or systems\n2. RiverMeadow Migration Server\n3. Target environments (cloud or on-premises)\n4. Network connections between components\n5. Use appropriate icons for servers, storage, networks, and cloud resources\n\nOnly return valid Draw.IO XML without any explanation.`
-          : `Create a flowchart diagram in Draw.IO XML format for: ${enhancedPrompt}\n\nDesign a clear process flow that includes:\n1. Start and end points\n2. Key decision points\n3. Main process steps\n4. Connections between steps\n5. Use different colors and shapes to distinguish between different types of steps\n\nOnly return valid Draw.IO XML without any explanation.`;
-        
-        const response = await openai.chat.completions.create({
-          model: "gpt-4o",
-          messages: [
-            { role: "system", content: systemMessage },
-            { role: "user", content: userMessage }
-          ],
-          max_tokens: 4000,
-          temperature: 0.5,
-        });
-        
-        // Extract the Draw.IO XML from the response
-        const drawioXml = response.choices[0].message.content?.trim() || "";
-        
-        // Clean up XML - remove markdown code blocks if present
-        const cleanXml = drawioXml
-          .replace(/```xml/g, '')
-          .replace(/```drawio/g, '')
-          .replace(/```/g, '')
-          .trim();
+        // Generate Draw.IO diagram XML
+        const drawioXml = await generateDrawIODiagram(prompt, enhancedPrompt, isNetworkDiagram);
         
         // Create timestamp & unique filename
         const timestamp = Date.now();
         const uuid = uuidv4().substring(0, 8);
-        const xmlFilename = `diagram_${timestamp}_${uuid}.drawio`;
-        const htmlFilename = `diagram_${timestamp}_${uuid}.html`;
+        const baseFilename = `generated_diagram_${timestamp}_${uuid}`;
+        const xmlFilename = `${baseFilename}.xml`;
+        const htmlFilename = `${baseFilename}.html`;
         
-        // Set file paths
         const xmlPath = path.join(GENERATED_IMAGES_DIR, xmlFilename);
         const htmlPath = path.join(GENERATED_IMAGES_DIR, htmlFilename);
         
         // Save the Draw.IO XML to a file
-        await writeFile(xmlPath, cleanXml);
+        await writeFile(xmlPath, drawioXml);
         
+        // Create a direct SVG viewer that is more reliable - NO iframe approach
         // Create HTML for the Draw.IO diagram using string concatenation
         const titleText = isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram';
         let drawioHtml = "<!DOCTYPE html>";
-        drawioHtml += "<html lang=\"en\">";
-        drawioHtml += "<head>";
         drawioHtml += "  <meta charset=\"UTF-8\">";
         drawioHtml += "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
         drawioHtml += "  <title>RiverMeadow Diagram</title>";
-        drawioHtml += "  <style>";
         drawioHtml += "    body, html { height: 100%; margin: 0; padding: 0; overflow: auto; font-family: Arial, sans-serif; }";
         drawioHtml += "    .diagram-container { display: flex; flex-direction: column; height: 100vh; }";
         drawioHtml += "    .header { background: white; padding: 10px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; z-index: 10; }";
@@ -148,30 +286,11 @@ export const generateDiagram = async (
         drawioHtml += "    .zoom-button:last-child { border-right: none; }";
         drawioHtml += "    .zoom-button:hover { background: #f5f5f5; }";
         drawioHtml += "    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }";
-        drawioHtml += "  </style>";
-        drawioHtml += "</head>";
-        drawioHtml += "<body>";
-        drawioHtml += "  <div class=\"diagram-container\">";
-        drawioHtml += "    <div class=\"header\">";
         drawioHtml += "      <h1>" + titleText + "</h1>";
-        drawioHtml += "      <div class=\"actions\">";
         drawioHtml += "        <a href=\"/api/diagram-xml/" + xmlFilename + "\" download=\"rivermeadow_diagram.drawio\" class=\"button button-download\">Download Diagram</a>";
-        drawioHtml += "      </div>";
-        drawioHtml += "    </div>";
-        drawioHtml += "    <div class=\"content-area\">";
-        drawioHtml += "      <div id=\"loading\" class=\"loading\">";
-        drawioHtml += "        <div class=\"spinner\"></div>";
-        drawioHtml += "        <div>Loading diagram...</div>";
-        drawioHtml += "      </div>";
-        drawioHtml += "      <div id=\"svg-container\"></div>";
-        drawioHtml += "    </div>";
-        drawioHtml += "    <div class=\"zoom-controls\">";
         drawioHtml += "      <button class=\"zoom-button\" id=\"zoom-out\">−</button>";
         drawioHtml += "      <button class=\"zoom-button\" id=\"zoom-reset\">100%</button>";
         drawioHtml += "      <button class=\"zoom-button\" id=\"zoom-in\">+</button>";
-        drawioHtml += "    </div>";
-        drawioHtml += "  </div>";
-        drawioHtml += "  <script>";
         drawioHtml += "    const svgContainer = document.getElementById('svg-container');";
         drawioHtml += "    const loading = document.getElementById('loading');";
         drawioHtml += "    const zoomResetButton = document.getElementById('zoom-reset');";
@@ -203,7 +322,6 @@ export const generateDiagram = async (
         drawioHtml += "      })";
         drawioHtml += "      .catch(error => {";
         drawioHtml += "        console.error('Error loading SVG:', error);";
-        drawioHtml += "        loading.innerHTML = '<div style=\"color:red\">Error loading diagram</div>';";
         drawioHtml += "      });";
         drawioHtml += "    document.getElementById('zoom-in').addEventListener('click', () => {";
         drawioHtml += "      currentZoom = Math.min(2.5, currentZoom + 0.1);";
@@ -229,9 +347,262 @@ export const generateDiagram = async (
         drawioHtml += "        } catch (e) {}";
         drawioHtml += "      }";
         drawioHtml += "    }";
-        drawioHtml += "  </script>";
-        drawioHtml += "</body>";
-        drawioHtml += "</html>";
+    h1 {
+      color: #0078d4;
+      margin: 0;
+      font-size: 18px;
+    }
+    .content-area {
+      flex: 1;
+      padding: 20px;
+      overflow: auto;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    #svg-container {
+      max-width: 100%;
+      transition: transform 0.3s;
+      transform-origin: center top;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 4px;
+      padding: 16px;
+      position: relative;
+    }
+    
+    /* Make sure all SVG elements are interactable */
+    #svg-container svg, #svg-container svg * {
+      pointer-events: auto;
+    }
+    
+    /* Prevent users from accidentally interacting with SVG in ways that might zoom it */
+    svg {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+    .button {
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .button:hover {
+      background-color: #005a9e;
+    }
+    .button-download {
+      background-color: #28a745;
+    }
+    .button-download:hover {
+      background-color: #218838;
+    }
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #666;
+      background: rgba(255,255,255,0.9);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 100;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0078d4;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    .hidden {
+      display: none;
+    }
+    .zoom-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: flex;
+      overflow: hidden;
+      z-index: 100;
+    }
+    .zoom-button {
+      background: none;
+      border: none;
+      border-right: 1px solid #eee;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .zoom-button:last-child {
+      border-right: none;
+    }
+    .zoom-button:hover {
+      background: #f5f5f5;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+      <h1>' + (isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram') + '</h1>
+      
+        <a href="/api/diagram-xml/' + xmlFilename + '" download="rivermeadow_diagram.drawio" 
+           class="button button-download">Download Diagram</a>
+    
+      
+    
+      <button class="zoom-button" id="zoom-out">−</button>
+      <button class="zoom-button" id="zoom-reset">100%</button>
+      <button class="zoom-button" id="zoom-in">+</button>
+  
+    // Initialize variables
+    const svgContainer = document.getElementById('svg-container');
+    const loading = document.getElementById('loading');
+    const zoomResetButton = document.getElementById('zoom-reset');
+    
+    // Determine initial zoom level - try to recover from localStorage or use config default
+    let currentZoom;
+    try {
+      const savedZoom = localStorage.getItem('diagram_zoom_level');
+      if (savedZoom && !isNaN(parseFloat(savedZoom))) {
+        currentZoom = parseFloat(savedZoom);
+        console.log('Restored saved zoom level:', Math.round(currentZoom * 100) + '%');
+      } else {
+        // Default to 50% as requested by the user
+        currentZoom = 0.5;
+        console.log('Using default zoom level:', Math.round(currentZoom * 100) + '%');
+      }
+    } catch (e) {
+      // Fallback to default zoom level of 50%
+      currentZoom = 0.5;
+      console.log('Error loading zoom, using default:', Math.round(currentZoom * 100) + '%');
+    }
+    
+    // Update the zoom reset button text to match initial zoom
+    if (zoomResetButton) {
+      zoomResetButton.textContent = Math.round(currentZoom * 100) + '%';
+    }
+    
+    // Load SVG content directly - no iframe
+    fetch('/api/diagram-svg/' + xmlFilename)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to load diagram');
+        }
+        return response.text();
+      })
+      .then(svgText => {
+        // Insert SVG content into the container
+        svgContainer.innerHTML = svgText;
+        
+        // Hide loading indicator
+        loading.classList.add('hidden');
+        
+        // Make SVG responsive and prevent auto-zooming
+        const svg = svgContainer.querySelector('svg');
+        if (svg) {
+          // Set basic responsive styles
+          svg.style.maxWidth = '100%';
+          svg.style.height = 'auto';
+          
+          // Disable auto scaling/zooming when clicking on the diagram
+          svg.style.transformOrigin = 'center';
+          
+          // Remove any event listeners that might trigger auto-zoom
+          svg.querySelectorAll('*').forEach(el => {
+            // Prevent click events from scaling the diagram
+            el.addEventListener('click', (e) => {
+              // Only stop propagation if not a link or interactive element
+              if (el.tagName !== 'a' && el.tagName !== 'A' && 
+                  !el.hasAttribute('href') && !el.hasAttribute('xlink:href')) {
+                e.stopPropagation();
+              }
+            });
+          });
+        }
+        
+        // Notify parent that we're loaded
+        try {
+          window.parent.postMessage({ type: 'diagram-loaded' }, '*');
+        } catch (e) {
+          console.error('Error notifying parent window', e);
+        }
+      })
+      .catch(error => {
+        console.error('Error loading SVG:', error);
+      });
+    
+    // Zoom functionality
+    document.getElementById('zoom-in').addEventListener('click', () => {
+      currentZoom = Math.min(2.5, currentZoom + 0.1);
+      applyZoom();
+    });
+    
+    document.getElementById('zoom-out').addEventListener('click', () => {
+      currentZoom = Math.max(0.2, currentZoom - 0.1);
+      applyZoom();
+    });
+    
+    document.getElementById('zoom-reset').addEventListener('click', () => {
+      currentZoom = 1.0;
+      applyZoom();
+    });
+    
+    function applyZoom() {
+      if (svgContainer) {
+        // Update the transform scale
+        svgContainer.style.transform = 'scale(' + currentZoom + ')';
+        
+        // Update zoom percentage button text
+        const resetButton = document.getElementById('zoom-reset');
+        if (resetButton) {
+          resetButton.textContent = Math.round(currentZoom * 100) + '%';
+        }
+        
+        // Log current zoom for debugging
+        console.log('Current zoom: ' + Math.round(currentZoom * 100) + '%');
+        
+        // Save zoom level to localStorage for persistence
+        try {
+          localStorage.setItem('diagram_zoom_level', currentZoom.toString());
+        } catch (e) {
+          console.warn('Could not save zoom level to localStorage', e);
+        }
+      }
+    }
+    
+    // Handle messages from parent window
+    window.addEventListener('message', function(event) {
+      try {
+        if (event.data && typeof event.data === 'object' && event.data.action === 'zoom') {
+          currentZoom = event.data.scale || 1.0;
+          applyZoom();
+        }
+      } catch (e) {
+        console.error('Error handling message:', e);
+      }
+    });
 
         // Save the HTML file
         await writeFile(htmlPath, drawioHtml);
@@ -381,13 +752,9 @@ export const generateDiagram = async (
     // Create an HTML file with the mermaid diagram using string concatenation
     const diagramTitle = isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram';
     const htmlContent = '<!DOCTYPE html>' +
-'<html lang="en">' +
-'<head>' +
 '  <meta charset="UTF-8">' +
 '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' +
 '  <title>RiverMeadow Diagram</title>' +
-'  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>' +
-'  <script>' +
 '    mermaid.initialize({' +
 '      startOnLoad: true,' +
 '      theme: "neutral",' +
@@ -445,8 +812,6 @@ export const generateDiagram = async (
 '        }' +
 '      }' +
 '    });' +
-'  </script>' +
-'  <style>' +
 '    body {' +
 '      font-family: Arial, sans-serif;' +
 '      margin: 0;' +
@@ -527,18 +892,9 @@ export const generateDiagram = async (
 '        page-break-inside: avoid;' +
 '      }' +
 '    }' +
-'  </style>' +
-'</head>' +
-'<body>' +
-'  <div class="diagram-container">' +
 '    <h1>' + diagramTitle + '</h1>' +
-'    <div class="mermaid">' +
 cleanMermaidCode +
-'    </div>' +
-'    <div class="error-message">Failed to render diagram</div>' +
 '    <pre class="code-fallback">' + cleanMermaidCode + '</pre>' +
-'  </div>' +
-'  <script>' +
 '    mermaid.parseError = function(err, hash) {' +
 '      console.error("Mermaid error:", err);' +
 '      document.querySelector(".error-message").style.display = "block";' +
@@ -555,9 +911,6 @@ cleanMermaidCode +
 '        }' +
 '      }, 1000);' +
 '    });' +
-'  </script>' +
-'</body>' +
-'</html>';
 
     // Create timestamp & unique filename with a common base
     const timestamp = Date.now();
@@ -710,17 +1063,35 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
     return true;
   }
   
-  // Default response based on combination of keywords
-  const diagramScore = 
-    (lowercasePrompt.includes('flowchart') ? 2 : 0) +
-    (lowercasePrompt.includes('diagram') ? 2 : 0) +
-    (lowercasePrompt.includes('architecture') ? 1 : 0) +
-    (lowercasePrompt.includes('visualize') ? 1 : 0) +
-    (lowercasePrompt.includes('draw') ? 1 : 0) +
-    (lowercasePrompt.includes('rivermeadow') ? 1 : 0);
+  // More specific regex patterns for clear diagram requests
+  const imageRequestPatterns = [
+    // Direct requests for diagrams with clear intent
+    /create\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization)/i,
+    /generate\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization)/i,
+    /draw\s+(?:a|an)?\s*(?:diagram|chart|graph|visualization)/i,
+    /show\s+(?:a|an|me|us)?\s*(?:diagram|chart|graph|visualization)/i,
+    
+    // Explicit architectural diagram requests
+    /(?:system|network|component|architectural)\s+diagram/i,
+    /(?:flow|process|architecture|system|component)\s+diagram/i,
+    
+    // Network diagram specific
+    /network\s+(?:diagram|architecture|topology)/i,
+    /infrastructure\s+(?:diagram|architecture|map)/i,
+    
+    // Very specific rivermeadow diagram requests
+    /(?:rivermeadow|migration)\s+(?:diagram|architecture|flow|process)/i,
+    
+    // Special case for OS-based migration tool - consider it a diagram request
+    /(?:create|make|generate|build)?\s*(?:os|operating system)?\s*(?:based|-)?\s*migration\s*(?:tool|solution|application|process)/i
+  ];
+
+  const regexMatch = imageRequestPatterns.some(pattern => pattern.test(prompt));
+  if (regexMatch) {
+    console.log('Image generation request detected via specific pattern matching');
+    return true;
+  }
   
-  const isDiagramRequest = diagramScore >= 2;
-  console.log(`Diagram detection score: ${diagramScore}, will ${isDiagramRequest ? '' : 'not '}generate diagram`);
-  
-  return isDiagramRequest;
+  console.log('No clear diagram request detected');
+  return false;
 };
