@@ -1336,6 +1336,103 @@ Noindex: /`);
     }
   });
   
+  // Endpoint for downloading the full diagram as PNG
+  app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
+    try {
+      const fileName = req.params.fileName;
+      const baseFileName = fileName.replace(/\.(html|xml)$/, '');
+      
+      // Create uploads/png directory if it doesn't exist
+      const pngDir = path.join(process.cwd(), 'uploads', 'png');
+      if (!fs.existsSync(pngDir)) {
+        fs.mkdirSync(pngDir, { recursive: true });
+      }
+      
+      // Generate a unique filename for the PNG output
+      const timestamp = Date.now();
+      const pngFileName = `full_diagram_${timestamp}.png`;
+      const outputPath = path.join(pngDir, pngFileName);
+      
+      // Path to the XML file that contains the diagram
+      const xmlFilePath = path.join(process.cwd(), 'uploads', 'generated', `${baseFileName}.xml`);
+      
+      if (!fs.existsSync(xmlFilePath)) {
+        return res.status(404).json({ error: 'Diagram file not found' });
+      }
+      
+      // Read the XML content
+      const xmlContent = fs.readFileSync(xmlFilePath, 'utf8');
+      
+      // Get the SVG content from the diagram-svg endpoint
+      const svgUrl = `/api/diagram-svg/${baseFileName}.xml`;
+      const svgResponse = await fetch(`http://localhost:${process.env.PORT || 5000}${svgUrl}`);
+      
+      if (!svgResponse.ok) {
+        return res.status(500).json({ error: 'Failed to get SVG content' });
+      }
+      
+      const svgContent = await svgResponse.text();
+      
+      // Create a temporary file with the SVG content to use with sharp
+      const tempSvgPath = path.join(pngDir, `temp_${timestamp}.svg`);
+      fs.writeFileSync(tempSvgPath, svgContent);
+      
+      // Use sharp to convert to PNG with high quality settings for full diagram
+      try {
+        await sharp(tempSvgPath, { 
+          density: 300, // Higher density for better text rendering
+          limitInputPixels: false // Remove size limit to handle large diagrams
+        })
+          .resize({
+            width: 3000, // Very large width to ensure we capture everything
+            height: 3000, // Very large height
+            fit: 'inside', // Keep everything in frame
+            background: { r: 255, g: 255, b: 255, alpha: 1 },
+            withoutEnlargement: false
+          })
+          .flatten({ background: { r: 255, g: 255, b: 255, alpha: 1 } })
+          .sharpen()
+          .png({ quality: 100 })
+          .toFile(outputPath);
+        
+        // Clean up temp SVG file
+        fs.unlinkSync(tempSvgPath);
+        
+        console.log(`Successfully converted full diagram to PNG: ${outputPath}`);
+        
+        // Send the file as an attachment
+        res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${timestamp}.png"`);
+        res.setHeader('Content-Type', 'image/png');
+        
+        const fileStream = fs.createReadStream(outputPath);
+        fileStream.pipe(res);
+      } catch (error) {
+        console.error('Error using sharp for PNG conversion:', error);
+        
+        // Fallback to simpler conversion method
+        // Use simple SVG to PNG conversion without scaling
+        await sharp(Buffer.from(svgContent), { 
+          density: 300
+        })
+          .png({ quality: 100 })
+          .toFile(outputPath);
+        
+        // Send the file as an attachment
+        res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${timestamp}.png"`);
+        res.setHeader('Content-Type', 'image/png');
+        
+        const fileStream = fs.createReadStream(outputPath);
+        fileStream.pipe(res);
+      }
+    } catch (error) {
+      console.error('Error generating full diagram PNG:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate diagram PNG',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Endpoint for viewing diagram HTML file directly
   app.get('/api/diagram-png/:fileName', async (req: Request, res: Response) => {
     try {
