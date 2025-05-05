@@ -1,0 +1,58 @@
+<mxfile host="app.diagrams.net" modified="2025-05-05T13:08:34.886Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-0e1f0dae-86f3-4a06-8bcf-e33d8fe43a9a" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_514885_0" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="1">
+  <mxGeometry x="20" y="20" width="80" height="80" as="geometry"/>
+  <mxCell label="Source Server" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="0">
+    <mxGeometry x="0" y="1" width="80" height="20" as="geometry" relative="1"/>
+  </mxCell>
+</mxCell>
+<mxCell id="cell_514885_1" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="1">
+  <mxGeometry x="200" y="20" width="80" height="80" as="geometry"/>
+  <mxCell label="RMS Migration Appliance" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+    <mxGeometry x="0" y="1" width="80" height="20" as="geometry" relative="1"/>
+  </mxCell>
+</mxCell>
+<mxCell id="cell_514885_2" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="1">
+  <mxGeometry x="380" y="20" width="80" height="80" as="geometry"/>
+  <mxCell label="Target Cloud" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_514885_2">
+    <mxGeometry x="0" y="1" width="80" height="20" as="geometry" relative="1"/>
+  </mxCell>
+</mxCell>
+<mxCell id="cell_514885_3" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="110" y="120" width="120" height="40" as="geometry"/>
+  <mxCell label="Deploy Appliance" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_514885_3">
+    <mxGeometry x="0" y="1" width="120" height="20" as="geometry" relative="1"/>
+  </mxCell>
+</mxCell>
+<mxCell id="cell_514885_4" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="110" y="180" width="120" height="40" as="geometry"/>
+  <mxCell label="Communicate with RiverMeadow Platform" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_514885_4">
+    <mxGeometry x="0" y="1" width="120" height="20" as="geometry" relative="1"/>
+  </mxCell>
+</mxCell>
+<mxCell id="cell_514885_5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="0" target="1">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxCell label="Initiate Migration" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_514885_5">
+    <mxGeometry x="0.5" y="0.5" width="80" height="20" as="geometry" relative="1"/>
+  </mxCell>
+</mxCell>
+<mxCell id="cell_514885_6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="1" target="2">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxCell label="Transfer Data" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_514885_6">
+    <mxGeometry x="0.5" y="0.5" width="80" height="20" as="geometry" relative="1"/>
+  </mxCell>
+</mxCell>
+<mxCell id="cell_514885_7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="3" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+  <mxCell label="Setup Communication" style="text;strokeColor=none;fillColor=none;" vertex="1" parent="cell_514885_7">
+    <mxGeometry x="0.5" y="0.5" width="80" height="20" as="geometry" relative="1"/>
+  </mxCell>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
