@@ -50,6 +50,73 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
+  // Function to generate a suitable chat title based on conversation content
+  const generateChatTitle = (messages: Message[]): string => {
+    // If no messages, return default title
+    if (messages.length === 0) return 'New Conversation';
+    
+    // Find the most recent user message and assistant response pair
+    let userMessage = '';
+    let assistantMessage = '';
+    
+    // Start from the most recent messages and look for the latest complete exchange
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'assistant' && assistantMessage === '') {
+        assistantMessage = messages[i].content;
+      }
+      else if (messages[i].role === 'user' && userMessage === '' && assistantMessage !== '') {
+        userMessage = messages[i].content;
+        break; // Found a complete exchange
+      }
+    }
+    
+    // If no complete exchange, use the first user message
+    if (userMessage === '') {
+      for (let i = 0; i < messages.length; i++) {
+        if (messages[i].role === 'user') {
+          userMessage = messages[i].content;
+          break;
+        }
+      }
+    }
+    
+    // Generate a title from the user's message (limited to 40 chars)
+    let title = userMessage.trim();
+    
+    // If title is too long, truncate it
+    if (title.length > 40) {
+      title = title.substring(0, 40).trim() + '...';
+    }
+    
+    return title;
+  };
+  
+  // Function to update the chat title in the database
+  const updateChatTitle = async (chatId: number, messages: Message[]) => {
+    try {
+      // Generate a new title based on the conversation
+      const newTitle = generateChatTitle(messages);
+      
+      // Get the current chat to check its title
+      const chatResponse = await apiRequest('GET', `/api/chats/${chatId}`);
+      if (chatResponse.ok) {
+        const chat = await chatResponse.json();
+        
+        // Only update if the title is still default or if we have a better title
+        if (chat.title === 'New Conversation' || chat.title.length < newTitle.length) {
+          // Update the chat title in the database
+          await apiRequest('PATCH', `/api/chats/${chatId}`, { title: newTitle });
+          
+          // Dispatch custom event to update UI across components (for sidebar refresh)
+          const event = new CustomEvent('chat-title-updated', { detail: { chatId, title: newTitle } });
+          window.dispatchEvent(event);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating chat title:', error);
+    }
+  };
+  
   // Load existing chat messages when chatId changes
   useEffect(() => {
     async function loadChatMessages() {
@@ -454,49 +521,30 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
             content: input
           });
           
-          // Check if this is the first message in the chat
+          // If this is the first message in the chat, update the title right away
           if (messages.length === 0) {
-            // Get the current chat to check its title
-            const chatResponse = await apiRequest('GET', `/api/chats/${chatId}`);
-            if (chatResponse.ok) {
-              const chat = await chatResponse.json();
-              
-              // If chat title is still "New Conversation", update it directly
-              if (chat.title === 'New Conversation') {
-                // Generate a title from the user's first message (using first 5-6 words or 40 chars max)
-                let newTitle = input.trim();
-                
-                // Limit to first 5-6 words or 40 chars
-                if (newTitle.length > 40) {
-                  newTitle = newTitle.substring(0, 40).trim() + '...';
-                } else {
-                  const words = newTitle.split(' ');
-                  if (words.length > 6) {
-                    newTitle = words.slice(0, 5).join(' ') + '...';
-                  }
-                }
-                
-                // First immediately update the UI with the new title without waiting for server
-                console.log(`Creating chat-title-updated-local event for chat ${chatId} with title "${newTitle}"`);
-                const chatUpdatedEvent = new CustomEvent('chat-title-updated-local', { 
-                  detail: { chatId, newTitle } 
-                });
-                window.dispatchEvent(chatUpdatedEvent);
+            // Generate a title from the user's first message
+            const newTitle = generateChatTitle([userMessage]);
+            
+            // First immediately update the UI with the new title without waiting for server
+            console.log(`Creating chat-title-updated-local event for chat ${chatId} with title "${newTitle}"`);
+            const chatUpdatedEvent = new CustomEvent('chat-title-updated-local', { 
+              detail: { chatId, newTitle } 
+            });
+            window.dispatchEvent(chatUpdatedEvent);
 
-                // Also dispatch the original event as a fallback
-                console.log(`Dispatching additional fallback chat-title-updated event`);
-                const fallbackEvent = new CustomEvent('chat-title-updated');
-                window.dispatchEvent(fallbackEvent);
-                
-                // Also update on the server
-                try {
-                  await apiRequest('PATCH', `/api/chats/${chatId}`, {
-                    title: newTitle
-                  });
-                } catch (titleError) {
-                  console.error('Error updating chat title:', titleError);
-                }
-              }
+            // Also dispatch the original event as a fallback
+            console.log(`Dispatching additional fallback chat-title-updated event`);
+            const fallbackEvent = new CustomEvent('chat-title-updated');
+            window.dispatchEvent(fallbackEvent);
+            
+            // Also update on the server
+            try {
+              await apiRequest('PATCH', `/api/chats/${chatId}`, {
+                title: newTitle
+              });
+            } catch (titleError) {
+              console.error('Error updating chat title:', titleError);
             }
           }
         } catch (error) {
@@ -560,6 +608,9 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
             content: response.content,
             references: response.references
           });
+          
+          // Update chat title based on the conversation after receiving assistant response
+          await updateChatTitle(chatId, [...messages, userMessage, assistantMessage]);
         } catch (error) {
           console.error('Error saving assistant message to chat:', error);
         }
