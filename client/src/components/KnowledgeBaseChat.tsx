@@ -441,17 +441,46 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
     }
   };
   
-  // Simulated progress for DALL-E image generation
+  // Detect diagram-related commands in user message
+  const isDiagramRequest = (content: string): boolean => {
+    // More specific diagram request detection with stronger contextual clues
+    
+    // First pattern: explicit drawing requests
+    const explicitDrawRequest = /(?:create|generate|draw|make|show|give\sme)\s+(?:a|an|the)?\s*(?:diagram|chart|graph|visualization|flow)/i.test(content);
+    
+    // Second pattern: domain-specific diagram requests
+    const domainSpecificRequest = /(?:network|architecture|infrastructure|system|migration|flow)\s+(?:diagram|visualization|chart)/i.test(content);
+    
+    // Third pattern: RiverMeadow-specific diagram requests that we know will generate diagrams
+    const riverMeadowSpecificRequest = /RiverMeadow\s+(?:migration|diagram|workflow|framework|process).*(?:diagram|visual|chart)/i.test(content);
+    
+    // Fourth pattern: explicit mentions of diagram tools
+    const diagramToolRequest = /(?:draw\.io|graphviz|mermaid|visio|lucidchart)/i.test(content);
+    
+    // Return true only if any of these specific patterns match
+    return explicitDrawRequest || domainSpecificRequest || riverMeadowSpecificRequest || diagramToolRequest;
+  };
+  
+  // State to track if the current request is likely a diagram request
+  const [currentRequestIsDiagram, setCurrentRequestIsDiagram] = useState(false);
+
+  // Simulated progress for diagram generation
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
     
     if (isLoading) {
-      // Check if the prompt might be requesting an image
+      // Check if the prompt is specifically requesting a diagram
       const lastMessage = messages[messages.length - 1];
-      const promptMightRequestImage = lastMessage && lastMessage.role === 'user' && 
-        /diagram|draw|visualize|chart|graph|show|create|generate/i.test(lastMessage.content);
+      const isExplicitDiagramRequest = lastMessage && 
+                                      lastMessage.role === 'user' && 
+                                      isDiagramRequest(lastMessage.content);
       
-      if (promptMightRequestImage) {
+      // Set state for current request type
+      setCurrentRequestIsDiagram(isExplicitDiagramRequest);
+      
+      // Only show diagram progress for explicit diagram requests
+      if (isExplicitDiagramRequest) {
+        console.log("Detected diagram request:", lastMessage.content);
         setIsImageGenerating(true);
         setLoadingProgress(0);
         
@@ -466,11 +495,12 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
         }, 500);
       }
     } else {
-      // When loading is complete, set progress to 100%
+      // When loading is complete, set progress to 100% (but only if we were showing diagram progress)
       if (isImageGenerating) {
         setLoadingProgress(100);
         setTimeout(() => {
           setIsImageGenerating(false);
+          setCurrentRequestIsDiagram(false);
         }, 500);
       }
     }
@@ -599,6 +629,16 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
         content: response.content,
         references: response.references
       };
+      
+      // Check if we actually got a diagram in the response
+      const hasDiagram = assistantMessage.references?.some(
+        ref => ref.type === 'image' && ref.imagePath?.endsWith('.html')
+      );
+      
+      // If we're showing diagram progress but didn't get a diagram, turn it off
+      if (currentRequestIsDiagram && !hasDiagram) {
+        setIsImageGenerating(false);
+      }
       
       setMessages((prev) => [...prev, assistantMessage]);
       
@@ -865,7 +905,7 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
         {renderMessages()}
       </div>
       
-      {isImageGenerating && (
+      {isImageGenerating && currentRequestIsDiagram && (
         <div className="p-4 pt-0">
           <div className="flex items-center mb-2">
             <ImageIcon className="h-4 w-4 mr-2 animate-pulse" />
