@@ -107,9 +107,16 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           // Update the chat title in the database
           await apiRequest('PATCH', `/api/chats/${chatId}`, { title: newTitle });
           
-          // Dispatch custom event to update UI across components (for sidebar refresh)
-          const event = new CustomEvent('chat-title-updated', { detail: { chatId, title: newTitle } });
-          window.dispatchEvent(event);
+          // First immediately update the UI with the new title via local events
+          console.log(`Creating chat-title-updated-local event for chat ${chatId} with title "${newTitle}"`);
+          const localUpdateEvent = new CustomEvent('chat-title-updated-local', { 
+            detail: { chatId, newTitle } 
+          });
+          window.dispatchEvent(localUpdateEvent);
+          
+          // Also dispatch global refresh event as a fallback
+          const globalEvent = new CustomEvent('chat-title-updated');
+          window.dispatchEvent(globalEvent);
         }
       }
     } catch (error) {
@@ -523,29 +530,8 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           
           // If this is the first message in the chat, update the title right away
           if (messages.length === 0) {
-            // Generate a title from the user's first message
-            const newTitle = generateChatTitle([userMessage]);
-            
-            // First immediately update the UI with the new title without waiting for server
-            console.log(`Creating chat-title-updated-local event for chat ${chatId} with title "${newTitle}"`);
-            const chatUpdatedEvent = new CustomEvent('chat-title-updated-local', { 
-              detail: { chatId, newTitle } 
-            });
-            window.dispatchEvent(chatUpdatedEvent);
-
-            // Also dispatch the original event as a fallback
-            console.log(`Dispatching additional fallback chat-title-updated event`);
-            const fallbackEvent = new CustomEvent('chat-title-updated');
-            window.dispatchEvent(fallbackEvent);
-            
-            // Also update on the server
-            try {
-              await apiRequest('PATCH', `/api/chats/${chatId}`, {
-                title: newTitle
-              });
-            } catch (titleError) {
-              console.error('Error updating chat title:', titleError);
-            }
+            // Just use our updateChatTitle function for consistency
+            await updateChatTitle(chatId, [userMessage]);
           }
         } catch (error) {
           console.error('Error saving user message to chat:', error);
