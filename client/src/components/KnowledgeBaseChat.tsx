@@ -108,30 +108,28 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
         if (chat.title === 'New Conversation' || chat.title.length < newTitle.length) {
           console.log(`Updating chat title for chat ${chatId} with title "${newTitle}"`);
           
-          // First update the title on the server directly
-          const updateResponse = await apiRequest('PATCH', `/api/chats/${chatId}`, { title: newTitle });
+          // Use the context's updateChatTitle to update both server and local state
+          await contextUpdateChatTitle(chatId, newTitle);
           
-          if (updateResponse.ok) {
-            // Then use the context's updateChatTitle to sync the state
-            await contextUpdateChatTitle(chatId, newTitle);
-            
-            // Dispatch both events to ensure proper updates across components
-            // New centralized event
-            window.dispatchEvent(new CustomEvent('chat-title-changed', { 
-              detail: { chatId, newTitle } 
-            }));
-            
-            // Legacy event for backward compatibility
-            window.dispatchEvent(new CustomEvent('chat-title-updated', {
-              detail: { chatId, newTitle }
-            }));
-            
-            // Also explicitly trigger a reload with short delay to ensure it happens after state updates
-            setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('reload-chats'));
-              refreshChats();
-            }, 300);
-          }
+          // Force a targeted update of just this chat after a short delay
+          // This is our new approach that directly fetches the latest data for this chat
+          setTimeout(() => {
+            // Import from context - this ensures the sidebar gets updated even if events fail
+            import('@/hooks/use-chat-titles').then(({ useChatTitles }) => {
+              try {
+                // Get the context from the provider and call forceUpdateChat
+                const context = useChatTitles();
+                if (context && context.forceUpdateChat) {
+                  console.log(`Forcing update of chat ${chatId} after title change`);
+                  context.forceUpdateChat(chatId);
+                }
+              } catch (error) {
+                // Outside provider context, fallback to refreshChats
+                console.log('Outside provider context, using refreshChats instead');
+                refreshChats();
+              }
+            });
+          }, 500);
         }
       }
     } catch (error) {

@@ -7,6 +7,8 @@ interface ChatTitlesContextType {
   updateChatTitle: (chatId: number, newTitle: string) => Promise<void>;
   chats: Chat[];
   isLoading: boolean;
+  // Add a method to force update by id
+  forceUpdateChat: (chatId: number) => Promise<void>;
 }
 
 const ChatTitlesContext = createContext<ChatTitlesContextType | null>(null);
@@ -16,32 +18,44 @@ export function ChatTitlesProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const refreshInProgress = useRef(false);
   const lastRefreshTime = useRef(0);
+  const forceUpdateQueue = useRef<Set<number>>(new Set());
 
   // Function to get all chats with debouncing
-  const refreshChats = useCallback(async () => {
-    // Prevent concurrent refreshes
-    if (refreshInProgress.current) {
+  const refreshChats = useCallback(async (force = false) => {
+    // Prevent concurrent refreshes unless forced
+    if (!force && refreshInProgress.current) {
       console.log('Refresh already in progress, skipping');
       return;
     }
 
-    // Add debouncing - don't refresh if we just did it recently (within 2 seconds)
+    // Add debouncing - don't refresh if we just did it recently (within 1 second) unless forced
     const now = Date.now();
-    if (now - lastRefreshTime.current < 2000) {
+    if (!force && now - lastRefreshTime.current < 1000) {
       console.log('Refresh recently completed, skipping');
       return;
     }
 
     refreshInProgress.current = true;
-    setIsLoading(true);
+    if (chats.length === 0) {
+      setIsLoading(true);
+    }
     
     try {
       const response = await apiRequest('GET', '/api/chats');
       if (response.ok) {
         console.log('Refreshed chats from server');
         const data = await response.json();
+        
+        // If we have chat data, log it
+        if (data && data.length > 0) {
+          console.log(`Server returned ${data.length} chats:`, 
+            data.map((c: Chat) => `id:${c.id}, title:"${c.title}"`).join(', '));
+        }
+        
         setChats(data);
         lastRefreshTime.current = Date.now();
+        // Clear any pending forceUpdate requests
+        forceUpdateQueue.current.clear();
       } else {
         console.error('Failed to load chats');
       }
@@ -51,32 +65,76 @@ export function ChatTitlesProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       refreshInProgress.current = false;
     }
+  }, [chats.length]);
+
+  // Function to force update a specific chat by ID
+  const forceUpdateChat = useCallback(async (chatId: number) => {
+    try {
+      console.log(`Force updating chat ${chatId}`);
+      
+      // Add to queue and process after a short delay to batch requests
+      forceUpdateQueue.current.add(chatId);
+      
+      // After a short delay, refresh the chat if it's still in the queue
+      setTimeout(async () => {
+        if (forceUpdateQueue.current.has(chatId)) {
+          const response = await apiRequest('GET', `/api/chats/${chatId}`);
+          if (response.ok) {
+            const chat = await response.json();
+            console.log(`Directly fetched updated chat: id=${chatId}, title="${chat.title}"`);
+            
+            // Update just this one chat in the list
+            setChats(prevChats => {
+              const updated = prevChats.map(c => 
+                c.id === chatId ? chat : c
+              );
+              return updated;
+            });
+            
+            // Remove from queue
+            forceUpdateQueue.current.delete(chatId);
+          }
+        }
+      }, 300);
+    } catch (error) {
+      console.error(`Error force updating chat ${chatId}:`, error);
+    }
   }, []);
 
   // Function to update a chat title
   const updateChatTitle = useCallback(async (chatId: number, newTitle: string) => {
     try {
+      console.log(`Updating chat title in context: chatId=${chatId}, title="${newTitle}"`);
+      
       // Update server
       const response = await apiRequest('PATCH', `/api/chats/${chatId}`, { title: newTitle });
       
       if (response.ok) {
-        console.log(`Updated chat title on server: chatId=${chatId}, title="${newTitle}"`);
-        
-        // Update local state immediately without fetching from server
+        // Update local state immediately
         setChats(prevChats => prevChats.map(chat => 
           chat.id === chatId ? { ...chat, title: newTitle } : chat
         ));
         
-        // Notify components about the change without triggering a refresh
-        const event = new CustomEvent('chat-title-changed', { 
+        // For debugging - log current state
+        setTimeout(() => {
+          console.log('Updated chats state:', 
+            chats.map(c => `id:${c.id}, title:"${c.title}"`).join(', '));
+        }, 50);
+        
+        // Notify components about the change
+        window.dispatchEvent(new CustomEvent('chat-title-changed', { 
           detail: { chatId, newTitle }
-        });
-        window.dispatchEvent(event);
+        }));
+        
+        return; // Success!
       }
     } catch (error) {
       console.error('Error updating chat title:', error);
     }
-  }, []);
+    
+    // If we get here, something went wrong - try to force refresh the chat
+    setTimeout(() => forceUpdateChat(chatId), 500);
+  }, [forceUpdateChat, chats]);
 
   // Load initial data
   useEffect(() => {
@@ -85,7 +143,7 @@ export function ChatTitlesProvider({ children }: { children: ReactNode }) {
     // Listen for auth-related events that should trigger a refresh
     const handleAuthEvent = () => {
       console.log('Auth event detected, refreshing chats');
-      refreshChats();
+      refreshChats(true); // Force refresh on auth change
     };
     
     window.addEventListener('auth-changed', handleAuthEvent);
@@ -95,7 +153,13 @@ export function ChatTitlesProvider({ children }: { children: ReactNode }) {
   }, [refreshChats]);
 
   return (
-    <ChatTitlesContext.Provider value={{ refreshChats, updateChatTitle, chats, isLoading }}>
+    <ChatTitlesContext.Provider value={{ 
+      refreshChats, 
+      updateChatTitle, 
+      forceUpdateChat,
+      chats, 
+      isLoading 
+    }}>
       {children}
     </ChatTitlesContext.Provider>
   );
