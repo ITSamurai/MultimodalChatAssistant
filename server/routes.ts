@@ -630,26 +630,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'File not found' });
       }
       
-      // Create a SVG directly from the XML content using the mxgraph library
+      // Read the actual XML content from the file
       const fileContent = fs.readFileSync(filePath, 'utf8');
       
-      // Create simple SVG placeholder until we can render properly
-      const svgPlaceholder = `
-      <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="#f8f9fa" />
-        <text x="50%" y="50%" font-family="Arial" font-size="20" text-anchor="middle">
-          Draw.IO Diagram
-        </text>
-        <text x="50%" y="60%" font-family="Arial" font-size="14" text-anchor="middle">
-          Click to download and view in diagrams.net
-        </text>
+      // Try to extract SVG from the XML content - look for HTML files first
+      if (filePath.endsWith('.html')) {
+        // For HTML files, try to extract <svg> tag
+        console.log('Extracting SVG from HTML file');
+        const svgMatch = fileContent.match(/<svg[^>]*>[\s\S]*?<\/svg>/i);
+        if (svgMatch && svgMatch[0]) {
+          console.log('Found SVG in HTML file');
+          const svgContent = svgMatch[0];
+          
+          // Set the content type
+          res.setHeader('Content-Type', 'image/svg+xml');
+          return res.status(200).send(svgContent);
+        }
+      }
+      
+      // For XML content, try to extract Draw.IO XML
+      if (fileContent.includes('<mxfile') || fileContent.includes('<mxGraphModel')) {
+        console.log('Processing Draw.IO XML file');
+        
+        try {
+          // Extract the first diagram - Draw.IO XML format
+          const diagramMatch = fileContent.match(/<diagram[^>]*>([^<]+)<\/diagram>/);
+          
+          if (diagramMatch && diagramMatch[1]) {
+            // Decode the base64 content inside the diagram tag
+            const decodedData = Buffer.from(diagramMatch[1], 'base64').toString('utf-8');
+            
+            // Parse the XML to get diagram dimensions and structure
+            const diagramWidth = 1200;  // Default width if not found
+            const diagramHeight = 800;  // Default height if not found
+            
+            // Create a full SVG document from the diagram content
+            const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+            <svg xmlns="http://www.w3.org/2000/svg" 
+                xmlns:xlink="http://www.w3.org/1999/xlink" 
+                width="${diagramWidth}" height="${diagramHeight}" 
+                viewBox="0 0 ${diagramWidth} ${diagramHeight}" 
+                version="1.1">
+              <defs>
+                <style type="text/css">
+                  .diagram { fill: white; }
+                  .shape { stroke: #333333; fill: #f5f5f5; }
+                  .connector { stroke: #333333; stroke-width: 2; fill: none; }
+                  .text { font-family: Arial, sans-serif; font-size: 12px; }
+                </style>
+              </defs>
+              <g class="diagram">
+                <rect width="100%" height="100%" fill="white"/>
+                <foreignObject width="${diagramWidth}" height="${diagramHeight}">
+                  <div xmlns="http://www.w3.org/1999/xhtml" 
+                      style="width:${diagramWidth}px; height:${diagramHeight}px; 
+                            display:flex; justify-content:center; align-items:center;">
+                    <img src="data:image/svg+xml;base64,${Buffer.from(fileContent).toString('base64')}" 
+                        style="max-width:100%; max-height:100%;" />
+                  </div>
+                </foreignObject>
+              </g>
+            </svg>`;
+            
+            // Set the content type
+            res.setHeader('Content-Type', 'image/svg+xml');
+            return res.status(200).send(svgContent);
+          }
+        } catch (error) {
+          console.error('Error extracting SVG from Draw.IO XML:', error);
+        }
+      }
+      
+      // Attempt to read HTML version if XML version didn't work
+      const htmlFilePath = filePath.replace(/\.xml$/, '.html');
+      if (fs.existsSync(htmlFilePath)) {
+        console.log(`Trying to extract SVG from HTML version: ${htmlFilePath}`);
+        const htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+        const svgMatch = htmlContent.match(/<svg[^>]*>[\s\S]*?<\/svg>/i);
+        
+        if (svgMatch && svgMatch[0]) {
+          console.log('Found SVG in HTML file');
+          // Set the content type
+          res.setHeader('Content-Type', 'image/svg+xml');
+          return res.status(200).send(svgMatch[0]);
+        }
+      }
+      
+      // If all extraction attempts fail, return the XML wrapped in an SVG
+      console.log('No SVG could be extracted, embedding XML in SVG');
+      const xmlSvg = `
+      <svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#f9fbfd" />
+        <switch>
+          <foreignObject width="100%" height="100%" requiredExtensions="http://www.w3.org/1999/xhtml">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+              <iframe src="data:text/html;base64,${Buffer.from(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="UTF-8">
+                  <style>
+                    body { margin: 0; padding: 0; overflow: hidden; }
+                    #graph { width: 100%; height: 100%; }
+                  </style>
+                  <script src="https://cdnjs.cloudflare.com/ajax/libs/mxgraph/4.2.2/mxgraph.min.js"></script>
+                </head>
+                <body>
+                  <div id="graph"></div>
+                  <script>
+                    const xmlData = ${JSON.stringify(fileContent)};
+                    // Let browser render the diagram
+                    document.getElementById('graph').innerHTML = xmlData;
+                  </script>
+                </body>
+                </html>
+              `).toString('base64')}" 
+              style="width:100%; height:100%; border:0;"></iframe>
+            </div>
+          </foreignObject>
+          <!-- Fallback content for browsers that don't support foreignObject -->
+          <text x="50%" y="50%" font-family="Arial" font-size="20" text-anchor="middle">
+            Draw.IO Diagram
+          </text>
+        </switch>
       </svg>
       `;
       
       // Set the content type
       res.setHeader('Content-Type', 'image/svg+xml');
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
-      return res.status(200).send(svgPlaceholder);
+      return res.status(200).send(xmlSvg);
     } catch (error) {
       console.error('Error rendering diagram as PNG:', error);
       return res.status(500).json({ error: 'Failed to render diagram as PNG' });
