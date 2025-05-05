@@ -1,0 +1,63 @@
+<mxfile host="app.diagrams.net" modified="2025-05-05T15:44:52.325Z" agent="RiverMeadow AI" version="21.3.7">
+  <diagram id="diagram-936083b5-5eb4-48fd-b499-a23f6d92a07e" name="RiverMeadow Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_892324_0" style="shape=mxgraph.cisco.servers.server" vertex="1" parent="1">
+  <mxGeometry x="40" y="40" width="80" height="80" as="geometry"/>
+  <mxLabel value="Source Server" />
+</mxCell>
+<mxCell id="cell_892324_1" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="180" y="60" width="120" height="40" as="geometry"/>
+  <mxLabel value="Plan Migration: W2K8R2-Demo" />
+</mxCell>
+<mxCell id="cell_892324_2" style="shape=mxgraph.cisco.misc.bridge" vertex="1" parent="1">
+  <mxGeometry x="340" y="40" width="80" height="80" as="geometry"/>
+  <mxLabel value="RMS Migration Appliance" />
+</mxCell>
+<mxCell id="cell_892324_3" style="shape=mxgraph.cisco.cloud.cloud" vertex="1" parent="1">
+  <mxGeometry x="500" y="40" width="80" height="80" as="geometry"/>
+  <mxLabel value="Target Cloud Server" />
+</mxCell>
+<mxCell id="cell_892324_4" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="180" y="140" width="120" height="40" as="geometry"/>
+  <mxLabel value="Select Transfer Method: Block-based" />
+</mxCell>
+<mxCell id="cell_892324_5" style="shape=mxgraph.cisco.storage.storage" vertex="1" parent="1">
+  <mxGeometry x="340" y="140" width="80" height="80" as="geometry"/>
+  <mxLabel value="Selected Mounts" />
+</mxCell>
+<mxCell id="cell_892324_6" style="shape=mxgraph.flowchart.process" vertex="1" parent="1">
+  <mxGeometry x="180" y="240" width="120" height="40" as="geometry"/>
+  <mxLabel value="OS Modernization: Target OS Upgrade" />
+</mxCell>
+<mxCell id="cell_892324_7" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_pc" vertex="1" parent="1">
+  <mxGeometry x="340" y="240" width="80" height="80" as="geometry"/>
+  <mxLabel value="Version Success" />
+</mxCell>
+<mxCell id="cell_892324_8" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="1" source="0" target="1">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_892324_9" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="1" source="1" target="2">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_892324_10" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="1" source="2" target="3">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_892324_11" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="1" source="1" target="4">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_892324_12" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="1" source="4" target="5">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_892324_13" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="1" source="4" target="6">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="cell_892324_14" style="edgeStyle=elbowEdgeStyle;elbow=horizontal" edge="1" parent="1" source="6" target="7">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

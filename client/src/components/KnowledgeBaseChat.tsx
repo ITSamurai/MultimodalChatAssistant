@@ -532,6 +532,7 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                                       transformOrigin: 'top left',
                                       width: diagramZooms[ref.imagePath!] ? `${100 / diagramZooms[ref.imagePath!]}%` : '200%',
                                       height: diagramZooms[ref.imagePath!] ? `${100 / diagramZooms[ref.imagePath!]}%` : '200%',
+                                      pointerEvents: 'auto', // Allow interactions with the iframe
                                     }}
                                   />
                                 </div>
