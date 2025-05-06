@@ -510,12 +510,12 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                   {message.references
                     .filter(ref => ref.type === 'image' && ref.imagePath)
                     .map((ref, index) => {
-                      // Check if it's an HTML diagram (ends with .html)
-                      const isHtmlDiagram = ref.imagePath?.endsWith('.html');
+                      // Check if it's a diagram (ends with .drawio or .html)
+                      const isDiagram = ref.imagePath?.endsWith('.drawio') || ref.imagePath?.endsWith('.html');
                       
                       return (
                         <div key={index} className="rounded-lg overflow-hidden border border-gray-200">
-                          {isHtmlDiagram ? (
+                          {isDiagram ? (
                             // Render Draw.IO diagram directly in the chat with embedded viewer
                             <div className="relative w-full bg-white p-4">
                               {/* Show the diagram directly as an image */}

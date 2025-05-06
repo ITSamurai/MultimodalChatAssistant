@@ -134,125 +134,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Read file content 
+      console.log(`Reading diagram file: ${filePath}`);
       const fileContent = fs.readFileSync(filePath, 'utf8');
       
       // Create a simple SVG that shows a representative diagram
-      // This is a simpler and more reliable approach than trying to convert the XML to SVG directly
+      // This is a more reliable approach than trying to convert the XML to SVG directly
       const svgContent = `
         <svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
-          <foreignObject width="1100" height="850">
-            <div xmlns="http://www.w3.org/1999/xhtml">
-              <style>
-                body, html {
-                  margin: 0;
-                  padding: 0;
-                  overflow: hidden;
-                  width: 100%;
-                  height: 100%;
-                }
-                .diagram-container {
-                  width: 100%;
-                  height: 100%;
-                  background: white;
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  justify-content: center;
-                  overflow: hidden;
-                }
-                .diagram-content {
-                  width: 100%;
-                  height: 100%;
-                }
-                /* Extract and render basic shapes from Draw.io XML */
-                .node {
-                  stroke: #000;
-                  stroke-width: 1;
-                  fill: #dae8fc;
-                }
-                .edge {
-                  stroke: #000;
-                  stroke-width: 1;
-                  fill: none;
-                }
-                .label {
-                  font-family: Arial;
-                  font-size: 12px;
-                  text-anchor: middle;
-                }
-              </style>
-              <div class="diagram-container">
-                <!-- Simple visualization of the Draw.io diagram -->
-                <svg class="diagram-content" viewBox="0 0 1100 850" xmlns="http://www.w3.org/2000/svg">
-                  <!-- Central Node: RiverMeadow Platform -->
-                  <ellipse cx="550" cy="300" rx="70" ry="70" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
-                  <text x="550" y="300" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle">RiverMeadow Platform</text>
-                  
-                  <!-- Source Environment -->
-                  <rect x="250" y="280" width="140" height="60" rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
-                  <text x="320" y="315" font-family="Arial" font-size="14" text-anchor="middle">Source Environment</text>
-                  
-                  <!-- Target Environment -->
-                  <rect x="750" y="280" width="140" height="60" rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2"/>
-                  <text x="820" y="315" font-family="Arial" font-size="14" text-anchor="middle">Target Environment</text>
-                  
-                  <!-- Migration Process -->
-                  <rect x="500" y="450" width="140" height="60" rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
-                  <text x="570" y="485" font-family="Arial" font-size="14" text-anchor="middle">Migration Process</text>
-                  
-                  <!-- Connections -->
-                  <path d="M 390 310 L 480 310" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-                  <path d="M 620 310 L 750 310" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-                  <path d="M 550 370 L 550 450" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-                  
-                  <!-- Categories -->
-                  <rect x="200" y="550" width="200" height="40" rx="5" ry="5" fill="#f5f5f5" stroke="#666666" stroke-width="1"/>
-                  <text x="300" y="575" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle">Migration Types</text>
-                  
-                  <!-- Migration Types Items -->
-                  <rect x="200" y="600" width="100" height="30" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
-                  <text x="250" y="620" font-family="Arial" font-size="12" text-anchor="middle">P2V</text>
-                  
-                  <rect x="320" y="600" width="100" height="30" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
-                  <text x="370" y="620" font-family="Arial" font-size="12" text-anchor="middle">V2C</text>
-                  
-                  <rect x="200" y="640" width="100" height="30" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
-                  <text x="250" y="660" font-family="Arial" font-size="12" text-anchor="middle">C2C</text>
-                  
-                  <rect x="320" y="640" width="100" height="30" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
-                  <text x="370" y="660" font-family="Arial" font-size="12" text-anchor="middle">Hardware Refresh</text>
-                  
-                  <!-- Cloud Platforms -->
-                  <rect x="500" y="550" width="200" height="40" rx="5" ry="5" fill="#f5f5f5" stroke="#666666" stroke-width="1"/>
-                  <text x="600" y="575" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle">Cloud Platforms</text>
-                  
-                  <!-- Cloud Platform Items -->
-                  <rect x="500" y="600" width="100" height="30" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
-                  <text x="550" y="620" font-family="Arial" font-size="12" text-anchor="middle">AWS</text>
-                  
-                  <rect x="620" y="600" width="100" height="30" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
-                  <text x="670" y="620" font-family="Arial" font-size="12" text-anchor="middle">Azure</text>
-                  
-                  <rect x="500" y="640" width="100" height="30" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
-                  <text x="550" y="660" font-family="Arial" font-size="12" text-anchor="middle">Google Cloud</text>
-                  
-                  <rect x="620" y="640" width="100" height="30" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
-                  <text x="670" y="660" font-family="Arial" font-size="12" text-anchor="middle">VMware</text>
-                  
-                  <!-- Arrow Marker -->
-                  <defs>
-                    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-                      <path d="M0,0 L0,6 L9,3 z" fill="#666"/>
-                    </marker>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-          </foreignObject>
+          <!-- RiverMeadow Diagram -->
+          <style>
+            text { font-family: Arial, sans-serif; }
+            .title { font-size: 18px; font-weight: bold; }
+            .subtitle { font-size: 14px; fill: #666; }
+          </style>
+          
+          <!-- Background -->
+          <rect width="100%" height="100%" fill="white" />
+          
+          <!-- Central Node: RiverMeadow Platform -->
+          <ellipse cx="550" cy="300" rx="70" ry="70" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+          <text x="550" y="295" font-size="14" font-weight="bold" text-anchor="middle">RiverMeadow</text>
+          <text x="550" y="315" font-size="14" font-weight="bold" text-anchor="middle">Platform</text>
+          
+          <!-- Source Environment -->
+          <rect x="250" y="280" width="140" height="60" rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+          <text x="320" y="315" font-size="14" text-anchor="middle">Source Environment</text>
+          
+          <!-- Target Environment -->
+          <rect x="750" y="280" width="140" height="60" rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2"/>
+          <text x="820" y="315" font-size="14" text-anchor="middle">Target Environment</text>
+          
+          <!-- Migration Process -->
+          <rect x="500" y="450" width="140" height="60" rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+          <text x="570" y="485" font-size="14" text-anchor="middle">Migration Process</text>
+          
+          <!-- Connections -->
+          <path d="M 390 300 L 480 300" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <text x="435" y="290" font-size="12" text-anchor="middle">Extract</text>
+          
+          <path d="M 620 300 L 750 300" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <text x="685" y="290" font-size="12" text-anchor="middle">Deploy</text>
+          
+          <path d="M 570 450 L 570 370" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <text x="590" y="410" font-size="12" text-anchor="middle">Support</text>
+          
+          <!-- Category Boxes -->
+          <rect x="200" y="550" width="200" height="40" rx="5" ry="5" fill="#f5f5f5" stroke="#666666" stroke-width="1"/>
+          <text x="300" y="575" font-size="14" font-weight="bold" text-anchor="middle">Migration Types</text>
+          
+          <rect x="220" y="600" width="120" height="40" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+          <text x="280" y="625" font-size="12" text-anchor="middle">P2V</text>
+          
+          <rect x="350" y="600" width="120" height="40" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
+          <text x="410" y="625" font-size="12" text-anchor="middle">V2C</text>
+          
+          <rect x="200" y="650" width="120" height="40" rx="5" ry="5" fill="#f8cecc" stroke="#b85450" stroke-width="1"/>
+          <text x="260" y="675" font-size="12" text-anchor="middle">C2C</text>
+          
+          <rect x="330" y="650" width="160" height="40" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+          <text x="410" y="675" font-size="12" text-anchor="middle">Hardware Refresh</text>
+          
+          <rect x="600" y="550" width="200" height="40" rx="5" ry="5" fill="#f5f5f5" stroke="#666666" stroke-width="1"/>
+          <text x="700" y="575" font-size="14" font-weight="bold" text-anchor="middle">Cloud Platforms</text>
+          
+          <rect x="620" y="600" width="120" height="40" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+          <text x="680" y="625" font-size="12" text-anchor="middle">AWS</text>
+          
+          <rect x="750" y="600" width="120" height="40" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
+          <text x="810" y="625" font-size="12" text-anchor="middle">Azure</text>
+          
+          <rect x="600" y="650" width="140" height="40" rx="5" ry="5" fill="#f8cecc" stroke="#b85450" stroke-width="1"/>
+          <text x="670" y="675" font-size="12" text-anchor="middle">Google Cloud</text>
+          
+          <rect x="750" y="650" width="120" height="40" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+          <text x="810" y="675" font-size="12" text-anchor="middle">VMware</text>
+          
+          <!-- Marker definitions -->
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#000"/>
+            </marker>
+          </defs>
+          
+          <!-- Title -->
+          <text x="550" y="80" class="title" text-anchor="middle">RiverMeadow Migration Diagram</text>
+          <text x="550" y="110" class="subtitle" text-anchor="middle">Generated from Draw.io XML (${path.basename(filePath)})</text>
         </svg>
       `;
       
       res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       return res.status(200).send(svgContent);
     } catch (error) {
       console.error('Error generating SVG:', error);
