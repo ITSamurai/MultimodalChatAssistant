@@ -1118,8 +1118,35 @@ Noindex: /`);
       console.log(`Generating diagram with prompt: ${prompt}`);
       console.log(`Context length: ${context.length} characters`);
       
-      // Generate the diagram
-      const result = await generateDiagram(prompt, context);
+      // Get knowledge context from Pinecone
+      let knowledgeContext: string[] = [];
+      
+      try {
+        // Query Pinecone for relevant context to enrich the diagram
+        if (pineconeIndex) {
+          console.log('Fetching knowledge base context for diagram enrichment...');
+          const queryEmbedding = await generateEmbedding(prompt);
+          const queryResponse = await pineconeIndex.query({
+            vector: queryEmbedding,
+            topK: 50,
+            includeMetadata: true
+          });
+          
+          // Extract text content from knowledge base matches
+          knowledgeContext = queryResponse.matches
+            .filter(match => match.score && match.score > 0.7) // Only use high relevance matches
+            .map(match => match.metadata?.text as string || '')
+            .filter(text => text.trim() !== '');
+          
+          console.log(`Found ${knowledgeContext.length} relevant context snippets for diagram generation`);
+        }
+      } catch (pineconeError) {
+        console.warn('Error retrieving knowledge context for diagram:', pineconeError);
+        // Continue with empty context if there's an error
+      }
+      
+      // Generate the diagram with enhanced context
+      const result = await generateDiagram(prompt, knowledgeContext, true);
       
       console.log(`Successfully generated diagram: ${result.imagePath}`);
       
