@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+  <diagram id="1746535005511-04f417d1" name="hybrid-network-topology - RiverMeadow">
+    <mxGraphModel dx="917" dy="591" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="hybrid-network-topology - RiverMeadow" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacing=0;fontSize=24;fontStyle=1;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="0.5" y="0" width="200" height="30" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="3" value="Legend" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;fontSize=12;fontStyle=0;fontColor=#7D8998;" vertex="1" parent="1">
+          <mxGeometry x="0.01" y="0.1" width="80" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Containers" style="ellipse;strokeColor=#232F3E;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="0.5" y="0.2" width="80" height="80" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="5" value="APIs" style="rounded=0;strokeColor=#232F3E;fillColor=#FF9900;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="0.5" y="0.4" width="100" height="50" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="6" value="Gateways" style="rhombus;strokeColor=#232F3E;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="0.5" y="0.55" width="80" height="80" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="7" value="CDN" style="triangle;strokeColor=#232F3E;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="0.5" y="0.75" width="80" height="80" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="8" value="Edge Locations" style="shape=hexagon;strokeColor=#232F3E;fillColor=#FF9900;fontColor=#232F3E;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="0.5" y="0.95" width="100" height="80" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="9" edge="1" source="4" target="5" style="strokeColor=#232F3E;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" edge="1" source="5" target="6" style="strokeColor=#232F3E;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" edge="1" source="6" target="7" style="strokeColor=#232F3E;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" edge="1" source="7" target="8" style="strokeColor=#232F3E;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

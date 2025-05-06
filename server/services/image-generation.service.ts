@@ -33,164 +33,351 @@ const ensureDirectoriesExist = async () => {
 };
 
 /**
- * Categorize the diagram type based on prompt content
- * Returns a specific diagram type to guide the generation process
+ * Completely revised diagram categorization that uses both the prompt content,
+ * context from the knowledge base, and randomized elements to ensure
+ * each diagram is unique
  */
-const categorizeDiagramType = (prompt: string): {
+const categorizeDiagramType = (prompt: string, contextSnippets: string[] = []): {
   category: string;
   specificType: string;
   colors: { primary: string; secondary: string; accent: string };
   elements: string[];
   layout: string;
+  title: string;
+  uniqueId: string;
 } => {
   const lowercasePrompt = prompt.toLowerCase();
   
-  // Define specific diagram types with their associated elements and styling
+  // Get all contextual terms to help customize the diagram
+  const combinedContext = contextSnippets.join(' ').toLowerCase();
+  
+  // Extract key technical terms from context
+  const extractedTerms = extractTechnicalTerms(combinedContext);
+  console.log('Extracted technical terms from context:', extractedTerms.slice(0, 10));
+  
+  // Generate time-based unique identifier
+  const uniqueId = Date.now().toString() + '-' + Math.random().toString(36).substring(2, 10);
+  
+  // Create rich categorization system with highly unique options
   const diagramTypes = [
+    // Network & Infrastructure
     {
       category: 'network',
-      keywords: ['network', 'infrastructure', 'cloud', 'aws', 'azure', 'gcp', 'server', 'topology'],
+      keywords: ['network', 'infrastructure', 'cloud', 'aws', 'azure', 'gcp', 'server', 'topology', 'connectivity'],
       specificTypes: [
         'cloud-migration-architecture', 
         'hybrid-network-topology', 
         'data-center-infrastructure', 
-        'secure-network-design'
+        'secure-network-design',
+        'multi-cloud-deployment',
+        'containerized-services-architecture',
+        'edge-computing-topology',
+        'disaster-recovery-infrastructure'
       ],
       colorSets: [
         { primary: '#4285F4', secondary: '#34A853', accent: '#EA4335' }, // Google-inspired
         { primary: '#0078D4', secondary: '#50E6FF', accent: '#D83B01' }, // Azure-inspired
-        { primary: '#232F3E', secondary: '#FF9900', accent: '#7D8998' }  // AWS-inspired
+        { primary: '#232F3E', secondary: '#FF9900', accent: '#7D8998' }, // AWS-inspired
+        { primary: '#0747A6', secondary: '#36B37E', accent: '#FF5630' }, // Atlassian-inspired
+        { primary: '#20123A', secondary: '#5F249F', accent: '#E01E5A' }, // Modern dark purple
+        { primary: '#1A73E8', secondary: '#34A853', accent: '#FBBC05' }, // Material inspired
+        { primary: '#003366', secondary: '#FF9900', accent: '#66CCFF' }, // Navy and orange
+        { primary: '#2D3748', secondary: '#48BB78', accent: '#F56565' }  // Dark mode inspired
       ],
       elementSets: [
         ['servers', 'cloud services', 'firewalls', 'load balancers', 'VPNs'],
         ['virtual machines', 'security groups', 'subnets', 'storage', 'databases'],
-        ['containers', 'APIs', 'gateways', 'CDN', 'edge locations']
+        ['containers', 'APIs', 'gateways', 'CDN', 'edge locations'],
+        ['microservices', 'IAM roles', 'availability zones', 'NAT gateways', 'VPC endpoints'],
+        ['clusters', 'nodes', 'pods', 'network policies', 'service mesh'],
+        ['compute instances', 'storage buckets', 'managed services', 'identity providers', 'elastic scaling']
       ],
-      layouts: ['horizontal', 'vertical', 'hierarchical', 'hub-and-spoke']
+      layouts: ['horizontal', 'vertical', 'hierarchical', 'hub-and-spoke', 'segmented', 'zoned', 'layered', 'distributed']
     },
+    
+    // Process & Workflow 
     {
       category: 'process',
-      keywords: ['process', 'workflow', 'steps', 'procedure', 'flowchart', 'sequence'],
+      keywords: ['process', 'workflow', 'steps', 'procedure', 'flowchart', 'sequence', 'assessment', 'pipeline'],
       specificTypes: [
         'migration-workflow', 
         'assessment-decision-tree', 
         'deployment-process', 
-        'validation-pipeline'
+        'validation-pipeline',
+        'continuous-integration-flow',
+        'approval-gates-workflow',
+        'maintenance-procedure',
+        'audit-compliance-process',
+        'risk-assessment-framework',
+        'release-management-cycle'
       ],
       colorSets: [
-        { primary: '#3498DB', secondary: '#2ECC71', accent: '#E74C3C' },
-        { primary: '#8E44AD', secondary: '#F1C40F', accent: '#16A085' },
-        { primary: '#2C3E50', secondary: '#E67E22', accent: '#ECF0F1' }
+        { primary: '#3498DB', secondary: '#2ECC71', accent: '#E74C3C' }, // Flat UI colors
+        { primary: '#8E44AD', secondary: '#F1C40F', accent: '#16A085' }, // Purple and teal
+        { primary: '#2C3E50', secondary: '#E67E22', accent: '#ECF0F1' }, // Dark blue and orange
+        { primary: '#6366F1', secondary: '#10B981', accent: '#F59E0B' }, // Indigo and emerald
+        { primary: '#7C3AED', secondary: '#EC4899', accent: '#FBBF24' }, // Purple and pink
+        { primary: '#1E40AF', secondary: '#047857', accent: '#B45309' }, // Dark blue and green
+        { primary: '#374151', secondary: '#9CA3AF', accent: '#F87171' }, // Gray scale with red
+        { primary: '#4338CA', secondary: '#8B5CF6', accent: '#EC4899' }  // Purple gradient
       ],
       elementSets: [
         ['decision points', 'actions', 'inputs/outputs', 'start/end points'],
         ['validation steps', 'conditional branches', 'loops', 'subprocess blocks'],
-        ['system interactions', 'user actions', 'data transformations', 'notifications']
+        ['system interactions', 'user actions', 'data transformations', 'notifications'],
+        ['status checks', 'approval gates', 'rollback procedures', 'verification steps'],
+        ['data collection', 'analysis', 'reporting', 'decision making', 'implementation'],
+        ['planning', 'execution', 'monitoring', 'control', 'closure'],
+        ['requirements', 'design', 'development', 'testing', 'deployment', 'maintenance'],
+        ['initiation', 'discovery', 'migration planning', 'validation', 'cutover', 'hypercare']
       ],
-      layouts: ['top-down', 'left-to-right', 'swim lanes', 'circular']
+      layouts: ['top-down', 'left-to-right', 'swim lanes', 'circular', 'matrix', 'timeline', 'radial', 'spiral']
     },
+    
+    // Software Architecture
     {
       category: 'software',
-      keywords: ['software', 'application', 'program', 'code', 'component', 'architecture'],
+      keywords: ['software', 'application', 'program', 'code', 'component', 'architecture', 'system', 'integration'],
       specificTypes: [
         'microservice-architecture', 
         'component-diagram', 
         'system-integration-map', 
-        'data-flow-architecture'
+        'data-flow-architecture',
+        'event-driven-architecture',
+        'domain-driven-design',
+        'api-gateway-pattern',
+        'service-mesh-topology',
+        'hexagonal-architecture',
+        'cqrs-event-sourcing',
+        'distributed-system-overview'
       ],
       colorSets: [
-        { primary: '#6236FF', secondary: '#41B883', accent: '#FF5757' },
-        { primary: '#61DAFB', secondary: '#F9A825', accent: '#6D4C41' },
-        { primary: '#7E57C2', secondary: '#26A69A', accent: '#EF5350' }
+        { primary: '#6236FF', secondary: '#41B883', accent: '#FF5757' }, // Purple and green
+        { primary: '#61DAFB', secondary: '#F9A825', accent: '#6D4C41' }, // React blue and amber
+        { primary: '#7E57C2', secondary: '#26A69A', accent: '#EF5350' }, // Purple and teal
+        { primary: '#3B82F6', secondary: '#10B981', accent: '#F97316' }, // Blue and green
+        { primary: '#8B5CF6', secondary: '#06B6D4', accent: '#F43F5E' }, // Violet and cyan
+        { primary: '#1D4ED8', secondary: '#059669', accent: '#EA580C' }, // Royal blue and emerald
+        { primary: '#4F46E5', secondary: '#0EA5E9', accent: '#F59E0B' }, // Indigo and sky
+        { primary: '#6D28D9', secondary: '#0D9488', accent: '#DC2626' }  // Purple and teal red
       ],
       elementSets: [
         ['services', 'APIs', 'databases', 'user interfaces', 'external systems'],
         ['modules', 'libraries', 'data stores', 'message queues', 'caches'],
-        ['controllers', 'models', 'views', 'middleware', 'authentication']
+        ['controllers', 'models', 'views', 'middleware', 'authentication'],
+        ['microservices', 'service registry', 'api gateway', 'circuit breaker', 'load balancer'],
+        ['data sources', 'transformations', 'aggregations', 'analytics', 'visualizations'],
+        ['event producers', 'event bus', 'event consumers', 'command handlers', 'query handlers'],
+        ['frontend', 'backend', 'databases', 'caching', 'monitoring', 'logging'],
+        ['clients', 'services', 'repositories', 'domain models', 'infrastructure']
       ],
-      layouts: ['layered', 'component-based', 'service-oriented', 'event-driven']
+      layouts: ['layered', 'component-based', 'service-oriented', 'event-driven', 'hexagonal', 'onion', 'clean', 'modular']
     },
+    
+    // Migration Related
     {
-      category: 'os-migration',
-      keywords: ['os migration', 'operating system', 'platform migration', 'system upgrade'],
+      category: 'migration',
+      keywords: ['migration', 'move', 'transfer', 'transition', 'shift', 'transform', 'modernize', 'convert'],
       specificTypes: [
         'os-transformation-process', 
         'cross-platform-migration', 
         'application-compatibility-workflow', 
-        'os-upgrade-lifecycle'
+        'os-upgrade-lifecycle',
+        'big-bang-migration-approach',
+        'phased-migration-strategy',
+        'parallel-run-migration',
+        'lift-and-shift-migration',
+        'replatform-migration',
+        'refactor-migration',
+        'datacenter-evacuation-plan'
       ],
       colorSets: [
         { primary: '#0078D4', secondary: '#107C10', accent: '#D83B01' }, // Windows-inspired
         { primary: '#E95420', secondary: '#77216F', accent: '#F2C500' }, // Ubuntu-inspired
-        { primary: '#4285F4', secondary: '#34A853', accent: '#FBBC05' }  // Chrome OS-inspired
+        { primary: '#4285F4', secondary: '#34A853', accent: '#FBBC05' }, // Chrome OS-inspired
+        { primary: '#2563EB', secondary: '#DC2626', accent: '#16A34A' }, // Primary colors
+        { primary: '#0F172A', secondary: '#334155', accent: '#F97316' }, // Dark slate with orange
+        { primary: '#5046E4', secondary: '#F000B8', accent: '#2DD4BF' }, // Electric purple and pink
+        { primary: '#2D3748', secondary: '#CBD5E0', accent: '#F56565' }, // Dark gray with red
+        { primary: '#312E81', secondary: '#6366F1', accent: '#EC4899' }  // Indigo with pink
       ],
       elementSets: [
-        ['source OS', 'target OS', 'application compatibility', 'data migration', 'testing'],
-        ['system assessment', 'backup', 'deployment', 'verification', 'rollback options'],
-        ['user profiles', 'settings', 'drivers', 'services', 'security configurations']
+        ['source', 'target', 'application compatibility', 'data migration', 'testing'],
+        ['assessment', 'planning', 'execution', 'validation', 'cutover', 'hypercare'],
+        ['user profiles', 'settings', 'drivers', 'services', 'security', 'applications'],
+        ['infrastructure', 'middleware', 'data', 'applications', 'security', 'operations'],
+        ['discovery', 'analysis', 'design', 'build', 'test', 'deploy', 'operate'],
+        ['pre-migration', 'migration', 'post-migration', 'optimization', 'decommission'],
+        ['source environment', 'migration tools', 'network transfer', 'target environment', 'verification'],
+        ['legacy systems', 'migration appliance', 'staging area', 'new platform', 'rollback mechanism']
       ],
-      layouts: ['migration path', 'parallel tracks', 'staged approach', 'automated pipeline']
+      layouts: ['migration path', 'parallel tracks', 'staged approach', 'automated pipeline', 'phased timeline', 'waterfall', 'hybrid', 'matrix']
+    },
+    
+    // Cloud Specific
+    {
+      category: 'cloud',
+      keywords: ['cloud', 'aws', 'azure', 'gcp', 'saas', 'paas', 'iaas', 'serverless', 'virtualization'],
+      specificTypes: [
+        'multi-cloud-strategy',
+        'cloud-native-architecture',
+        'serverless-computing-model',
+        'cloud-security-framework',
+        'hybrid-cloud-deployment',
+        'cloud-cost-optimization',
+        'high-availability-cloud-design',
+        'cloud-disaster-recovery',
+        'cloud-to-cloud-migration-flow',
+        'cloud-workload-migration'
+      ],
+      colorSets: [
+        { primary: '#FF9900', secondary: '#232F3E', accent: '#FF4F8B' }, // AWS-inspired
+        { primary: '#0078D4', secondary: '#50E6FF', accent: '#D83B01' }, // Azure-inspired
+        { primary: '#4285F4', secondary: '#34A853', accent: '#FBBC05' }, // GCP-inspired
+        { primary: '#2E51A3', secondary: '#3E8DDD', accent: '#FF6B6B' }, // Blue cloud theme
+        { primary: '#1A365D', secondary: '#2C5282', accent: '#7B9CFF' }, // Deep blue cloud
+        { primary: '#00A4BD', secondary: '#7B848C', accent: '#FF8200' }, // Teal and orange
+        { primary: '#6236FF', secondary: '#9C77FF', accent: '#41B883' }, // Purple cloud
+        { primary: '#38B2AC', secondary: '#805AD5', accent: '#F56565' }  // Teal and purple
+      ],
+      elementSets: [
+        ['cloud providers', 'regions', 'availability zones', 'services', 'networking'],
+        ['compute', 'storage', 'database', 'networking', 'security', 'identity'],
+        ['infrastructure', 'platform', 'applications', 'data', 'functions', 'containers'],
+        ['public cloud', 'private cloud', 'hybrid connection', 'on-premises systems', 'edge'],
+        ['front-end services', 'middleware', 'back-end services', 'data storage', 'analytics'],
+        ['virtual machines', 'kubernetes clusters', 'serverless functions', 'managed services', 'identity providers'],
+        ['cloud connector', 'migration service', 'replication', 'transformation', 'validation'],
+        ['source cloud', 'migration tool', 'transit network', 'target cloud', 'monitoring']
+      ],
+      layouts: ['provider-based', 'service-oriented', 'regional', 'global', 'multi-region', 'zonal', 'hybrid', 'distributed']
     }
   ];
   
-  // First, create a scoring system for each category based on keyword matches
-  const categoryScores = diagramTypes.map(type => {
-    // Count how many keywords from this category are in the prompt
-    const matchCount = type.keywords.filter(keyword => lowercasePrompt.includes(keyword)).length;
+  // Calculate base scores based on keyword presence
+  const baseScores = diagramTypes.map(type => {
+    const keywordMatches = type.keywords.filter(keyword => lowercasePrompt.includes(keyword)).length;
     return {
       category: type,
-      score: matchCount,
-      // Add a small random factor to break ties and add variety
-      finalScore: matchCount + (Math.random() * 0.5)
+      keywordScore: keywordMatches,
     };
   });
-
-  console.log('Category scores:');
-  categoryScores.forEach(cat => {
-    console.log(`${cat.category.category}: ${cat.score} (final: ${cat.finalScore.toFixed(2)})`);
+  
+  // Add context-based scoring from knowledge base
+  const contextualScores = baseScores.map(score => {
+    const contextMatchScore = score.category.keywords.filter(keyword => 
+      combinedContext.includes(keyword)
+    ).length * 0.5; // Weight context matches less than direct prompt matches
+    
+    return {
+      ...score,
+      contextScore: contextMatchScore,
+      // Add randomization to prevent same diagram generation
+      randomFactor: Math.random() * 0.8, // Significant random factor
+      totalScore: score.keywordScore + contextMatchScore + (Math.random() * 0.8)
+    };
   });
   
-  // Select the category with highest score, or random if all scores are 0
-  const highestScore = Math.max(...categoryScores.map(c => c.finalScore));
+  // Log detailed scoring to help debug
+  console.log('Detailed category scoring:');
+  contextualScores.forEach(cat => {
+    console.log(`${cat.category.category}: Keywords=${cat.keywordScore}, Context=${cat.contextScore.toFixed(2)}, Random=${cat.randomFactor.toFixed(2)}, Total=${cat.totalScore.toFixed(2)}`);
+  });
   
-  // If we have some matches, use the highest scored category
-  let matchedCategory = highestScore > 0 
-    ? categoryScores.find(c => c.finalScore === highestScore)?.category
-    : diagramTypes[Math.floor(Math.random() * diagramTypes.length)]; // Random category if no matches
-    
-  // If still no match, default to process diagrams
-  if (!matchedCategory) {
-    matchedCategory = diagramTypes[1]; // Default to process diagrams if no match
-  }
+  // Find highest scoring category with randomization to ensure variety
+  contextualScores.sort((a, b) => b.totalScore - a.totalScore);
   
-  // Create a unique hash-like value from the prompt to ensure consistent but different results
-  const promptHash = Array.from(prompt)
-    .reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) & 0xFFFFFFFF, 0)
-    .toString();
+  // Occasionally pick second-best category for more variety (20% chance)
+  const categoryIndex = (Math.random() < 0.2 && contextualScores.length > 1) ? 1 : 0;
+  const selectedCategory = contextualScores[categoryIndex].category;
   
-  // Use the hash to deterministically but uniquely select diagram attributes
-  const hashDigits = promptHash.split('').map(d => parseInt(d));
+  // Create truly random selections for visual elements
+  const typeIndex = Math.floor(Math.random() * selectedCategory.specificTypes.length);
+  const colorIndex = Math.floor(Math.random() * selectedCategory.colorSets.length);
+  const elementIndex = Math.floor(Math.random() * selectedCategory.elementSets.length);
+  const layoutIndex = Math.floor(Math.random() * selectedCategory.layouts.length);
   
-  // Select a specific type, color set, element set, and layout based on the hash
-  const typeIndex = hashDigits[0] % matchedCategory.specificTypes.length;
-  const colorIndex = hashDigits[1] % matchedCategory.colorSets.length;
-  const elementIndex = hashDigits[2] % matchedCategory.elementSets.length;
-  const layoutIndex = hashDigits[3] % matchedCategory.layouts.length;
+  // Generate a meaningful title based on prompt and category
+  const titleKeywords = prompt.split(' ')
+    .filter(word => word.length > 3)
+    .slice(0, 3)
+    .join(' ');
   
+  const categoryTitle = selectedCategory.category.charAt(0).toUpperCase() + selectedCategory.category.slice(1);
+  const diagramTitle = `RiverMeadow ${categoryTitle}: ${titleKeywords}`;
+  
+  // Return enhanced diagram info with more unique properties
   return {
-    category: matchedCategory.category,
-    specificType: matchedCategory.specificTypes[typeIndex],
-    colors: matchedCategory.colorSets[colorIndex],
-    elements: matchedCategory.elementSets[elementIndex],
-    layout: matchedCategory.layouts[layoutIndex]
+    category: selectedCategory.category,
+    specificType: selectedCategory.specificTypes[typeIndex],
+    colors: selectedCategory.colorSets[colorIndex],
+    elements: [
+      ...selectedCategory.elementSets[elementIndex],
+      // Add contextual elements from knowledge base if available
+      ...extractedTerms.slice(0, 3)
+    ],
+    layout: selectedCategory.layouts[layoutIndex],
+    title: diagramTitle,
+    uniqueId: uniqueId
   };
 };
 
 /**
- * Generate a diagram based on a prompt
+ * Extract technical terms from knowledge base context for use in diagrams
+ */
+function extractTechnicalTerms(text: string): string[] {
+  // List of common technical terms related to cloud migration
+  const technicalTerms = [
+    'virtual machine', 'cloud', 'server', 'migration', 'container', 'kubernetes',
+    'docker', 'load balancer', 'security group', 'subnet', 'vpc', 'instance', 
+    'compute', 'storage', 'database', 'network', 'firewall', 'api', 'gateway',
+    'serverless', 'function', 'lambda', 'microservice', 'architecture', 'workflow',
+    'pipeline', 'cicd', 'devops', 'infrastructure', 'platform', 'saas', 'paas',
+    'iaas', 'public cloud', 'private cloud', 'hybrid cloud', 'multi-cloud', 'azure',
+    'aws', 'gcp', 'google cloud', 'amazon web services', 'microsoft azure',
+    'virtualization', 'hypervisor', 'vmware', 'esxi', 'vcenter', 'hyper-v', 'kvm',
+    'xen', 'openstack', 'terraform', 'cloudformation', 'arm template', 'ansible',
+    'puppet', 'chef', 'salt', 'orchestration', 'automation', 'deployment', 'release',
+    'artifact', 'backup', 'restore', 'disaster recovery', 'high availability',
+    'scalability', 'elasticity', 'performance', 'monitoring', 'logging', 'analytics',
+    'dashboard', 'alert', 'notification', 'sla', 'slo', 'sli', 'metrics', 'kpi',
+    'compliance', 'governance', 'security', 'encryption', 'identity', 'access control',
+    'authentication', 'authorization', 'iam', 'rbac', 'role', 'policy', 'permission'
+  ];
+  
+  // Extract terms found in the text
+  const foundTerms: string[] = [];
+  
+  technicalTerms.forEach(term => {
+    if (text.includes(term)) {
+      foundTerms.push(term);
+    }
+  });
+  
+  // Also extract any capitalized terms which are likely technical names/components
+  const capitalizedTermsMatch = text.match(/[A-Z][a-z]{2,}(?:\s+[A-Z][a-z]{2,})*/g);
+  const capitalizedTerms = capitalizedTermsMatch ? Array.from(new Set(capitalizedTermsMatch.map(t => t))) : [];
+  
+  // Combine and deduplicate without using Set spread
+  const allTerms = [...foundTerms, ...capitalizedTerms];
+  const uniqueTerms: string[] = [];
+  
+  for (const term of allTerms) {
+    if (!uniqueTerms.includes(term)) {
+      uniqueTerms.push(term);
+    }
+  }
+  
+  return uniqueTerms;
+}
+
+/**
+ * Completely rewritten diagram generation function that incorporates context from Pinecone
+ * and uses advanced techniques to ensure unique diagram generation each time
  */
 export const generateDiagram = async (
   prompt: string,
+  knowledgeContext: string[] = [],
   useDrawIO: boolean = true
 ): Promise<{
   imagePath: string;
@@ -202,28 +389,45 @@ export const generateDiagram = async (
     // Make sure necessary directories exist
     await ensureDirectoriesExist();
     
-    // Create a unique time-based identifier
+    // Analyze input to extract meaning and prepare for diagram generation
     const reqTimestamp = Date.now();
     const reqUuid = uuidv4().substring(0, 8);
     
-    // Get detailed diagram type information to ensure uniqueness
-    const diagramInfo = categorizeDiagramType(prompt);
-    console.log(`Diagram type: ${diagramInfo.category} / ${diagramInfo.specificType}`);
-    console.log(`Color scheme: ${diagramInfo.colors.primary}, layout: ${diagramInfo.layout}`);
+    // Extract key terms from the knowledge context to incorporate into the diagram
+    console.log(`Processing diagram request with ${knowledgeContext.length} context snippets`);
     
-    // Build a unique enhanced prompt that will force different diagrams each time
-    const enhancedPrompt = `${prompt} (Unique request ID: ${reqTimestamp}-${reqUuid})`;
+    // Get enhanced diagram type information that includes context and randomization
+    const diagramInfo = categorizeDiagramType(prompt, knowledgeContext);
     
-    // Log more detailed debugging information
-    console.log('DIAGRAM DEBUG INFO:');
+    // Build a truly unique enhanced prompt using multiple factors:
+    // 1. The original prompt
+    // 2. Timestamp and session ID for uniqueness
+    // 3. Specific request for visual variety
+    // 4. Counter-measures against model tendency to create similar outputs
+    const enhancedPrompt = `
+Create a COMPLETELY UNIQUE and visually DISTINCT diagram for:
+"${prompt}"
+
+IMPORTANT REQUIREMENTS:
+- Make this diagram VISUALLY DIFFERENT from any other diagram you've generated before
+- Use ${diagramInfo.layout} layout style specifically
+- Feature ${diagramInfo.elements.slice(0, 3).join(', ')} as key diagram components
+- Ensure clarity, professionalism, and visual appeal
+- Create unique identifier: ${diagramInfo.uniqueId}
+`.trim();
+    
+    // Log comprehensive debug information
+    console.log('\n==== ENHANCED DIAGRAM GENERATION REQUEST ====');
     console.log(`Original prompt: "${prompt}"`);
-    console.log(`Enhanced prompt: "${enhancedPrompt}"`);
-    console.log(`Category: ${diagramInfo.category}`);
-    console.log(`Specific type: ${diagramInfo.specificType}`);
+    console.log(`Diagram category: ${diagramInfo.category}`);
+    console.log(`Diagram type: ${diagramInfo.specificType}`);
+    console.log(`Diagram title: ${diagramInfo.title}`);
     console.log(`Colors: Primary=${diagramInfo.colors.primary}, Secondary=${diagramInfo.colors.secondary}, Accent=${diagramInfo.colors.accent}`);
     console.log(`Elements: ${diagramInfo.elements.join(', ')}`);
     console.log(`Layout: ${diagramInfo.layout}`);
-    console.log(`Timestamp: ${reqTimestamp}, UUID: ${reqUuid}`);
+    console.log(`Unique ID: ${diagramInfo.uniqueId}`);
+    console.log(`Context terms: ${extractTechnicalTerms(knowledgeContext.join(' ')).slice(0, 10).join(', ') || 'None'}`);
+    console.log('===============================================\n');
     
     // Try to use Draw.IO first if requested
     if (useDrawIO) {
@@ -288,7 +492,7 @@ Please follow these specific requirements:
 6. Include clear labels for all components
 7. Use different shapes for different types of elements
 8. Add a title and brief legend
-9. Diagram ID must be set to "${reqTimestamp}-${reqUuid}"
+9. Diagram ID must be set to "${diagramInfo.uniqueId}"
 
 IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown formatting, or code blocks`;
         
