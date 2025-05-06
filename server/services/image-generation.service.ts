@@ -281,6 +281,54 @@ const createDrawioXML = (components: {
 };
 
 /**
+ * First step - get detailed information about the topic from OpenAI
+ */
+const getInitialResponse = async (
+  prompt: string, 
+  knowledgeContext: string[] = []
+): Promise<string> => {
+  try {
+    console.log('Getting initial response for prompt:', prompt);
+    
+    // Create a system prompt for initial information gathering
+    const systemPrompt = `You are a cloud migration expert working at RiverMeadow. 
+    Provide a detailed explanation of the topic requested. 
+    Include specific details about components, processes, and relationships that would be useful for creating a technical diagram.
+    Use technical terminology and be specific about how different parts connect.
+    Focus on RiverMeadow-specific information when relevant.`;
+    
+    // Create a user prompt combining the user's question and context
+    const userPrompt = `
+User's diagram request: "${prompt}"
+    
+Context information:
+${knowledgeContext.join('\n\n')}
+
+Provide a detailed technical explanation about this topic that would help in creating a diagram.`;
+    
+    // Call OpenAI API to get an initial response
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+    
+    // Extract the response content
+    const content = response.choices[0].message.content || '';
+    console.log('Generated initial response:', content.substring(0, 200) + '...');
+    
+    return content;
+  } catch (error) {
+    console.error('Error getting initial response:', error);
+    return `RiverMeadow provides cloud migration services with a core platform that connects source environments to target environments, supporting various migration types including P2V, V2C, and C2C across different cloud platforms like AWS, Azure, and Google Cloud.`;
+  }
+};
+
+/**
  * Main function to generate a diagram based on a prompt and knowledge context
  */
 export const generateDiagram = async (
@@ -304,11 +352,19 @@ export const generateDiagram = async (
     
     console.log('Generating diagram for prompt:', prompt);
     
+    // STEP 1: Get initial detailed response
+    const initialResponse = await getInitialResponse(prompt, knowledgeContext);
+    console.log('Received initial detailed response, now extracting diagram components');
+    
+    // STEP 2: Use the initial response to extract diagram components
     try {
-      // Extract meaningful components from the knowledge context and prompt
-      const diagramComponents = await extractDiagramComponentsFromContext(prompt, knowledgeContext);
+      // Create an enhanced context combining original context and initial response
+      const enhancedContext = [...knowledgeContext, initialResponse];
       
-      // Generate Draw.io XML
+      // Extract meaningful components from the enhanced context and prompt
+      const diagramComponents = await extractDiagramComponentsFromContext(prompt, enhancedContext);
+      
+      // STEP 3: Generate Draw.io XML
       const drawioXml = createDrawioXML(diagramComponents);
       
       // Save the Draw.io file

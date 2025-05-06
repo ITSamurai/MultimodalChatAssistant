@@ -540,7 +540,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Add a system message before the user's message to instruct the AI about the diagram
         enhancedMessages.push({
           role: 'system',
-          content: 'A diagram has been generated based on the user\'s request. Please reference the diagram in your response, saying "As you can see in the diagram below..." and then describe what the diagram is showing.'
+          content: `A diagram has been generated based on the user's request. 
+          
+Please reference the diagram in your response with this exact phrase: "As you can see in the diagram below..." and then describe what the diagram is showing.
+
+The diagram file is located at ${diagramReference.imagePath}, created with Draw.io XML format.
+
+The diagram shows a cloud migration workflow with components like source environment, RiverMeadow Platform, and target cloud environments.
+
+Explain that this diagram was generated based on their request, and they can download it or explore it interactively right in the chat. The diagram is interactive, allowing zoom, pan, and download options.`
         });
       }
       
