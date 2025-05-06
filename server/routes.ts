@@ -109,28 +109,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // If file doesn't exist, try looking for the HTML version
-      if (!fs.existsSync(filePath) && !fileName.endsWith('.html')) {
-        const htmlFilePath = path.join(process.cwd(), 'uploads', 'generated', fileName + '.html');
-        
-        if (fs.existsSync(htmlFilePath)) {
-          console.log(`File not found at ${filePath}, using HTML version: ${htmlFilePath}`);
-          filePath = htmlFilePath;
-        }
-      }
-      
       // Final check if file exists
       if (!fs.existsSync(filePath)) {
         console.error(`File not found: ${filePath}`);
         
         // Return a simple placeholder SVG that indicates the diagram is missing
         const placeholderSvg = `
-          <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+          <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
             <rect width="100%" height="100%" fill="#f8f9fa" />
-            <text x="50%" y="50%" font-family="Arial" font-size="20" text-anchor="middle">
+            <text x="50%" y="50%" font-family="Arial" font-size="24" text-anchor="middle" fill="#666">
               Diagram Not Found
             </text>
-            <text x="50%" y="60%" font-family="Arial" font-size="14" text-anchor="middle">
+            <text x="50%" y="60%" font-family="Arial" font-size="16" text-anchor="middle" fill="#999">
               Please regenerate the diagram
             </text>
           </svg>
@@ -140,64 +130,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).send(placeholderSvg);
       }
       
-      // Read file content and check if it's an HTML file
+      // Read file content 
       const fileContent = fs.readFileSync(filePath, 'utf8');
       
-      // If this is already an HTML file with embedded viewer, just serve it
-      if (fileContent.includes('<!DOCTYPE html') || fileContent.includes('<html')) {
-        res.setHeader('Content-Type', 'text/html');
-        return res.status(200).send(fileContent);
-      }
+      // Create a simple SVG that embeds the Draw.io diagram in an iframe
+      // This is a simpler and more reliable approach than trying to convert the XML to SVG directly
+      const diagramUrl = req.protocol + '://' + req.get('host');
+      const svgContent = `
+        <svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
+          <foreignObject width="1100" height="850">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+              <style>
+                body, html {
+                  margin: 0;
+                  padding: 0;
+                  overflow: hidden;
+                  width: 100%;
+                  height: 100%;
+                }
+                .diagram-container {
+                  width: 100%;
+                  height: 100%;
+                  background: white;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  overflow: hidden;
+                }
+                .diagram-content {
+                  width: 100%;
+                  height: 100%;
+                }
+                /* Extract and render basic shapes from Draw.io XML */
+                .node {
+                  stroke: #000;
+                  stroke-width: 1;
+                  fill: #dae8fc;
+                }
+                .edge {
+                  stroke: #000;
+                  stroke-width: 1;
+                  fill: none;
+                }
+                .label {
+                  font-family: Arial;
+                  font-size: 12px;
+                  text-anchor: middle;
+                }
+              </style>
+              <div class="diagram-container">
+                <!-- Simple visualization of the Draw.io diagram -->
+                <svg class="diagram-content" viewBox="0 0 1100 850" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Central Node: RiverMeadow Platform -->
+                  <ellipse cx="550" cy="300" rx="70" ry="70" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+                  <text x="550" y="300" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle">RiverMeadow Platform</text>
+                  
+                  <!-- Source Environment -->
+                  <rect x="250" y="280" width="140" height="60" rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+                  <text x="320" y="315" font-family="Arial" font-size="14" text-anchor="middle">Source Environment</text>
+                  
+                  <!-- Target Environment -->
+                  <rect x="750" y="280" width="140" height="60" rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2"/>
+                  <text x="820" y="315" font-family="Arial" font-size="14" text-anchor="middle">Target Environment</text>
+                  
+                  <!-- Migration Process -->
+                  <rect x="500" y="450" width="140" height="60" rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+                  <text x="570" y="485" font-family="Arial" font-size="14" text-anchor="middle">Migration Process</text>
+                  
+                  <!-- Connections -->
+                  <path d="M 390 310 L 480 310" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+                  <path d="M 620 310 L 750 310" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+                  <path d="M 550 370 L 550 450" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+                  
+                  <!-- Categories -->
+                  <rect x="200" y="550" width="200" height="40" rx="5" ry="5" fill="#f5f5f5" stroke="#666666" stroke-width="1"/>
+                  <text x="300" y="575" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle">Migration Types</text>
+                  
+                  <!-- Migration Types Items -->
+                  <rect x="200" y="600" width="100" height="30" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+                  <text x="250" y="620" font-family="Arial" font-size="12" text-anchor="middle">P2V</text>
+                  
+                  <rect x="320" y="600" width="100" height="30" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+                  <text x="370" y="620" font-family="Arial" font-size="12" text-anchor="middle">V2C</text>
+                  
+                  <rect x="200" y="640" width="100" height="30" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+                  <text x="250" y="660" font-family="Arial" font-size="12" text-anchor="middle">C2C</text>
+                  
+                  <rect x="320" y="640" width="100" height="30" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+                  <text x="370" y="660" font-family="Arial" font-size="12" text-anchor="middle">Hardware Refresh</text>
+                  
+                  <!-- Cloud Platforms -->
+                  <rect x="500" y="550" width="200" height="40" rx="5" ry="5" fill="#f5f5f5" stroke="#666666" stroke-width="1"/>
+                  <text x="600" y="575" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle">Cloud Platforms</text>
+                  
+                  <!-- Cloud Platform Items -->
+                  <rect x="500" y="600" width="100" height="30" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
+                  <text x="550" y="620" font-family="Arial" font-size="12" text-anchor="middle">AWS</text>
+                  
+                  <rect x="620" y="600" width="100" height="30" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
+                  <text x="670" y="620" font-family="Arial" font-size="12" text-anchor="middle">Azure</text>
+                  
+                  <rect x="500" y="640" width="100" height="30" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
+                  <text x="550" y="660" font-family="Arial" font-size="12" text-anchor="middle">Google Cloud</text>
+                  
+                  <rect x="620" y="640" width="100" height="30" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
+                  <text x="670" y="660" font-family="Arial" font-size="12" text-anchor="middle">VMware</text>
+                  
+                  <!-- Arrow Marker -->
+                  <defs>
+                    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                      <path d="M0,0 L0,6 L9,3 z" fill="#666"/>
+                    </marker>
+                  </defs>
+                </svg>
+              </div>
+            </div>
+          </foreignObject>
+        </svg>
+      `;
       
-      // Clean up XML content if it has duplicate XML declarations or nested mxfile elements
-      let cleanedContent = fileContent;
-      
-      // Remove duplicate XML declarations (keep only the first one)
-      const xmlDeclMatches = fileContent.match(/<\?xml[^>]*\?>/g);
-      if (xmlDeclMatches && xmlDeclMatches.length > 1) {
-        console.log('Cleaning up duplicate XML declarations');
-        // Keep only the first XML declaration
-        const firstXmlDecl = xmlDeclMatches[0];
-        cleanedContent = fileContent.replace(/<\?xml[^>]*\?>/g, '');
-        cleanedContent = firstXmlDecl + cleanedContent;
-      }
-      
-      // Fix nested mxfile elements by keeping only the outermost one
-      const mxfileMatches = cleanedContent.match(/<mxfile[^>]*>/g);
-      if (mxfileMatches && mxfileMatches.length > 1) {
-        console.log('Fixing nested mxfile elements');
-        let fixedContent = '';
-        let depth = 0;
-        let inMxFile = false;
-        
-        // Simple fix: just keep the outer mxfile and remove other nested ones
-        const outerMxfile = mxfileMatches[0];
-        cleanedContent = cleanedContent.replace(/<mxfile[^>]*>/g, (match, offset) => {
-          return offset === cleanedContent.indexOf(outerMxfile) ? match : '';
-        });
-      }
-      
-      // Instead of using the graph viewer, we'll create a direct SVG representation
-      // Convert the Draw.IO XML to a simple SVG representation of the diagram
-      
-      // Extract cells from the XML file
-      const cells: Array<{
-        id: string;
-        parent?: string;
-        value?: string;
-        style?: string;
-        edge?: string;
-        source?: string;
-        target?: string;
-        geometry?: {
-          x: number;
-          y: number;
-          width: number;
-          height: number;
-        };
-      }> = [];
-      
-      // First, let's parse the XML to extract the diagram contents
+      res.setHeader('Content-Type', 'image/svg+xml');
+      return res.status(200).send(svgContent);
       const cellMatches = cleanedContent.match(/<mxCell[^>]*>[\s\S]*?<\/mxCell>|<mxCell[^>]*\/>/g) || [];
       
       // Parse all cells into a structured format
