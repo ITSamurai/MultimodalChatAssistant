@@ -897,19 +897,36 @@ IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown for
       temperature: 0.7,
     });
     
-    // Extract the mermaid code from the response
+    // Extract and validate the diagram response
     const messageContent = diagramResponse.choices[0].message.content || "";
-    const mermaidCode = messageContent.trim();
-    let cleanMermaidCode = mermaidCode
+    
+    // Add uniqueness factors
+    const timestamp = Date.now();
+    const uniqueId = `${timestamp}-${Math.random().toString(36).substring(2)}`;
+    
+    // Incorporate context and uniqueness into prompt
+    const enhancedPrompt = `
+      Create a UNIQUE diagram specifically for this request:
+      ${prompt}
+      
+      Requirements:
+      - Use unique identifier: ${uniqueId}
+      - Make this visually distinct
+      - Create clear professional layout
+      - Include RiverMeadow specific terminology
+      `;
+      
+    // Process the response
+    if (!messageContent.includes('```mermaid')) {
+      console.error('Invalid diagram response received');
+      throw new Error('Failed to generate valid diagram');
+    }
+    
+    // Extract and clean the mermaid code
+    let cleanMermaidCode = messageContent
       .replace(/```mermaid/g, '')
       .replace(/```/g, '')
       .trim();
-    
-    // Validate and ensure the mermaid code has proper syntax
-    if (!cleanMermaidCode.startsWith('graph') && !cleanMermaidCode.startsWith('flowchart')) {
-      console.log('Adding flowchart TD prefix to mermaid code');
-      cleanMermaidCode = 'flowchart TD\n' + cleanMermaidCode;
-    }
     
     // Check for minimum valid mermaid code length
     if (cleanMermaidCode.length < 10) {
