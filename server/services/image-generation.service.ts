@@ -276,11 +276,11 @@ IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown for
           .replace(/```/g, '')
           .trim();
         
-        // Create timestamp & unique filename
-        const timestamp = Date.now();
-        const uuid = uuidv4().substring(0, 8);
-        const xmlFilename = `diagram_${timestamp}_${uuid}.drawio`;
-        const htmlFilename = `diagram_${timestamp}_${uuid}.html`;
+        // Create unique filenames with new timestamp to ensure uniqueness
+        const fileTimestamp = Date.now();
+        const fileUuid = uuidv4().substring(0, 8);
+        const xmlFilename = `diagram_${fileTimestamp}_${fileUuid}.drawio`;
+        const htmlFilename = `diagram_${fileTimestamp}_${fileUuid}.html`;
         
         // Set file paths
         const xmlPath = path.join(GENERATED_IMAGES_DIR, xmlFilename);
@@ -500,7 +500,8 @@ IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown for
     console.log('Using Mermaid for diagram generation');
     let mermaidPrompt;
     
-    if (isNetworkDiagram) {
+    // Choose the appropriate mermaid diagram type based on the diagram category
+    if (diagramInfo.category === 'network') {
       mermaidPrompt = "Create a mermaid.js network diagram code for: " + enhancedPrompt + "\n" +
       "Use the appropriate syntax for network diagrams. In Mermaid, you can represent networks using:\n" +
       "1. flowchart LR - for left-to-right network diagrams\n" +
@@ -512,13 +513,51 @@ IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown for
       "   - [/Load Balancer/] for load balancers\n" +
       "   - [(Storage)] for storage\n" +
       "   - [Cloud] for cloud services\n\n" +
-      "Keep the diagram focused on the key network components and their connections.\n" +
+      "3. Use these specific colors for styling: " + 
+         diagramInfo.colors.primary + ", " + 
+         diagramInfo.colors.secondary + ", " + 
+         diagramInfo.colors.accent + "\n" +
+      "4. Include these elements: " + diagramInfo.elements.join(', ') + "\n" +
+      "5. Create a title: RiverMeadow " + diagramInfo.specificType + "\n\n" +
       "Only generate valid mermaid.js code wrapped in a code block, nothing else. Use proper RiverMeadow terminology.";
+    } else if (diagramInfo.category === 'os-migration') {
+      mermaidPrompt = "Create a mermaid.js OS migration diagram code for: " + enhancedPrompt + "\n" +
+      "The diagram should be a flowchart (use flowchart " + 
+      (diagramInfo.layout.includes('left') ? 'LR' : 'TD') + " syntax). " +
+      "Show the process of migrating from one OS to another with RiverMeadow software.\n" +
+      "1. Use different node shapes for different steps in the migration process\n" +
+      "2. Use these specific colors for styling: " + 
+         diagramInfo.colors.primary + ", " + 
+         diagramInfo.colors.secondary + ", " + 
+         diagramInfo.colors.accent + "\n" +
+      "3. Include these elements: " + diagramInfo.elements.join(', ') + "\n" +
+      "4. Create a title: RiverMeadow " + diagramInfo.specificType + "\n\n" +
+      "Only generate valid mermaid.js code wrapped in a code block, nothing else. Make it VISUALLY UNIQUE.";
+    } else if (diagramInfo.category === 'software') {
+      mermaidPrompt = "Create a mermaid.js software architecture diagram code for: " + enhancedPrompt + "\n" +
+      "The diagram should be a flowchart (use flowchart " + 
+      (diagramInfo.layout.includes('left') ? 'LR' : 'TD') + " syntax). " +
+      "Show the software components and their relationships in RiverMeadow's platform.\n" +
+      "1. Use different node shapes for different types of software components\n" +
+      "2. Use these specific colors for styling: " + 
+         diagramInfo.colors.primary + ", " + 
+         diagramInfo.colors.secondary + ", " + 
+         diagramInfo.colors.accent + "\n" +
+      "3. Include these elements: " + diagramInfo.elements.join(', ') + "\n" +
+      "4. Create a title: RiverMeadow " + diagramInfo.specificType + "\n\n" +
+      "Only generate valid mermaid.js code wrapped in a code block, nothing else. Make it VISUALLY UNIQUE.";
     } else {
-      mermaidPrompt = "Create a mermaid.js diagram code for: " + enhancedPrompt + "\n" +
+      // Default to process diagram
+      mermaidPrompt = "Create a mermaid.js process diagram code for: " + enhancedPrompt + "\n" +
       "The diagram should be a flowchart (use flowchart TD syntax). Keep it simple and focused on the main steps.\n" +
-      "For example, if it's about OS migration steps, show the main 5-7 steps in the process.\n" +
-      "Only generate valid mermaid.js code wrapped in a code block, nothing else. Use RiverMeadow terminology.";
+      "1. Show the main 5-7 steps in the RiverMeadow migration process\n" +
+      "2. Use these specific colors for styling: " + 
+         diagramInfo.colors.primary + ", " + 
+         diagramInfo.colors.secondary + ", " + 
+         diagramInfo.colors.accent + "\n" +
+      "3. Include these elements: " + diagramInfo.elements.join(', ') + "\n" +
+      "4. Create a title: RiverMeadow " + diagramInfo.specificType + "\n\n" +
+      "Only generate valid mermaid.js code wrapped in a code block, nothing else. Make it VISUALLY UNIQUE.";
     }
 
     const diagramResponse = await openai.chat.completions.create({
@@ -549,7 +588,8 @@ IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown for
     if (cleanMermaidCode.length < 10) {
       console.log('Generated mermaid code too short, using fallback diagram');
       
-      if (isNetworkDiagram) {
+      // Create a fallback diagram based on the diagram category
+      if (diagramInfo.category === 'network') {
         // Network diagram fallback
         cleanMermaidCode = `flowchart LR
     Internet((Internet)) --> FW{{Firewall}}
@@ -562,27 +602,82 @@ IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown for
     RMS --> Cloud1[Cloud Provider 1]
     RMS --> Cloud2[Cloud Provider 2]
     
-    classDef network fill:#e3f2fd,stroke:#2196f3,stroke-width:1px;
-    classDef source fill:#e8f5e9,stroke:#43a047,stroke-width:1px;
-    classDef target fill:#fff3e0,stroke:#ff9800,stroke-width:1px;
+    classDef network fill:${diagramInfo.colors.primary},stroke:#2196f3,stroke-width:1px;
+    classDef source fill:${diagramInfo.colors.secondary},stroke:#43a047,stroke-width:1px;
+    classDef target fill:${diagramInfo.colors.accent},stroke:#ff9800,stroke-width:1px;
     
     class Internet,FW,LB network
     class S1,S2 source
     class Cloud1,Cloud2 target`;
+      } else if (diagramInfo.category === 'os-migration') {
+        // OS Migration fallback
+        cleanMermaidCode = `flowchart ${diagramInfo.layout.includes('left') ? 'LR' : 'TD'}
+    Start([Start]) --> Assessment[Source OS Assessment]
+    Assessment --> Compatibility{Compatibility Check}
+    Compatibility -->|Compatible| Backup[Backup Source System]
+    Compatibility -->|Incompatible| Remediation[Application Remediation]
+    Remediation --> Backup
+    Backup --> Migration[OS Migration Process]
+    Migration --> Testing[Application Testing]
+    Testing --> Validation{Validation}
+    Validation -->|Pass| Cutover[Production Cutover]
+    Validation -->|Fail| Rollback[Rollback to Source]
+    Rollback --> Assessment
+    Cutover --> End([Migration Complete])
+    
+    classDef start fill:${diagramInfo.colors.primary},stroke:#333,color:white;
+    classDef process fill:${diagramInfo.colors.secondary},stroke:#333;
+    classDef decision fill:${diagramInfo.colors.accent},stroke:#333;
+    
+    class Start,End start
+    class Assessment,Backup,Migration,Testing,Cutover,Rollback,Remediation process
+    class Compatibility,Validation decision`;
+      } else if (diagramInfo.category === 'software') {
+        // Software architecture fallback
+        cleanMermaidCode = `flowchart ${diagramInfo.layout.includes('left') ? 'LR' : 'TD'}
+    UI[User Interface] --> API[RiverMeadow API]
+    API --> Auth[(Authentication)]
+    API --> Core{Core Migration Engine}
+    Core --> SourceAdapter[Source Adapter]
+    Core --> TargetAdapter[Target Adapter]
+    SourceAdapter --> SourceSystems[(Source Systems)]
+    TargetAdapter --> TargetSystems[(Target Systems)]
+    Core --> Storage[(Migration Storage)]
+    Core --> Jobs[Job Manager]
+    Jobs --> Worker1[Worker 1]
+    Jobs --> Worker2[Worker 2]
+    
+    classDef frontend fill:${diagramInfo.colors.primary},stroke:#333;
+    classDef backend fill:${diagramInfo.colors.secondary},stroke:#333;
+    classDef data fill:${diagramInfo.colors.accent},stroke:#333;
+    
+    class UI frontend
+    class API,Core,SourceAdapter,TargetAdapter,Jobs,Worker1,Worker2 backend
+    class Auth,Storage,SourceSystems,TargetSystems data`;
       } else {
         // Process diagram fallback
         cleanMermaidCode = `flowchart TD
-    A[RiverMeadow Migration Start] --> B[Deploy Migration Appliance]
+    A([RiverMeadow Migration Start]) --> B[Deploy Migration Appliance]
     B --> C[Configure Source and Target]
-    C --> D[Perform Preflight Checks]
-    D --> E[Execute Migration]
+    C --> D{Perform Preflight Checks}
+    D -->|Pass| E[Execute Migration]
+    D -->|Fail| C
     E --> F[Verify Results]
-    F --> G[Migration Complete]`;
+    F --> G([Migration Complete])
+    
+    classDef start fill:${diagramInfo.colors.primary},stroke:#333,color:white;
+    classDef process fill:${diagramInfo.colors.secondary},stroke:#333;
+    classDef decision fill:${diagramInfo.colors.accent},stroke:#333;
+    
+    class A,G start
+    class B,C,E,F process
+    class D decision`;
       }
     }
     
     // Create an HTML file with the mermaid diagram using string concatenation
-    const diagramTitle = isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram';
+    // Get a more specific title based on diagram category
+    let diagramTitle = `RiverMeadow ${diagramInfo.specificType}`;
     const htmlContent = '<!DOCTYPE html>' +
 '<html lang="en">' +
 '<head>' +
