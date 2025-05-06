@@ -968,14 +968,11 @@ cleanMermaidCode +
 '</body>' +
 '</html>';
 
-    // Create timestamp & unique filename with a common base
-    const timestamp = Date.now();
-    const uuid = uuidv4().substring(0, 8);
-    const baseFilename = `generated_diagram_${timestamp}_${uuid}`;
-    const htmlFilename = `${baseFilename}.html`;
-    const mmdFilename = `${baseFilename}.mmd`;
-
-    const htmlPath = path.join(GENERATED_IMAGES_DIR, htmlFilename);
+    // Create timestamp & unique filename for mermaid diagram
+    const mermaidTimestamp = Date.now();
+    const mermaidUuid = uuidv4().substring(0, 8);
+    const mermaidBaseFilename = `generated_diagram_${mermaidTimestamp}_${mermaidUuid}`;
+    const mmdFilename = `${mermaidBaseFilename}.mmd`;
     const mmdPath = path.join(GENERATED_IMAGES_DIR, mmdFilename);
 
     // Save HTML file to disk
@@ -1089,7 +1086,7 @@ function detectNetworkDiagramRequest(prompt: string): boolean {
 /**
  * Check if a prompt is asking for an image or diagram
  */
-export const isImageGenerationRequest = (prompt: string): boolean => {
+const isImageGenerationRequest = (prompt: string): boolean => {
   // Convert to lowercase for case-insensitive matching
   const lowercasePrompt = prompt.toLowerCase();
 
