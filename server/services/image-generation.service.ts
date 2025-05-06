@@ -357,49 +357,8 @@ export const generateDiagram = async (
       cleanMermaidCode = 'flowchart TD\n' + cleanMermaidCode;
     }
     
-    // Check if this is a specific OS-based migration diagram request
-    const lowercasePrompt = prompt.toLowerCase();
-    const isExplicitOsMigrationRequest = lowercasePrompt.includes('os based migration') || 
-                                       (lowercasePrompt.includes('os migration') && !lowercasePrompt.includes('type'));
-                                 
-    // Only use the specific OS migration diagram for explicit OS migration requests
-    if (isExplicitOsMigrationRequest) {
-      console.log('Explicit OS-based migration diagram request detected, using specific diagram');
-      
-      // Use a simpler version of the OS migration diagram that's guaranteed to render
-      cleanMermaidCode = `graph TD
-    A[Review OS-based Migration Requirements] --> B[Migration Setup]
-    B --> C[Full Migration Profile Setup]
-    B --> D[Differential Migration Profile Setup]
-    C --> E[Source Server 1]
-    C --> F[Source Server 2]
-    D --> G[Source Server 1]
-    D --> H[Source Server 2]
-    E --> I[Target Setup]
-    F --> J[Target Setup]
-    G --> K[Target Setup]
-    H --> L[Target Setup]
-    I --> M[Migration Summary]
-    J --> M
-    K --> M
-    L --> M
-    M --> N[Deployment Plan]
-    
-    style A fill:#e3f2fd,stroke:#2196f3
-    style B fill:#e3f2fd,stroke:#2196f3
-    style C fill:#e8f5e9,stroke:#43a047
-    style D fill:#e8f5e9,stroke:#43a047
-    style E fill:#f3e5f5,stroke:#9c27b0
-    style F fill:#f3e5f5,stroke:#9c27b0
-    style G fill:#f3e5f5,stroke:#9c27b0
-    style H fill:#f3e5f5,stroke:#9c27b0
-    style I fill:#fff3e0,stroke:#ff9800
-    style J fill:#fff3e0,stroke:#ff9800
-    style K fill:#fff3e0,stroke:#ff9800
-    style L fill:#fff3e0,stroke:#ff9800
-    style M fill:#fafafa,stroke:#607d8b
-    style N fill:#fafafa,stroke:#607d8b`;
-    } else if (cleanMermaidCode.length < 10) {
+    // Check for minimum valid mermaid code length
+    if (cleanMermaidCode.length < 10) {
       console.log('Generated mermaid code too short, using fallback diagram');
       
       if (isNetworkDiagram) {
@@ -759,54 +718,58 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
   // Convert to lowercase for case-insensitive matching
   const lowercasePrompt = prompt.toLowerCase();
   
-  // Special case: if prompt is related to OS migration, consider it a diagram request
-  if (/\bos\s*(?:based|-)?\s*migration\b/i.test(lowercasePrompt)) {
-    console.log('Direct OS migration diagram request detected');
-    return true;
-  }
-
   // First, check if this is a question - if it starts with what, how, why, when, etc.
   // If so, we DON'T want to generate a diagram for it unless it explicitly asks
   const isQuestion = /^(?:what|how|why|when|where|who|can|is|are|do|does|which|could|would|should|will)\b/i.test(lowercasePrompt);
   
-  // ONLY if this is a question, let's check if it EXPLICITLY asks for a diagram
+  // ONLY if this is a question, let's check if it EXPLICITLY asks for a visual
   if (isQuestion) {
     // If it's a question, it should explicitly ask for a visual
-    const explicitlyAsksForDiagram = 
-      /(?:show|create|draw|generate|make|give)\s+(?:me|us|a|an)?\s*(?:diagram|chart|visual|graph|picture)/i.test(lowercasePrompt) ||
-      /(?:can|could)\s+(?:you|i)\s+(?:show|see|have|get)\s+(?:a|an)?\s*(?:diagram|visual|chart|graph)/i.test(lowercasePrompt) ||
-      /(?:i|we)\s+(?:want|need|would like)\s+(?:a|an|to see)?\s*(?:diagram|chart|visual|graph)/i.test(lowercasePrompt);
+    const explicitlyAsksForVisual = 
+      /(?:show|create|draw|generate|make|give|visualize|illustrate|display)\s+(?:me|us|a|an)?\s*(?:diagram|chart|visual|graph|picture|image|illustration|visualization|flow)/i.test(lowercasePrompt) ||
+      /(?:can|could)\s+(?:you|i)\s+(?:show|see|have|get|create|make|draw)\s+(?:a|an)?\s*(?:diagram|visual|chart|graph|picture|image|illustration|visualization)/i.test(lowercasePrompt) ||
+      /(?:i|we)\s+(?:want|need|would like)\s+(?:a|an|to see)?\s*(?:diagram|chart|visual|graph|picture|image|illustration|visualization)/i.test(lowercasePrompt) ||
+      /(?:explain|describe|show)\s+(?:visually|with\s+a\s+diagram|with\s+an\s+image|with\s+a\s+picture|with\s+a\s+visual)/i.test(lowercasePrompt);
       
-    if (!explicitlyAsksForDiagram) {
-      console.log('Question detected but does not explicitly ask for a diagram');
+    if (!explicitlyAsksForVisual) {
+      console.log('Question detected but does not explicitly ask for a visual');
       return false;
     }
   }
   
-  // Check for commands that explicitly ask for OS migration diagrams/visuals
+  // Check for domain-specific diagram requests (any type, not just OS migration)
   if (
-    (lowercasePrompt.includes('os migration') && lowercasePrompt.includes('diagram')) ||
-    (lowercasePrompt.includes('rivermeadow') && lowercasePrompt.includes('diagram')) ||
-    (lowercasePrompt.includes('migration') && lowercasePrompt.includes('diagram'))
+    (lowercasePrompt.includes('migration') && lowercasePrompt.includes('diagram')) ||
+    (lowercasePrompt.includes('rivermeadow') && (
+      lowercasePrompt.includes('diagram') || 
+      lowercasePrompt.includes('visual') || 
+      lowercasePrompt.includes('picture') || 
+      lowercasePrompt.includes('image'))
+    )
   ) {
-    console.log('OS Migration or RiverMeadow diagram request detected');
+    console.log('Migration or RiverMeadow diagram request detected');
     return true;
   }
   
-  // More focused detection for direct diagram requests (must contain diagram-specific words)
-  const containsDiagramWords = 
+  // More focused detection for direct visual requests (expanded to include more terms)
+  const containsVisualWords = 
     lowercasePrompt.includes('diagram') || 
     lowercasePrompt.includes('chart') || 
     lowercasePrompt.includes('graph') ||
     lowercasePrompt.includes('visualization') ||
     lowercasePrompt.includes('flowchart') ||
-    lowercasePrompt.includes('architecture');
+    lowercasePrompt.includes('architecture') ||
+    lowercasePrompt.includes('picture') ||
+    lowercasePrompt.includes('image') ||
+    lowercasePrompt.includes('illustration') ||
+    lowercasePrompt.includes('visual') ||
+    lowercasePrompt.includes('infographic');
   
-  if (!containsDiagramWords) {
+  if (!containsVisualWords) {
     return false;
   }
   
-  // Additional check for action verbs specific to creating visuals
+  // Additional check for action verbs specific to creating visuals (expanded list)
   const containsActionVerbs =
     lowercasePrompt.includes('create') ||
     lowercasePrompt.includes('draw') ||
@@ -814,7 +777,12 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
     lowercasePrompt.includes('generate') ||
     lowercasePrompt.includes('visualize') ||
     lowercasePrompt.includes('make') ||
-    lowercasePrompt.includes('design');
+    lowercasePrompt.includes('design') ||
+    lowercasePrompt.includes('illustrate') ||
+    lowercasePrompt.includes('sketch') ||
+    lowercasePrompt.includes('render') ||
+    lowercasePrompt.includes('display') ||
+    lowercasePrompt.includes('depict');
     
   if (containsActionVerbs && containsDiagramWords) {
     console.log('Direct diagram request detected via keyword matching');
