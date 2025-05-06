@@ -344,10 +344,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'Not authenticated' });
       }
       
+      console.log('Creating new chat for user:', req.user.id);
+      
       const chat = await storage.createChat({
         userId: req.user.id,
         title: req.body.title || 'New Conversation'
       });
+      
+      console.log('Created new chat:', chat);
+      
+      // After creating the chat, refresh the list of chats for the user
+      const refreshedChats = await storage.getUserChats(req.user.id);
+      console.log(`User now has ${refreshedChats.length} chats`);
       
       return res.status(201).json(chat);
     } catch (error) {
@@ -357,15 +365,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all chats for the current user
-  app.get('/api/chats', async (req: Request, res: Response) => {
+  app.get('/api/chats', requireTokenAuth, async (req: Request, res: Response) => {
     try {
-      if (req.user) {
-        const chats = await storage.getUserChats(req.user.id);
-        return res.json(chats);
-      } else {
-        // Return empty array for non-authenticated users
-        return res.json([]);
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
       }
+      
+      console.log('Fetching chats for user:', req.user.id);
+      const chats = await storage.getUserChats(req.user.id);
+      console.log(`Found ${chats.length} chats for user ${req.user.id}`);
+      
+      return res.json(chats);
     } catch (error) {
       console.error('Error fetching chats:', error);
       res.status(500).json({ error: 'Failed to fetch chats' });

@@ -1,0 +1,113 @@
+<mxfile host="app.diagrams.net" modified="2025-05-06T20:55:01.156Z" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="diagram-1746564901156-re52d0" name="RiverMeadow Cloud Migration Components">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Central Node -->
+        <mxCell id="2" value="&lt;b&gt;RiverMeadow Platform&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="460" y="350" width="140" height="140" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Control Plane -->
+        <mxCell id="3" value="Control Plane" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="710" y="350" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Source Agent -->
+        <mxCell id="4" value="Source Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="636.776695296637" y="491.4213562373095" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Target Agent -->
+        <mxCell id="5" value="Target Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="460" y="550" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Data Pipeline -->
+        <mxCell id="6" value="Data Pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="283.22330470336317" y="491.4213562373095" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Migration Services -->
+        <mxCell id="7" value="Migration Services" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="210" y="350" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: API Integrations -->
+        <mxCell id="8" value="API Integrations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="283.22330470336306" y="208.57864376269052" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Security and Compliance -->
+        <mxCell id="9" value="Security and Compliance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="459.99999999999994" y="150" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Monitoring and Reporting -->
+        <mxCell id="10" value="Monitoring and Reporting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="636.7766952966368" y="208.57864376269046" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- Connection from RiverMeadow Platform to Control Plane -->
+        <mxCell id="11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Connection from Control Plane to Source Agent -->
+        <mxCell id="12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Connection from Source Agent to Data Pipeline -->
+        <mxCell id="13" value="Data Capture" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="4" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Connection from Data Pipeline to Target Agent -->
+        <mxCell id="14" value="Data Transfer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="6" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Connection from Target Agent to Migration Services -->
+        <mxCell id="15" value="Deployment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="5" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Connection from Migration Services to Monitoring and Reporting -->
+        <mxCell id="16" value="Validation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="7" target="10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Agents Category -->
+        <mxCell id="17" value="&lt;b&gt;Agents&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="600" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="Source Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="650" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="Target Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="340" y="650" width="120" height="40" as="geometry" />
+        </mxCell>
+        <!-- Data Transfer and Transformation Category -->
+        <mxCell id="20" value="&lt;b&gt;Data Transfer and Transformation&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="730" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="Data Pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="780" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="Transformations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="340" y="780" width="120" height="40" as="geometry" />
+        </mxCell>
+        <!-- Migration Services Category -->
+        <mxCell id="23" value="&lt;b&gt;Migration Services&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="860" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="Pre-Migration Assessment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="910" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="Migration Execution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="340" y="910" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="Post-Migration Validation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="480" y="910" width="120" height="40" as="geometry" />
+        </mxCell>
+        <!-- Security Category -->
+        <mxCell id="27" value="&lt;b&gt;Security&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="990" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="28" value="Encryption" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1040" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="29" value="Compliance Auditing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1040" width="120" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

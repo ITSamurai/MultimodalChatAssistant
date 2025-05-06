@@ -47,17 +47,25 @@ export function ChatTitlesProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         
         // If we have chat data, log it
-        if (data && data.length > 0) {
-          console.log(`Server returned ${data.length} chats:`, 
-            data.map((c: Chat) => `id:${c.id}, title:"${c.title}"`).join(', '));
+        if (data && Array.isArray(data)) {
+          if (data.length > 0) {
+            console.log(`Server returned ${data.length} chats:`, 
+              data.map((c: Chat) => `id:${c.id}, title:"${c.title}"`).join(', '));
+          } else {
+            console.log('Server returned empty chat list');
+          }
+          
+          // Set the chats regardless of whether it's empty or not
+          setChats(data);
+        } else {
+          console.error('Invalid chat data received:', data);
         }
         
-        setChats(data);
         lastRefreshTime.current = Date.now();
         // Clear any pending forceUpdate requests
         forceUpdateQueue.current.clear();
       } else {
-        console.error('Failed to load chats');
+        console.error('Failed to load chats:', await response.text());
       }
     } catch (error) {
       console.error('Error loading chats:', error);
@@ -65,7 +73,7 @@ export function ChatTitlesProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       refreshInProgress.current = false;
     }
-  }, [chats.length]);
+  }, []);
 
   // Function to force update a specific chat by ID
   const forceUpdateChat = useCallback(async (chatId: number) => {
