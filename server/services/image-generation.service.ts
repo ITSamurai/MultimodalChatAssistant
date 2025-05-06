@@ -33,16 +33,42 @@ const ensureDirectoriesExist = async () => {
 };
 
 /**
- * Enhance prompt with specific diagram language
+ * Enhance prompt with specific diagram language based on the diagram type
  */
 const enhancePrompt = (prompt: string, isNetworkDiagram: boolean): string => {
   // Add RiverMeadow terminology and diagram-specific enhancements
   let enhancedPrompt = prompt;
+  const lowercasePrompt = prompt.toLowerCase();
+  
+  // Detect diagram theme from prompt for more specific enhancements
+  const isCloudFocused = lowercasePrompt.includes('cloud') || 
+                        lowercasePrompt.includes('aws') ||
+                        lowercasePrompt.includes('azure') ||
+                        lowercasePrompt.includes('gcp');
+                        
+  const isSoftwareFocused = lowercasePrompt.includes('software') || 
+                           lowercasePrompt.includes('application') ||
+                           lowercasePrompt.includes('program') ||
+                           lowercasePrompt.includes('code');
+                           
+  const isProcessFocused = lowercasePrompt.includes('process') || 
+                          lowercasePrompt.includes('workflow') ||
+                          lowercasePrompt.includes('steps') ||
+                          lowercasePrompt.includes('procedure');
   
   if (isNetworkDiagram) {
-    enhancedPrompt += " Include source systems, target systems, and RiverMeadow Migration Server in the architecture.";
+    if (isCloudFocused) {
+      enhancedPrompt += " Include source systems, target cloud environments, and RiverMeadow Migration Server in the architecture. Use cloud provider icons where appropriate. Show network connections between on-premises and cloud components.";
+    } else {
+      enhancedPrompt += " Include source systems, target systems, and RiverMeadow Migration Server in the architecture. Show network connections, firewalls, and data flow direction. Use appropriate networking icons.";
+    }
+  } else if (isProcessFocused) {
+    enhancedPrompt += " Show the key steps, decision points, and workflow in RiverMeadow's migration process. Include start and end points clearly marked.";
+  } else if (isSoftwareFocused) {
+    enhancedPrompt += " Show the software components, interfaces, and data flow in the RiverMeadow system. Include API connections and integration points.";
   } else {
-    enhancedPrompt += " Show the key steps in RiverMeadow's migration process.";
+    // Generic enhancement as fallback
+    enhancedPrompt += " Clearly illustrate the migration process or architecture in the context of RiverMeadow's cloud migration platform.";
   }
   
   return enhancedPrompt;
@@ -654,21 +680,16 @@ cleanMermaidCode +
 };
 
 /**
- * Detect if the user is requesting a network diagram specifically
+ * Detect if the user is requesting a network/hardware diagram specifically
+ * This is important for applying the right styling and icons in the diagram
  */
 function detectNetworkDiagramRequest(prompt: string): boolean {
   // Convert to lowercase for case-insensitive matching
   const lowercasePrompt = prompt.toLowerCase();
   
-  // Exclude general diagram prompts that might match keywords but aren't network-specific
-  if (lowercasePrompt.includes('os migration') || 
-      lowercasePrompt.includes('os-based migration') || 
-      lowercasePrompt.includes('migration type')) {
-    return false;
-  }
-  
-  // Keywords that indicate a network diagram request
+  // Keywords that indicate a network/hardware/infrastructure diagram request
   const networkKeywords = [
+    // Network specific
     'network diagram',
     'network architecture',
     'network topology',
@@ -681,30 +702,64 @@ function detectNetworkDiagramRequest(prompt: string): boolean {
     'infrastructure architecture',
     'deployment architecture',
     'communication architecture',
-    'system topology'
+    'system topology',
+    
+    // Hardware specific
+    'hardware diagram',
+    'physical architecture',
+    'server layout',
+    'data center',
+    'rack layout',
+    'hardware components',
+    'device connectivity',
+    
+    // Technical infrastructure
+    'technical architecture',
+    'it infrastructure',
+    'enterprise architecture',
+    'technology stack',
+    'hosting environment',
+    'virtualization diagram'
   ];
   
-  // Check if any network keywords are in the prompt
-  const hasNetworkKeyword = networkKeywords.some(keyword => 
+  // Check if any network/hardware keywords are in the prompt
+  const hasNetworkHardwareKeyword = networkKeywords.some(keyword => 
     lowercasePrompt.includes(keyword)
   );
   
-  // Additional check for common network-related terms combined with diagram requests
-  const hasNetworkContext = 
+  // Additional check for common network/hardware-related terms combined with diagram requests
+  const hasNetworkHardwareContext = 
     (lowercasePrompt.includes('network') || 
      lowercasePrompt.includes('infrastructure') || 
      lowercasePrompt.includes('cloud') || 
      lowercasePrompt.includes('server') || 
      lowercasePrompt.includes('router') || 
      lowercasePrompt.includes('firewall') ||
-     lowercasePrompt.includes('architecture')) && 
+     lowercasePrompt.includes('vpn') ||
+     lowercasePrompt.includes('aws') ||
+     lowercasePrompt.includes('azure') ||
+     lowercasePrompt.includes('gcp') ||
+     lowercasePrompt.includes('data center') ||
+     lowercasePrompt.includes('hardware') ||
+     lowercasePrompt.includes('physical') ||
+     lowercasePrompt.includes('virtual machine') ||
+     lowercasePrompt.includes('vm') ||
+     lowercasePrompt.includes('database') ||
+     lowercasePrompt.includes('storage') ||
+     lowercasePrompt.includes('equipment') ||
+     lowercasePrompt.includes('compute') ||
+     lowercasePrompt.includes('device')) && 
     (lowercasePrompt.includes('diagram') || 
      lowercasePrompt.includes('map') || 
      lowercasePrompt.includes('topology') ||
-     lowercasePrompt.includes('layout'));
+     lowercasePrompt.includes('layout') ||
+     lowercasePrompt.includes('infrastructure') ||
+     lowercasePrompt.includes('architecture') ||
+     lowercasePrompt.includes('visual') ||
+     lowercasePrompt.includes('illustration'));
   
-  if (hasNetworkKeyword || hasNetworkContext) {
-    console.log('Network diagram request detected');
+  if (hasNetworkHardwareKeyword || hasNetworkHardwareContext) {
+    console.log('Network/hardware diagram request detected');
     return true;
   }
   
@@ -784,19 +839,37 @@ export const isImageGenerationRequest = (prompt: string): boolean => {
     lowercasePrompt.includes('display') ||
     lowercasePrompt.includes('depict');
     
-  if (containsActionVerbs && containsDiagramWords) {
+  if (containsActionVerbs && containsVisualWords) {
     console.log('Direct diagram request detected via keyword matching');
     return true;
   }
   
-  // Default response based on combination of keywords
+  // Default response based on combination of keywords with expanded visual terms
   const diagramScore = 
+    // Primary diagram terms (higher weight)
     (lowercasePrompt.includes('flowchart') ? 2 : 0) +
     (lowercasePrompt.includes('diagram') ? 2 : 0) +
-    (lowercasePrompt.includes('architecture') ? 1 : 0) +
+    (lowercasePrompt.includes('architecture') ? 2 : 0) +
+    (lowercasePrompt.includes('chart') ? 2 : 0) +
+    
+    // Visual representation terms
+    (lowercasePrompt.includes('picture') ? 1 : 0) +
+    (lowercasePrompt.includes('image') ? 1 : 0) +
+    (lowercasePrompt.includes('illustration') ? 1 : 0) +
+    (lowercasePrompt.includes('visual') ? 1 : 0) +
+    (lowercasePrompt.includes('graph') ? 1 : 0) +
+    (lowercasePrompt.includes('visualization') ? 1 : 0) +
+    (lowercasePrompt.includes('infographic') ? 1 : 0) +
+    
+    // Action verbs
     (lowercasePrompt.includes('visualize') ? 1 : 0) +
     (lowercasePrompt.includes('draw') ? 1 : 0) +
-    (lowercasePrompt.includes('rivermeadow') ? 1 : 0);
+    (lowercasePrompt.includes('illustrate') ? 1 : 0) +
+    (lowercasePrompt.includes('sketch') ? 1 : 0) +
+    
+    // Context boost
+    (lowercasePrompt.includes('rivermeadow') ? 1 : 0) +
+    (lowercasePrompt.includes('migration') ? 1 : 0);
   
   const isDiagramRequest = diagramScore >= 2;
   console.log(`Diagram detection score: ${diagramScore}, will ${isDiagramRequest ? '' : 'not '}generate diagram`);
