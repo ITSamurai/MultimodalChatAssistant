@@ -7,12 +7,23 @@ import { setupAuth, requireTokenAuth } from './auth';
 import { storage } from './storage';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import { PineconeIndex } from '@pinecone-database/pinecone';
 import { initializePineconeIndex } from './services/pinecone.service';
 import OpenAI from 'openai';
 
+// Define custom types
+interface ChatResponse {
+  role: string;
+  content: string;
+  references?: Array<{
+    type: string;
+    imagePath: string;
+    caption: string;
+    content: string;
+  }>;
+}
+
 // Initialize Pinecone for vector search
-let pineconeIndex: PineconeIndex | null = null;
+let pineconeIndex: any = null;
 
 // Initialize OpenAI for text completions
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -325,8 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const chat = await storage.createChat({
         userId: req.user.id,
-        title: req.body.title || 'New Conversation',
-        createdAt: new Date()
+        title: req.body.title || 'New Conversation'
       });
       
       return res.status(201).json(chat);
@@ -412,8 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await storage.createChatMessage({
         chatId,
         role: req.body.role,
-        content: req.body.content,
-        createdAt: new Date()
+        content: req.body.content
       });
       
       return res.status(201).json(message);
@@ -423,20 +432,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Chat endpoint for AI responses
+  // Chat endpoint for AI responses with diagram generation
   app.post('/api/chat', requireTokenAuth, async (req: Request, res: Response) => {
     try {
-      // Process chat message (handled by external code)
-      // For now, return a placeholder response
-      const response = {
+      const { messages, model, temperature, maxTokens } = req.body;
+      
+      if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        return res.status(400).json({ error: 'Invalid or missing messages' });
+      }
+      
+      // Log the chat request
+      console.log('Received chat request:', JSON.stringify({ messages, model, temperature, maxTokens }));
+      
+      // Validate that we have at least one message
+      const validatedMessages = messages.filter(msg => 
+        msg && typeof msg === 'object' && 
+        typeof msg.role === 'string' && 
+        typeof msg.content === 'string'
+      );
+      
+      if (validatedMessages.length === 0) {
+        return res.status(400).json({ error: 'No valid messages provided' });
+      }
+      
+      console.log('Validated ' + validatedMessages.length + ' messages, proceeding with chat...');
+      
+      // Get the latest user message
+      const latestUserMessage = validatedMessages
+        .slice()
+        .reverse()
+        .find(m => m.role === 'user')?.content || '';
+      
+      console.log('Latest user message:', latestUserMessage);
+      
+      // Check if the message is requesting an image generation
+      const isImageRequest = latestUserMessage.toLowerCase().includes('diagram');
+      console.log('Image generation requested?', isImageRequest ? 'YES' : 'NO', 'for prompt:', JSON.stringify(latestUserMessage));
+      
+      // If this is a diagram request, generate a diagram
+      let diagramReference = null;
+      
+      if (isImageRequest && typeof generateDiagram === 'function') {
+        try {
+          // Query Pinecone for relevant knowledge base entries
+          console.log(`Creating comprehensive RiverMeadow diagram based on context and prompt`);
+          
+          // Generate diagram and get the path
+          const diagramResult = await generateDiagram(latestUserMessage, []);
+          console.log(`Successfully generated image: ${diagramResult.imagePath}`);
+          
+          // Add reference to the diagram
+          diagramReference = {
+            type: 'image',
+            imagePath: diagramResult.imagePath,
+            caption: 'Generated diagram based on knowledge base information',
+            content: latestUserMessage
+          };
+        } catch (diagramError) {
+          console.error('Error generating diagram:', diagramError);
+        }
+      }
+      
+      // Create the OpenAI API request with enhanced messages that reference the diagram
+      let enhancedMessages = [...validatedMessages];
+      
+      // If a diagram was generated, append an assistant message that mentions it
+      if (diagramReference) {
+        // Add a system message before the user's message to instruct the AI about the diagram
+        enhancedMessages.push({
+          role: 'system',
+          content: 'A diagram has been generated based on the user\'s request. Please reference the diagram in your response, saying "As you can see in the diagram below..." and then describe what the diagram is showing.'
+        });
+      }
+      
+      // Call OpenAI with the enhanced messages
+      console.log('Using model:', model, 'temp:', temperature, 'max_tokens:', maxTokens);
+      const openaiResponse = await openai.chat.completions.create({
+        model: model || 'gpt-4o',
+        messages: enhancedMessages,
+        max_tokens: maxTokens || 2048,
+        temperature: temperature || 0.5,
+      });
+      
+      const aiResponse = openaiResponse.choices[0].message.content;
+      
+      // Construct the final response with any references
+      const response: ChatResponse = {
         role: 'assistant',
-        content: 'This is a placeholder response. Real responses would be generated by the AI model.'
+        content: aiResponse
       };
       
+      // Add the diagram reference if available
+      if (diagramReference) {
+        response.references = [diagramReference];
+      }
+      
+      console.log('Successfully generated response from knowledge base');
       return res.status(200).json(response);
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       console.error('Error processing chat:', error);
-      res.status(500).json({ error: 'Failed to process chat' });
+      res.status(500).json({ error: 'Failed to process chat: ' + (error.message || 'Unknown error') });
     }
   });
   
