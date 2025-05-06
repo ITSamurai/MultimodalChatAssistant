@@ -36,6 +36,7 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
   const [editingChatId, setEditingChatId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const { toast } = useToast();
 
   // Load chats for the current user initially - but only once when the user first loads

@@ -100,14 +100,16 @@ export default function ChatPage() {
 
   return (
     <Layout>
-      <div className="flex h-[calc(100vh-64px)]">
-        {/* Chat Sidebar - 280px wide */}
-        <ChatSidebar className="w-[280px] flex-shrink-0" />
+      <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+        {/* Chat Sidebar - always visible */}
+        <div className="w-[280px] border-r bg-background flex-shrink-0 h-full">
+          <ChatSidebar className="h-full" />
+        </div>
         
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Chat Header */}
-          <div className="border-b py-2 px-4">
+          <div className="border-b py-2 px-4 bg-background">
             <h1 className="text-xl font-semibold">
               {isLoading ? (
                 <span className="flex items-center">
@@ -128,11 +130,27 @@ export default function ChatPage() {
               <KnowledgeBaseChat chatId={parseInt(id)} />
             ) : (
               <div className="flex items-center justify-center h-full text-center p-4">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">No chat selected</h3>
-                  <p className="text-muted-foreground">
-                    Select an existing chat or create a new one to get started
+                <div className="max-w-md mx-auto">
+                  <h3 className="text-2xl font-bold mb-4">Welcome to RiverMeadow AI Chat</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Create a new chat or select an existing conversation to start interacting with the AI assistant.
                   </p>
+                  <div className="flex flex-col items-center space-y-4">
+                    <Button 
+                      onClick={() => {
+                        const createChatEvent = new Event('create-new-chat');
+                        window.dispatchEvent(createChatEvent);
+                      }}
+                      size="lg"
+                      className="w-full flex items-center justify-center gap-2"
+                    >
+                      <PlusCircle className="h-5 w-5" />
+                      Start New Conversation
+                    </Button>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      You can ask questions about documents, request diagrams, or get information about cloud migration.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}

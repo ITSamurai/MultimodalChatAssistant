@@ -421,6 +421,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to update chat' });
     }
   });
+  
+  // Delete a chat
+  app.delete('/api/chats/:id', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ error: 'Chat not found' });
+      }
+      
+      if (chat.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      await storage.deleteChat(chatId);
+      console.log(`Chat ${chatId} deleted`);
+      
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      res.status(500).json({ error: 'Failed to delete chat' });
+    }
+  });
 
   // Get messages for a chat
   app.get('/api/chats/:id/messages', requireTokenAuth, async (req: Request, res: Response) => {
