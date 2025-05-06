@@ -112,7 +112,7 @@ Based on this information, provide the JSON structure for creating a diagram abo
         { role: 'user', content: userPrompt }
       ],
       response_format: { type: 'json_object' },
-      temperature: 0.7
+      temperature: 1.0 // Increased temperature for more variation
     });
     
     // Parse the JSON response
@@ -159,6 +159,14 @@ const createDrawioXML = (components: {
   // Generate unique ID for the diagram
   const diagramId = `diagram-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
   
+  // Randomize diagram layout parameters
+  const layoutType = Math.random() > 0.5 ? 'circular' : 'hierarchical';
+  const centerX = 400 + Math.floor(Math.random() * 200);
+  const centerY = 300 + Math.floor(Math.random() * 150);
+  const radiusX = 200 + Math.floor(Math.random() * 100);
+  const radiusY = 150 + Math.floor(Math.random() * 100);
+  const offsetAngle = Math.random() * Math.PI; // Random starting angle
+  
   // Create XML content with header
   let xmlContent = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="RiverMeadow Assistant" version="21.2.9">
   <diagram id="${diagramId}" name="${title}">
@@ -176,37 +184,100 @@ const createDrawioXML = (components: {
   // Map to store node IDs by name for creating connections
   const nodeMap = new Map<string, number>();
   
+  // Randomly select node styles
+  const nodeStyles = [
+    // Modern styles with different shapes and colors
+    "shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;",
+    "shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;",
+    "shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;",
+    "shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;",
+    "shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;",
+    "shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;",
+    "shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;fontSize=13;",
+    "shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#b0e3e6;strokeColor=#0e8088;fontSize=13;"
+  ];
+  
+  // Randomly select edge styles
+  const edgeStyles = [
+    "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;",
+    "edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;",
+    "edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;",
+    "edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;",
+    "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;",
+    "edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;dashed=1;"
+  ];
+  
+  // Shuffle node order for more variety but keep RiverMeadow first
+  const shuffledNodes = [nodes[0]];
+  const otherNodes = nodes.slice(1);
+  
+  // Fisher-Yates shuffle
+  for (let i = otherNodes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [otherNodes[i], otherNodes[j]] = [otherNodes[j], otherNodes[i]];
+  }
+  
+  // Combine back
+  const orderedNodes = [...shuffledNodes, ...otherNodes];
+  
   // Add the central node - always RiverMeadow
   const centralNodeId = getCellId();
-  nodeMap.set("RiverMeadow Platform", centralNodeId);
+  const centralNodeStyle = nodeStyles[Math.floor(Math.random() * 2)]; // Choose one of the first two styles for central node
+  nodeMap.set(orderedNodes[0], centralNodeId);
+  
+  // Get a random size for central node between 120-160
+  const centralNodeSize = 120 + Math.floor(Math.random() * 41);
   
   xmlContent += `
         <!-- Central Node -->
-        <mxCell id="${centralNodeId}" value="&lt;b&gt;${nodes[0]}&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="460" y="350" width="140" height="140" as="geometry" />
+        <mxCell id="${centralNodeId}" value="&lt;b&gt;${orderedNodes[0]}&lt;/b&gt;" style="${centralNodeStyle}" vertex="1" parent="1">
+          <mxGeometry x="${centerX - centralNodeSize/2}" y="${centerY - centralNodeSize/2}" width="${centralNodeSize}" height="${centralNodeSize}" as="geometry" />
         </mxCell>`;
   
   // Add other primary nodes
-  const primaryNodeStyles = [
-    "rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;",
-    "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;"
-  ];
-  
   // Skip the first node (RiverMeadow Platform) as it's already added
-  for (let i = 1; i < nodes.length; i++) {
+  for (let i = 1; i < orderedNodes.length; i++) {
     const nodeId = getCellId();
-    const nodeName = nodes[i];
+    const nodeName = orderedNodes[i];
     nodeMap.set(nodeName, nodeId);
     
-    // Position nodes around the central node
-    const angle = (i - 1) * (2 * Math.PI / (nodes.length - 1));
-    const x = 460 + 250 * Math.cos(angle);
-    const y = 350 + 200 * Math.sin(angle);
+    // Choose a random node style
+    const nodeStyle = nodeStyles[Math.floor(Math.random() * nodeStyles.length)];
+    
+    // Randomize node size slightly
+    const nodeWidth = 120 + Math.floor(Math.random() * 41); // 120-160
+    const nodeHeight = 50 + Math.floor(Math.random() * 21);  // 50-70
+    
+    let x, y;
+    
+    if (layoutType === 'circular') {
+      // Position nodes around the central node in a slightly irregular circle
+      const angle = offsetAngle + (i - 1) * (2 * Math.PI / (orderedNodes.length - 1)) + (Math.random() * 0.2 - 0.1);
+      const radius = 0.9 + Math.random() * 0.2; // Scale between 0.9 and 1.1
+      x = centerX + radiusX * radius * Math.cos(angle);
+      y = centerY + radiusY * radius * Math.sin(angle);
+    } else {
+      // Hierarchical layout
+      if (i <= Math.ceil((orderedNodes.length - 1) / 2)) {
+        // Top half - place above center
+        x = centerX - 250 + (i-1) * 300 / Math.ceil((orderedNodes.length - 1) / 2);
+        y = centerY - radiusY - Math.random() * 40;
+      } else {
+        // Bottom half - place below center
+        const offset = i - 1 - Math.ceil((orderedNodes.length - 1) / 2);
+        x = centerX - 250 + offset * 300 / Math.floor((orderedNodes.length - 1) / 2);
+        y = centerY + radiusY/2 + Math.random() * 40;
+      }
+    }
+    
+    // Round coordinates to integers
+    x = Math.round(x);
+    y = Math.round(y);
     
     xmlContent += `
         <!-- Primary Node: ${nodeName} -->
-        <mxCell id="${nodeId}" value="${nodeName}" style="${primaryNodeStyles[i % primaryNodeStyles.length]}" vertex="1" parent="1">
-          <mxGeometry x="${x}" y="${y}" width="140" height="60" as="geometry" />
+        <mxCell id="${nodeId}" value="${nodeName}" style="${nodeStyle}" vertex="1" parent="1">
+          <mxGeometry x="${x - nodeWidth/2}" y="${y - nodeHeight/2}" width="${nodeWidth}" height="${nodeHeight}" as="geometry" />
         </mxCell>`;
   }
   
@@ -217,57 +288,110 @@ const createDrawioXML = (components: {
     
     if (fromId && toId) {
       const connId = getCellId();
+      // Choose a random edge style
+      const edgeStyle = edgeStyles[Math.floor(Math.random() * edgeStyles.length)];
+      
+      // Add slight randomization to entry/exit points 
+      const entryX = Math.random() > 0.5 ? 0 : 1;
+      const entryY = Math.random() > 0.5 ? 0 : 1;
+      
       xmlContent += `
         <!-- Connection from ${connection.from} to ${connection.to} -->
-        <mxCell id="${connId}" value="${connection.label || ""}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="${fromId}" target="${toId}">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="${connId}" value="${connection.label || ""}" style="${edgeStyle}" edge="1" parent="1" source="${fromId}" target="${toId}">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="${entryX}" y="${entryY}" as="targetPoint" />
+          </mxGeometry>
         </mxCell>`;
     }
   }
   
-  // Add category sections
-  let categoryY = 600;
+  // Add category sections - randomize position
+  // Determine if categories should be on left or right side
+  const categoriesOnLeft = Math.random() > 0.5;
+  const categoryX = categoriesOnLeft ? 120 + Math.floor(Math.random() * 60) : 650 + Math.floor(Math.random() * 60); 
+  let categoryY = 600 + Math.floor(Math.random() * 50);
+  
+  // Randomize category styles and colors
+  const categoryHeaderStyles = [
+    "fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;",
+    "fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;",
+    "fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;",
+    "fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;"
+  ];
+  
+  // Category item style groups
+  const categoryItemStyleGroups = [
+    // Group 1: Blues and greens
+    [
+      "fillColor=#dae8fc;strokeColor=#6c8ebf;",
+      "fillColor=#d5e8d4;strokeColor=#82b366;",
+      "fillColor=#b1ddf0;strokeColor=#10739e;"
+    ],
+    // Group 2: Warm colors
+    [
+      "fillColor=#ffe6cc;strokeColor=#d79b00;",
+      "fillColor=#f8cecc;strokeColor=#b85450;",
+      "fillColor=#fad7ac;strokeColor=#b46504;"
+    ],
+    // Group 3: Purple and teal
+    [
+      "fillColor=#e1d5e7;strokeColor=#9673a6;",
+      "fillColor=#b0e3e6;strokeColor=#0e8088;",
+      "fillColor=#d4e1f5;strokeColor=#56517e;"
+    ]
+  ];
+  
+  // Choose a random style group for this diagram
+  const selectedItemStyleGroup = categoryItemStyleGroups[Math.floor(Math.random() * categoryItemStyleGroups.length)];
   
   for (const [categoryName, items] of Object.entries(categories)) {
-    // Add category title
+    // Add category title with random style
     const categoryTitleId = getCellId();
+    const headerStyle = categoryHeaderStyles[Math.floor(Math.random() * categoryHeaderStyles.length)];
+    
+    // Randomize header width
+    const headerWidth = 180 + Math.floor(Math.random() * 61); // 180-240
+    
     xmlContent += `
         <!-- ${categoryName} Category -->
-        <mxCell id="${categoryTitleId}" value="&lt;b&gt;${categoryName}&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="200" y="${categoryY}" width="200" height="40" as="geometry" />
+        <mxCell id="${categoryTitleId}" value="&lt;b&gt;${categoryName}&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;${headerStyle}fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="${categoryX}" y="${categoryY}" width="${headerWidth}" height="40" as="geometry" />
         </mxCell>`;
     
-    // Add category items
-    const itemsPerRow = 3;
-    const itemWidth = 120;
-    const itemHeight = 40;
-    const itemSpacing = 20;
-    
-    let colorIndex = 0;
-    const categoryColors = [
-      "fillColor=#e1d5e7;strokeColor=#9673a6;", // Purple
-      "fillColor=#fff2cc;strokeColor=#d6b656;", // Yellow
-      "fillColor=#f8cecc;strokeColor=#b85450;"  // Red
-    ];
+    // Add category items with randomization
+    const itemsPerRow = 2 + Math.floor(Math.random() * 2); // 2-3 items per row
+    const itemWidth = 100 + Math.floor(Math.random() * 41); // 100-140
+    const itemHeight = 35 + Math.floor(Math.random() * 16); // 35-50
+    const itemSpacing = 15 + Math.floor(Math.random() * 16); // 15-30
     
     for (let i = 0; i < items.length; i++) {
       const itemId = getCellId();
       const item = items[i];
       
+      // Choose a random style from the selected group
+      const itemStyle = selectedItemStyleGroup[i % selectedItemStyleGroup.length];
+      
       const row = Math.floor(i / itemsPerRow);
       const col = i % itemsPerRow;
       
-      const x = 200 + col * (itemWidth + itemSpacing) - (row * 20); // Slight indent per row
-      const y = categoryY + 50 + row * (itemHeight + 10);
+      // Add slight position jitter
+      const jitterX = Math.floor(Math.random() * 11) - 5; // -5 to +5
+      const jitterY = Math.floor(Math.random() * 11) - 5; // -5 to +5
+      
+      const x = categoryX + (col * (itemWidth + itemSpacing)) - (row * 10) + jitterX;
+      const y = categoryY + 50 + (row * (itemHeight + 15)) + jitterY;
+      
+      // Randomize border radius
+      const rounded = Math.floor(Math.random() * 3) + 1;
       
       xmlContent += `
-        <mxCell id="${itemId}" value="${item}" style="rounded=1;whiteSpace=wrap;html=1;${categoryColors[colorIndex]}" vertex="1" parent="1">
+        <mxCell id="${itemId}" value="${item}" style="rounded=${rounded};whiteSpace=wrap;html=1;${itemStyle}" vertex="1" parent="1">
           <mxGeometry x="${x}" y="${y}" width="${itemWidth}" height="${itemHeight}" as="geometry" />
         </mxCell>`;
     }
     
-    categoryY += 50 + Math.ceil(items.length / itemsPerRow) * (itemHeight + 10) + 30;
-    colorIndex = (colorIndex + 1) % categoryColors.length;
+    // Increase y position for next category
+    categoryY += 60 + Math.ceil(items.length / itemsPerRow) * (itemHeight + 15) + 10;
   }
   
   // Close XML structure
@@ -313,7 +437,7 @@ Provide a detailed technical explanation about this topic that would help in cre
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.7,
+      temperature: 1.0, // Increased temperature for more variation
       max_tokens: 1000
     });
     

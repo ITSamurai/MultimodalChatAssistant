@@ -587,12 +587,13 @@ Explain that this diagram was generated based on their request, and they can dow
       }
       
       // Call OpenAI with the enhanced messages
+      // Use a higher temperature (default 1.0) for more creative and varied responses
       console.log('Using model:', model, 'temp:', temperature, 'max_tokens:', maxTokens);
       const openaiResponse = await openai.chat.completions.create({
         model: model || 'gpt-4o',
         messages: enhancedMessages,
         max_tokens: maxTokens || 2048,
-        temperature: temperature || 0.5,
+        temperature: temperature || 1.0, // Default to 1.0 for more variation
       });
       
       const aiResponse = openaiResponse.choices[0].message.content || 'No response generated.';
