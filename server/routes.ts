@@ -18,12 +18,23 @@ import {
   initializePineconeIndex, 
   indexDocumentInPinecone,
   addKnowledgeToPinecone,
-  createChatWithKnowledgeBase
+  createChatWithKnowledgeBase,
+  generateEmbedding,
+  querySimilarVectors
 } from './services/pinecone.service';
 import { generateDiagram } from './services/image-generation.service';
 import { setupAuth, requireTokenAuth, hashPassword, verifyAuthToken } from './auth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Pinecone index for knowledge retrieval
+  let pineconeIndex: any = null;
+  try {
+    pineconeIndex = await initializePineconeIndex();
+    console.log('Pinecone index initialized successfully for routes');
+  } catch (error) {
+    console.warn('Could not initialize Pinecone index:', error);
+  }
+
   // Configure multer for in-memory storage
   const upload = multer({ 
     storage: multer.memoryStorage(),
@@ -1119,7 +1130,7 @@ Noindex: /`);
       console.log(`Context length: ${context.length} characters`);
       
       // Get knowledge context from Pinecone
-      let knowledgeContext: string[] = [];
+      let knowledgeContextArr: string[] = [];
       
       try {
         // Query Pinecone for relevant context to enrich the diagram
@@ -1132,21 +1143,23 @@ Noindex: /`);
             includeMetadata: true
           });
           
-          // Extract text content from knowledge base matches
-          knowledgeContext = queryResponse.matches
-            .filter(match => match.score && match.score > 0.7) // Only use high relevance matches
-            .map(match => match.metadata?.text as string || '')
-            .filter(text => text.trim() !== '');
+          // Extract text content from knowledge base matches with type safety
+          if (queryResponse.matches && Array.isArray(queryResponse.matches)) {
+            knowledgeContextArr = queryResponse.matches
+              .filter((match: any) => match.score && match.score > 0.7) // Only use high relevance matches
+              .map((match: any) => match.metadata?.text as string || '')
+              .filter((text: string) => text.trim() !== '');
+          }
           
-          console.log(`Found ${knowledgeContext.length} relevant context snippets for diagram generation`);
+          console.log(`Found ${knowledgeContextArr.length} relevant context snippets for diagram generation`);
         }
       } catch (pineconeError) {
         console.warn('Error retrieving knowledge context for diagram:', pineconeError);
         // Continue with empty context if there's an error
       }
       
-      // Generate the diagram with enhanced context
-      const result = await generateDiagram(prompt, knowledgeContext, true);
+      // Generate the diagram with enhanced context from both the request and Pinecone
+      const result = await generateDiagram(prompt, knowledgeContextArr, true);
       
       console.log(`Successfully generated diagram: ${result.imagePath}`);
       
