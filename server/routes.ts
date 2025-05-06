@@ -258,6 +258,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API endpoint to download a diagram as PNG (full version) - no authentication required
+  app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
+    try {
+      const fileName = req.params.fileName;
+      // Try multiple possible file extensions and paths
+      const possiblePaths = [
+        path.join(process.cwd(), 'uploads', 'generated', `${fileName}.drawio`),
+        path.join(process.cwd(), 'uploads', 'generated', `${fileName}.xml`),
+        path.join(process.cwd(), 'uploads', 'generated', fileName)
+      ];
+      
+      let filePath = null;
+      for (const tryPath of possiblePaths) {
+        if (fs.existsSync(tryPath)) {
+          filePath = tryPath;
+          break;
+        }
+      }
+      
+      if (!filePath) {
+        return res.status(404).json({ error: 'Diagram not found' });
+      }
+      
+      // Set proper headers for download
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.drawio"`);
+      
+      // Stream the file for download
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error('Error downloading diagram:', error);
+      return res.status(500).json({ error: 'Failed to download diagram' });
+    }
+  });
+  
   // Configuration endpoint
   app.get('/api/config', requireTokenAuth, async (req: Request, res: Response) => {
     try {
@@ -354,6 +390,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching chat:', error);
       res.status(500).json({ error: 'Failed to fetch chat' });
+    }
+  });
+  
+  // Update a chat (specifically its title)
+  app.patch('/api/chats/:id', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ error: 'Chat not found' });
+      }
+      
+      if (chat.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      const { title } = req.body;
+      if (!title || typeof title !== 'string') {
+        return res.status(400).json({ error: 'Title is required' });
+      }
+      
+      const updatedChat = await storage.updateChatTitle(chatId, title);
+      console.log('Updated chat title:', updatedChat);
+      
+      return res.json(updatedChat);
+    } catch (error) {
+      console.error('Error updating chat:', error);
+      res.status(500).json({ error: 'Failed to update chat' });
     }
   });
 
