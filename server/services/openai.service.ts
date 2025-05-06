@@ -21,14 +21,10 @@ IMPORTANT RESPONSE GUIDELINES:
 2. Reference SECTION NUMBERS AND PAGE NUMBERS when providing information
 3. Quote STEP-BY-STEP PROCEDURES exactly as they appear in the document
 4. NEVER make up fictional sections, figure numbers, or page numbers
-5. When discussing figures or diagrams:
-   - Include the exact figure number and page number from the document
-   - Describe what the diagram shows with technical precision
-   - Explain the relationship between diagram components
-6. If exact information is not found, state clearly: "This specific information is not directly addressed in the available document sections."
-7. Use concise, technical language appropriate for IT professionals
-8. Format responses with markdown for readability (headings, bullet points, numbered lists)
-9. If referencing multiple sections, organize your response by section
+5. If exact information is not found, state clearly: "This specific information is not directly addressed in the available document sections."
+6. Use concise, technical language appropriate for IT professionals
+7. Format responses with markdown for readability (headings, bullet points, numbered lists)
+8. If referencing multiple sections, organize your response by section
 
 Begin each response with "DOCUMENT ANALYSIS:" followed by a concise summary of what you found, then provide the detailed information.`;
 

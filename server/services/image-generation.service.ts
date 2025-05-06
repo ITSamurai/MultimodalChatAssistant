@@ -36,21 +36,23 @@ export const ensureDirectoriesExist = async (): Promise<void> => {
 /**
  * Process the GPT response to extract key components for the diagram
  */
-const extractDiagramComponentsFromContext = (context: string[]): {
+const extractDiagramComponentsFromContext = async (
+  prompt: string,
+  context: string[]
+): Promise<{
   title: string;
   nodes: string[];
   connections: Array<{from: string, to: string, label?: string}>;
   categories: Record<string, string[]>;
-} => {
-  const combinedContext = context.join(' ');
-  
+}> => {
   // Default values for RiverMeadow diagram if context is insufficient
   const defaultComponents = {
     title: "RiverMeadow Cloud Migration Platform",
     nodes: ["RiverMeadow Platform", "Source Environment", "Target Environment", "Migration Process"],
     connections: [
-      {from: "Source Environment", to: "Migration Process"},
-      {from: "Migration Process", to: "Target Environment"}
+      {from: "Source Environment", to: "RiverMeadow Platform"},
+      {from: "RiverMeadow Platform", to: "Target Environment"},
+      {from: "Migration Process", to: "RiverMeadow Platform"}
     ],
     categories: {
       "Migration Types": ["P2V", "V2C", "C2C", "Hardware Refresh"],
@@ -58,45 +60,89 @@ const extractDiagramComponentsFromContext = (context: string[]): {
     }
   };
   
-  // Try to extract better components from the context
-  if (combinedContext.length > 100) {
-    const cloudPlatforms = ["AWS", "Azure", "Google Cloud", "VMware", "OpenShift", "IBM Cloud"]
-      .filter(platform => combinedContext.includes(platform));
-      
-    const migrationTypes = [];
-    if (combinedContext.includes("Physical to Virtual") || combinedContext.includes("P2V")) 
-      migrationTypes.push("Physical to Virtual (P2V)");
-    if (combinedContext.includes("Virtual to Cloud") || combinedContext.includes("V2C")) 
-      migrationTypes.push("Virtual to Cloud (V2C)");
-    if (combinedContext.includes("Cloud to Cloud") || combinedContext.includes("C2C")) 
-      migrationTypes.push("Cloud to Cloud (C2C)");
-    if (combinedContext.includes("Physical to Cloud") || combinedContext.includes("P2C")) 
-      migrationTypes.push("Physical to Cloud (P2C)");
+  try {
+    // If context is very small, just use default components
+    const combinedContext = context.join(' ');
+    if (combinedContext.length < 100) {
+      console.log('Context too small, using default components');
+      return defaultComponents;
+    }
     
-    const features = [];
-    if (combinedContext.includes("data migration")) features.push("Data Migration");
-    if (combinedContext.includes("live migration")) features.push("Live Migration");
-    if (combinedContext.includes("non-intrusive")) features.push("Non-Intrusive Migration");
-    if (combinedContext.includes("disaster recovery")) features.push("Disaster Recovery");
-    if (combinedContext.includes("workload optimization")) features.push("Workload Optimization");
+    console.log('Generating diagram components using OpenAI');
     
-    return {
-      title: "RiverMeadow Migration Solution",
-      nodes: ["RiverMeadow Platform", "Source Infrastructure", "Target Cloud", "Migration Services"],
-      connections: [
-        {from: "Source Infrastructure", to: "RiverMeadow Platform", label: "Extract"},
-        {from: "RiverMeadow Platform", to: "Target Cloud", label: "Deploy"},
-        {from: "Migration Services", to: "RiverMeadow Platform", label: "Support"}
+    // Create a system prompt for extracting diagram components
+    const systemPrompt = `You are a diagram expert tasked with extracting key components from text to create a diagram about RiverMeadow's cloud migration services. 
+    Format your response as a JSON object with the following structure exactly:
+    {
+      "title": "The main title for the diagram",
+      "nodes": ["Node1", "Node2", "Node3", ...],
+      "connections": [
+        {"from": "Node1", "to": "Node2", "label": "optional connection label"},
+        {"from": "Node2", "to": "Node3"}
       ],
-      categories: {
-        "Migration Types": migrationTypes.length > 0 ? migrationTypes : defaultComponents.categories["Migration Types"],
-        "Cloud Platforms": cloudPlatforms.length > 0 ? cloudPlatforms : defaultComponents.categories["Cloud Platforms"],
-        "Features": features.length > 0 ? features : ["Automated Migration", "Secure Transfer", "Performance Optimization"]
+      "categories": {
+        "Category1": ["Item1", "Item2", "Item3"],
+        "Category2": ["Item1", "Item2"]
       }
+    }
+    
+    Important guidelines:
+    1. Always include "RiverMeadow Platform" as one of the main nodes
+    2. Focus on creating a technical system diagram showing components, relationships, and categories
+    3. Use reasonable abbreviations for complex terms
+    4. Extract ONLY real components mentioned in the provided context
+    5. For the diagram title, make it specific to what the user is asking for
+    6. Include 3-6 main nodes, 2-6 connections, and 2-4 categories with 3-6 items each
+    7. DO NOT invent components that aren't mentioned in the context`;
+    
+    // Create a user prompt combining the user's question and context
+    const userPrompt = `
+User's diagram request: "${prompt}"
+    
+Context information:
+${context.join('\n\n')}
+
+Based on this information, provide the JSON structure for creating a diagram about RiverMeadow's cloud migration services.`;
+    
+    // Call OpenAI API to extract diagram components
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.7
+    });
+    
+    // Parse the JSON response
+    const content = response.choices[0].message.content || '{}';
+    const result = JSON.parse(content);
+    console.log('Generated diagram components from OpenAI:', JSON.stringify(result, null, 2));
+    
+    // Validate the structure
+    if (!result.title || !Array.isArray(result.nodes) || !Array.isArray(result.connections) || !result.categories) {
+      console.warn('Invalid structure in OpenAI response, using default components');
+      return defaultComponents;
+    }
+    
+    // Make sure RiverMeadow Platform is included
+    if (!result.nodes.includes('RiverMeadow Platform')) {
+      result.nodes.unshift('RiverMeadow Platform');
+    }
+    
+    // Return the extracted components
+    return {
+      title: result.title,
+      nodes: result.nodes,
+      connections: result.connections,
+      categories: result.categories
     };
+  } catch (error) {
+    console.error('Error extracting diagram components from context:', error);
+    console.log('Falling back to default components');
+    return defaultComponents;
   }
-  
-  return defaultComponents;
 };
 
 /**
@@ -258,46 +304,60 @@ export const generateDiagram = async (
     
     console.log('Generating diagram for prompt:', prompt);
     
-    // Extract meaningful components from the knowledge context
-    const diagramComponents = extractDiagramComponentsFromContext(knowledgeContext);
-    
-    // If the prompt contains specific keywords, modify the default diagram
-    const lowerPrompt = prompt.toLowerCase();
-    if (lowerPrompt.includes('migration')) {
-      diagramComponents.title = "RiverMeadow Migration Process";
-      // Enhance with migration-specific content
-      diagramComponents.categories["Migration Steps"] = [
-        "Discovery", "Assessment", "Planning", "Migration", "Validation", "Cutover"
-      ];
-    } else if (lowerPrompt.includes('disaster recovery') || lowerPrompt.includes('dr')) {
-      diagramComponents.title = "RiverMeadow Disaster Recovery Solution";
-      // Enhance with DR-specific content
-      diagramComponents.categories["Recovery Components"] = [
-        "Backup", "Replication", "Failover", "Failback", "Testing"
-      ];
-    } else if (lowerPrompt.includes('architecture')) {
-      diagramComponents.title = "RiverMeadow System Architecture";
-      // Enhance with architecture-specific content
-      diagramComponents.categories["System Components"] = [
-        "Control Plane", "Data Plane", "API Gateway", "Authentication", "Scheduling Engine"
-      ];
+    try {
+      // Extract meaningful components from the knowledge context and prompt
+      const diagramComponents = await extractDiagramComponentsFromContext(prompt, knowledgeContext);
+      
+      // Generate Draw.io XML
+      const drawioXml = createDrawioXML(diagramComponents);
+      
+      // Save the Draw.io file
+      const drawioPath = path.join(GENERATED_IMAGES_DIR, drawioFilename);
+      await writeFile(drawioPath, drawioXml);
+      
+      console.log(`Diagram generated successfully: ${drawioPath}`);
+      
+      return {
+        imagePath: `/uploads/generated/${drawioFilename}`,
+        mmdPath: `/uploads/generated/${drawioFilename}`,
+        mmdFilename: drawioFilename,
+        altText: prompt.substring(0, 255) // Limit alt text length
+      };
+    } catch (diagramError) {
+      console.error('Error extracting diagram components:', diagramError);
+      
+      // Fall back to default components
+      const defaultComponents = {
+        title: "RiverMeadow Cloud Migration Platform",
+        nodes: ["RiverMeadow Platform", "Source Environment", "Target Environment", "Migration Process"],
+        connections: [
+          {from: "Source Environment", to: "RiverMeadow Platform"},
+          {from: "RiverMeadow Platform", to: "Target Environment"},
+          {from: "Migration Process", to: "RiverMeadow Platform"}
+        ],
+        categories: {
+          "Migration Types": ["P2V", "V2C", "C2C", "Hardware Refresh"],
+          "Cloud Platforms": ["AWS", "Azure", "Google Cloud", "VMware"]
+        }
+      };
+      
+      // Generate Draw.io XML with default components
+      const drawioXml = createDrawioXML(defaultComponents);
+      
+      // Save the Draw.io file
+      const drawioPath = path.join(GENERATED_IMAGES_DIR, drawioFilename);
+      await writeFile(drawioPath, drawioXml);
+      
+      console.log(`Diagram generated with defaults: ${drawioPath}`);
+      
+      return {
+        imagePath: `/uploads/generated/${drawioFilename}`,
+        mmdPath: `/uploads/generated/${drawioFilename}`,
+        mmdFilename: drawioFilename,
+        altText: prompt.substring(0, 255) // Limit alt text length
+      };
     }
     
-    // Generate Draw.io XML
-    const drawioXml = createDrawioXML(diagramComponents);
-    
-    // Save the Draw.io file
-    const drawioPath = path.join(GENERATED_IMAGES_DIR, drawioFilename);
-    await writeFile(drawioPath, drawioXml);
-    
-    console.log(`Diagram generated successfully: ${drawioPath}`);
-    
-    return {
-      imagePath: `/uploads/generated/${drawioFilename}`,
-      mmdPath: `/uploads/generated/${drawioFilename}`,
-      mmdFilename: drawioFilename,
-      altText: prompt.substring(0, 255) // Limit alt text length
-    };
   } catch (error) {
     console.error('Error generating diagram:', error);
     throw new Error('Failed to generate diagram');

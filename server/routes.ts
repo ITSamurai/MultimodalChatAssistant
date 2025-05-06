@@ -514,7 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temperature: temperature || 0.5,
       });
       
-      const aiResponse = openaiResponse.choices[0].message.content;
+      const aiResponse = openaiResponse.choices[0].message.content || 'No response generated.';
       
       // Construct the final response with any references
       const response: ChatResponse = {
