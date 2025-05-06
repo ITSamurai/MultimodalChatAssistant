@@ -37,6 +37,10 @@ const ensureDirectoriesExist = async () => {
  * context from the knowledge base, and randomized elements to ensure
  * each diagram is unique
  */
+/**
+ * Categorize diagram type based on prompt and knowledge context
+ * Enhanced to create more diverse and unique diagram specifications
+ */
 const categorizeDiagramType = (prompt: string, contextSnippets: string[] = []): {
   category: string;
   specificType: string;
@@ -55,8 +59,13 @@ const categorizeDiagramType = (prompt: string, contextSnippets: string[] = []): 
   const extractedTerms = extractTechnicalTerms(combinedContext);
   console.log('Extracted technical terms from context:', extractedTerms.slice(0, 10));
   
-  // Generate time-based unique identifier
-  const uniqueId = Date.now().toString() + '-' + Math.random().toString(36).substring(2, 10);
+  // Add current timestamp to randomization factors to ensure uniqueness
+  const timestamp = Date.now();
+  // Use a combination of timestamp and multiple random seeds for stronger uniqueness
+  const uniqueId = `${timestamp}-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 6)}`;
+  
+  // Use timestamp to influence random selections to ensure diagrams vary over time
+  const hourBasedRandomSeed = new Date().getHours() + (new Date().getMinutes() / 60);
   
   // Create rich categorization system with highly unique options
   const diagramTypes = [
@@ -324,8 +333,14 @@ const categorizeDiagramType = (prompt: string, contextSnippets: string[] = []): 
 
 /**
  * Extract technical terms from knowledge base context for use in diagrams
+ * Enhanced to detect patterns and create more unique diagrams based on context
  */
 function extractTechnicalTerms(text: string): string[] {
+  // Bail early if text is empty
+  if (!text || text.trim() === '') {
+    return ['cloud migration', 'virtual machine', 'network', 'server', 'infrastructure'];
+  }
+  
   // List of common technical terms related to cloud migration
   const technicalTerms = [
     'virtual machine', 'cloud', 'server', 'migration', 'container', 'kubernetes',
@@ -342,24 +357,77 @@ function extractTechnicalTerms(text: string): string[] {
     'scalability', 'elasticity', 'performance', 'monitoring', 'logging', 'analytics',
     'dashboard', 'alert', 'notification', 'sla', 'slo', 'sli', 'metrics', 'kpi',
     'compliance', 'governance', 'security', 'encryption', 'identity', 'access control',
-    'authentication', 'authorization', 'iam', 'rbac', 'role', 'policy', 'permission'
+    'authentication', 'authorization', 'iam', 'rbac', 'role', 'policy', 'permission',
+    // Adding more specific RiverMeadow migration terms
+    'source environment', 'target environment', 'transformation', 'assessment', 'discovery',
+    'planning', 'deployment', 'cutover', 'testing', 'validation', 'optimization',
+    'synchronization', 'replication', 'conversion', 'performance testing', 'security compliance',
+    'licensing', 'cost optimization', 'TCO', 'ROI', 'business case', 'operational readiness',
+    'application dependency', 'data transfer', 'bandwidth', 'latency', 'connectivity'
+  ];
+  
+  // RiverMeadow specific terms
+  const riverMeadowTerms = [
+    'RiverMeadow CloudMigration', 'RiverMeadow Platform', 'SaaS Migration', 
+    'RiverMeadow Migration Platform', 'RiverMeadow SaaS', 'RiverMeadow API',
+    'OS-Based Migration', 'Physical to Virtual Migration', 'Cloud to Cloud Migration',
+    'Migration Factory', 'Discovery API', 'Application Dependency Mapping',
+    'Pre-Flight Checks', 'Migration Automation', 'Migration Assessment', 
+    'Migration Planning', 'Migration Execution', 'Migration Validation',
+    'Migration Wave Planning', 'Dependency Analysis', 'Automated Testing'
   ];
   
   // Extract terms found in the text
   const foundTerms: string[] = [];
   
   technicalTerms.forEach(term => {
-    if (text.includes(term)) {
+    if (text.toLowerCase().includes(term.toLowerCase())) {
       foundTerms.push(term);
     }
   });
   
+  // Extract RiverMeadow specific terms
+  riverMeadowTerms.forEach(term => {
+    if (text.toLowerCase().includes(term.toLowerCase())) {
+      foundTerms.push(term);
+    }
+  });
+  
+  // Add RiverMeadow specific terms if RiverMeadow is mentioned but no specific terms found
+  if ((text.toLowerCase().includes('rivermeadow') || text.toLowerCase().includes('river meadow')) && 
+      !foundTerms.some(term => term.includes('RiverMeadow'))) {
+    foundTerms.push('RiverMeadow CloudMigration', 'RiverMeadow Platform', 'SaaS Migration');
+  }
+  
   // Also extract any capitalized terms which are likely technical names/components
   const capitalizedTermsMatch = text.match(/[A-Z][a-z]{2,}(?:\s+[A-Z][a-z]{2,})*/g);
-  const capitalizedTerms = capitalizedTermsMatch ? Array.from(new Set(capitalizedTermsMatch.map(t => t))) : [];
+  const capitalizedTerms = capitalizedTermsMatch 
+    ? Array.from(new Set(capitalizedTermsMatch.map(t => t)))
+        .filter(term => 
+          term.length > 3 && 
+          !['The', 'This', 'That', 'Then', 'These', 'Those', 'They', 'NULL'].includes(term)
+        )
+    : [];
   
-  // Combine and deduplicate without using Set spread
-  const allTerms = [...foundTerms, ...capitalizedTerms];
+  // Generate some random compound terms for uniqueness
+  const randomTerms: string[] = [];
+  // Add timestamp to ensure uniqueness
+  const timestamp = Date.now();
+  
+  // Create unique compound terms combining words that appear in the text
+  const words = text.split(/\s+/).filter(w => w.length > 3);
+  if (words.length >= 2) {
+    // Take some random words from the text to create unique compounds
+    const randomWord1 = words[Math.floor(Math.random() * words.length)];
+    const randomWord2 = words[Math.floor(Math.random() * words.length)];
+    randomTerms.push(`${randomWord1}-${randomWord2}-${timestamp % 1000}`);
+  }
+  
+  // Always add at least one guaranteed unique term
+  randomTerms.push(`migration-element-${timestamp % 10000}`);
+  
+  // Combine all terms and deduplicate
+  const allTerms = [...foundTerms, ...capitalizedTerms, ...randomTerms];
   const uniqueTerms: string[] = [];
   
   for (const term of allTerms) {
@@ -368,7 +436,9 @@ function extractTechnicalTerms(text: string): string[] {
     }
   }
   
-  return uniqueTerms;
+  return uniqueTerms.length > 0 ? 
+    uniqueTerms : 
+    ['cloud migration', 'virtual machine', 'network', 'server', 'infrastructure'];
 }
 
 /**
