@@ -349,7 +349,9 @@ export async function createChatWithKnowledgeBase(messages: Array<{
       try {
         console.log("Image generation requested, attempting to create diagram...");
         imageGenerationAttempted = true;
-        generatedImage = await generateDiagram(latestUserMessage, knowledgeContext);
+        // Convert context to array format
+        const contextArray = similarVectors.map(v => v.text);
+        generatedImage = await generateDiagram(latestUserMessage, contextArray);
         console.log(`Successfully generated image: ${generatedImage.imagePath}`);
       } catch (error) {
         console.error("Error generating image:", error);

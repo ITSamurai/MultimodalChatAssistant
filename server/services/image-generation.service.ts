@@ -467,7 +467,9 @@ export const generateDiagram = async (
     console.log(`Processing diagram request with ${knowledgeContext.length} context snippets`);
     
     // Get enhanced diagram type information that includes context and randomization
-    const diagramInfo = categorizeDiagramType(prompt, knowledgeContext);
+    // Convert context to array format if needed
+  const contextArray = Array.isArray(knowledgeContext) ? knowledgeContext : [knowledgeContext];
+  const diagramInfo = categorizeDiagramType(prompt, contextArray);
     
     // Build a truly unique enhanced prompt using multiple factors:
     // 1. The original prompt
