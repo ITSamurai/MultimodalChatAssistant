@@ -34,11 +34,16 @@ const ensureDirectoriesExist = async () => {
 
 /**
  * Enhance prompt with specific diagram language based on the diagram type
+ * Includes variability to ensure uniqueness in generated diagrams
  */
 const enhancePrompt = (prompt: string, isNetworkDiagram: boolean): string => {
   // Add RiverMeadow terminology and diagram-specific enhancements
   let enhancedPrompt = prompt;
   const lowercasePrompt = prompt.toLowerCase();
+  
+  // Add a unique identifier to ensure different results each time
+  const uniqueId = Date.now().toString().slice(-4);
+  enhancedPrompt += ` (Request ID: ${uniqueId})`;
   
   // Detect diagram theme from prompt for more specific enhancements
   const isCloudFocused = lowercasePrompt.includes('cloud') || 
@@ -55,21 +60,58 @@ const enhancePrompt = (prompt: string, isNetworkDiagram: boolean): string => {
                           lowercasePrompt.includes('workflow') ||
                           lowercasePrompt.includes('steps') ||
                           lowercasePrompt.includes('procedure');
+                          
+  const isOsMigrationFocused = lowercasePrompt.includes('os migration') ||
+                              lowercasePrompt.includes('os-based migration') ||
+                              (lowercasePrompt.includes('os') && lowercasePrompt.includes('migration'));
+  
+  // Select different enhancement styles based on request type
+  const enhancementVariants = [];
   
   if (isNetworkDiagram) {
     if (isCloudFocused) {
-      enhancedPrompt += " Include source systems, target cloud environments, and RiverMeadow Migration Server in the architecture. Use cloud provider icons where appropriate. Show network connections between on-premises and cloud components.";
+      enhancementVariants.push(
+        " Create a visually distinct cloud architecture showing source systems, target cloud environments, and RiverMeadow Migration Server. Use cloud provider icons and show network connections between on-premises and cloud components.",
+        " Design a modern cloud infrastructure diagram showing migration paths from on-premises to cloud targets via RiverMeadow. Include security components and data flow directions.",
+        " Illustrate a detailed cloud migration architecture with source systems, target environments, and the RiverMeadow platform. Show all network connections and security boundaries."
+      );
     } else {
-      enhancedPrompt += " Include source systems, target systems, and RiverMeadow Migration Server in the architecture. Show network connections, firewalls, and data flow direction. Use appropriate networking icons.";
+      enhancementVariants.push(
+        " Design a comprehensive network diagram showing source systems, target systems, and RiverMeadow Migration Server. Include network connections, firewalls, and data flow direction with appropriate networking icons.",
+        " Create a detailed infrastructure diagram with source and target environments connected through RiverMeadow's migration platform. Show all network components and connectivity paths.",
+        " Illustrate the network topology for RiverMeadow's migration solution, showing detailed connections between source servers, the migration platform, and target environments."
+      );
     }
   } else if (isProcessFocused) {
-    enhancedPrompt += " Show the key steps, decision points, and workflow in RiverMeadow's migration process. Include start and end points clearly marked.";
+    enhancementVariants.push(
+      " Create a detailed flowchart showing the key steps, decision points, and workflow in RiverMeadow's migration process. Include clearly marked start and end points with distinct visual elements.",
+      " Design a comprehensive process diagram illustrating the RiverMeadow migration workflow with all steps from initial assessment to final validation. Use distinctive shapes for different process types.",
+      " Illustrate the sequential steps in the RiverMeadow migration process, showing all decision points, actions, and outcomes with clear connections between steps."
+    );
   } else if (isSoftwareFocused) {
-    enhancedPrompt += " Show the software components, interfaces, and data flow in the RiverMeadow system. Include API connections and integration points.";
+    enhancementVariants.push(
+      " Create a component diagram showing the software architecture, interfaces, and data flow in the RiverMeadow system. Include API connections and integration points with external systems.",
+      " Design a software architecture diagram that illustrates how RiverMeadow's components interact with each other and with external systems. Show data flow and system boundaries.",
+      " Illustrate the software components and their relationships within the RiverMeadow platform, including all services, interfaces, and connections to source and target environments."
+    );
+  } else if (isOsMigrationFocused) {
+    enhancementVariants.push(
+      " Design a unique OS migration diagram showing the complete workflow from source OS assessment to target OS deployment using RiverMeadow's platform. Include all key steps with detailed labels.",
+      " Create a comprehensive visualization of the OS migration process showing both technical and business considerations. Include steps for data migration, application compatibility, and post-migration testing.",
+      " Illustrate a detailed OS migration path with specific focus on the technical challenges and solutions provided by RiverMeadow. Show all components involved in the migration process."
+    );
   } else {
-    // Generic enhancement as fallback
-    enhancedPrompt += " Clearly illustrate the migration process or architecture in the context of RiverMeadow's cloud migration platform.";
+    // Generic enhancement variants as fallback
+    enhancementVariants.push(
+      " Create a clear and detailed diagram illustrating the migration process or architecture in the context of RiverMeadow's cloud migration platform. Use distinctive visual elements.",
+      " Design a comprehensive visualization of RiverMeadow's migration solution, showing key components, processes, and relationships with clear visual hierarchy.",
+      " Illustrate the complete RiverMeadow migration ecosystem, including all major components and their relationships in a visually engaging layout."
+    );
   }
+  
+  // Select a random enhancement variant to ensure uniqueness
+  const randomIndex = Math.floor(Math.random() * enhancementVariants.length);
+  enhancedPrompt += enhancementVariants[randomIndex];
   
   return enhancedPrompt;
 };
@@ -102,14 +144,120 @@ export const generateDiagram = async (
       try {
         console.log('Attempting to generate Draw.IO diagram');
         
-        // Define the system prompt for Draw.IO XML generation
-        const systemMessage = isNetworkDiagram
-          ? "You are an expert at creating network architecture diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow migration architecture."
-          : "You are an expert at creating flowchart diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow migration processes.";
+        // Detect specific diagram types from the prompt
+        const lowercasePrompt = prompt.toLowerCase();
+        const isCloudFocused = lowercasePrompt.includes('cloud') || 
+                              lowercasePrompt.includes('aws') ||
+                              lowercasePrompt.includes('azure') ||
+                              lowercasePrompt.includes('gcp');
         
-        const userMessage = isNetworkDiagram
-          ? `Create a network architecture diagram in Draw.IO XML format for: ${enhancedPrompt}\n\nInclude these elements in your design:\n1. Source servers or systems\n2. RiverMeadow Migration Server\n3. Target environments (cloud or on-premises)\n4. Network connections between components\n5. Use appropriate icons for servers, storage, networks, and cloud resources\n\nOnly return valid Draw.IO XML without any explanation.`
-          : `Create a flowchart diagram in Draw.IO XML format for: ${enhancedPrompt}\n\nDesign a clear process flow that includes:\n1. Start and end points\n2. Key decision points\n3. Main process steps\n4. Connections between steps\n5. Use different colors and shapes to distinguish between different types of steps\n\nOnly return valid Draw.IO XML without any explanation.`;
+        const isSoftwareFocused = lowercasePrompt.includes('software') || 
+                                 lowercasePrompt.includes('application') ||
+                                 lowercasePrompt.includes('program') ||
+                                 lowercasePrompt.includes('code');
+        
+        const isOsMigrationFocused = lowercasePrompt.includes('os migration') ||
+                                    lowercasePrompt.includes('os-based migration') ||
+                                    (lowercasePrompt.includes('os') && lowercasePrompt.includes('migration'));
+        
+        // Define the system prompt for Draw.IO XML generation based on diagram type
+        let systemMessage = "";
+        if (isNetworkDiagram) {
+          systemMessage = "You are an expert at creating network architecture diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow migration architecture. Use different icons for different types of network components. Include detailed labels for all diagram elements.";
+        } else if (isOsMigrationFocused) {
+          systemMessage = "You are an expert at creating OS migration diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes the OS migration process with RiverMeadow. Use distinctive shapes and colors for different phases of migration. Include detailed labels and connections.";
+        } else if (isSoftwareFocused) {
+          systemMessage = "You are an expert at creating software architecture diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow software components and interfaces. Use appropriate icons for different types of software components. Include clear labels and connection types.";
+        } else {
+          systemMessage = "You are an expert at creating flowchart diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow migration processes. Use varied shapes and colors for different process types. Include detailed labels and clear directional flow.";
+        }
+        
+        // Define the user message based on diagram type
+        let userMessage = "";
+        
+        if (isNetworkDiagram) {
+          // Network architecture diagram instructions
+          if (isCloudFocused) {
+            userMessage = `Create a detailed cloud architecture diagram in Draw.IO XML format for: ${enhancedPrompt}
+            
+Include these elements in your design:
+1. Source on-premises systems with appropriate icons
+2. RiverMeadow Migration Server and related components
+3. Target cloud environments with cloud-specific icons (AWS/Azure/GCP as appropriate)
+4. Network connections showing data flow between components
+5. Security elements like firewalls, VPNs, and secure connections
+6. Clear labels for all components and connections
+7. Use different colors for source, migration, and target environments
+8. Group related components together visually
+9. Add a title and brief legend
+
+Make the diagram visually distinct with a professional appearance. Use appropriate cloud icons for different services. Only return valid Draw.IO XML without any explanation.`;
+          } else {
+            userMessage = `Create a network infrastructure diagram in Draw.IO XML format for: ${enhancedPrompt}
+            
+Include these elements in your design:
+1. Source servers or systems with hardware-appropriate icons
+2. RiverMeadow Migration Server and related components
+3. Target environments (physical or virtual)
+4. Network connections between components showing data flow direction
+5. Security elements like firewalls and network boundaries
+6. Use appropriate icons for servers, routers, switches, storage, and other hardware
+7. Clear labels for all components and connections
+8. Use different colors to distinguish different network segments
+9. Include a title and brief legend
+
+Make the diagram visually professional with clear component relationships. Only return valid Draw.IO XML without any explanation.`;
+          }
+        } else if (isOsMigrationFocused) {
+          // OS migration diagram instructions
+          userMessage = `Create a unique OS migration diagram in Draw.IO XML format for: ${enhancedPrompt}
+          
+Design a comprehensive diagram that includes:
+1. Source OS environment with appropriate icons and labels
+2. Target OS environment with distinctive representation
+3. RiverMeadow migration components and tools
+4. Migration workflow with clear step sequence
+5. Data and application migration paths
+6. Decision points and validation steps
+7. Pre and post-migration activities
+8. Use different shapes and colors for different phases
+9. Include a title and timeline elements if appropriate
+
+Make this diagram visually distinct from generic migration flowcharts. Highlight technical aspects specific to OS migration. Only return valid Draw.IO XML without any explanation.`;
+        } else if (isSoftwareFocused) {
+          // Software architecture diagram instructions
+          userMessage = `Create a software architecture diagram in Draw.IO XML format for: ${enhancedPrompt}
+          
+Design a detailed software diagram that includes:
+1. RiverMeadow software components with appropriate icons
+2. Component relationships and dependencies
+3. APIs and integration points
+4. Data flow between components
+5. External systems and interfaces
+6. User interaction points
+7. Clear labels for all components and interfaces
+8. Use different shapes and colors for different component types
+9. Group related functionality together
+10. Include a title and legend
+
+Make the diagram technically precise with modern software architecture elements. Only return valid Draw.IO XML without any explanation.`;
+        } else {
+          // Default process flowchart instructions
+          userMessage = `Create a flowchart diagram in Draw.IO XML format for: ${enhancedPrompt}
+          
+Design a clear process flow that includes:
+1. Distinctive start and end points
+2. All key decision points with different outcome paths
+3. Main process steps in logical sequence
+4. Connections between steps showing process flow
+5. Use different colors and shapes to distinguish between different types of steps
+6. Include subprocess groupings if appropriate
+7. Clear labels for all steps and decisions
+8. Time or sequence indicators if relevant
+9. Include a title that describes the specific process
+
+Make this flowchart visually distinctive with professional styling. Only return valid Draw.IO XML without any explanation.`;
+        }
         
         const response = await openai.chat.completions.create({
           model: "gpt-4o",
@@ -118,7 +266,7 @@ export const generateDiagram = async (
             { role: "user", content: userMessage }
           ],
           max_tokens: 4000,
-          temperature: 0.5,
+          temperature: 0.8,  // Increased temperature for more variation
         });
         
         // Extract the Draw.IO XML from the response

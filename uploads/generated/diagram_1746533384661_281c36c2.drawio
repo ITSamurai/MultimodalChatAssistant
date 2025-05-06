@@ -1,0 +1,58 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Linux Migration Process" id="n5JQq8E9d1O8z3R4bq4Q">
+    <mxGraphModel dx="1000" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="start" value="Start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="50" y="100" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="step1" value="Initiate Migration Request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="200" y="100" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="decision1" value="Is Pre-check Passed?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="400" y="100" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="step2" value="Perform Pre-checks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="200" y="200" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="step3" value="Execute Migration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="600" y="100" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="decision2" value="Is Migration Successful?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="800" y="100" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="step4" value="Perform Rollback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="800" y="200" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="end" value="End" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="100" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="start" target="step1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="step1" target="decision1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" value="No" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="decision1" target="step2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge4" value="Yes" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="decision1" target="step3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="step2" target="decision1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge6" value="Yes" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="decision2" target="end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge7" value="No" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="decision2" target="step4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge8" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="step3" target="decision2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
