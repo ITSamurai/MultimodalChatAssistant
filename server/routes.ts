@@ -315,7 +315,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Chat endpoint
+  // Chat endpoints
+  // Create a new chat
+  app.post('/api/chats', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+      
+      const chat = await storage.createChat({
+        userId: req.user.id,
+        title: req.body.title || 'New Conversation',
+        createdAt: new Date()
+      });
+      
+      return res.status(201).json(chat);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      res.status(500).json({ error: 'Failed to create chat' });
+    }
+  });
+
+  // Get all chats for the current user
+  app.get('/api/chats', async (req: Request, res: Response) => {
+    try {
+      if (req.user) {
+        const chats = await storage.getUserChats(req.user.id);
+        return res.json(chats);
+      } else {
+        // Return empty array for non-authenticated users
+        return res.json([]);
+      }
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+      res.status(500).json({ error: 'Failed to fetch chats' });
+    }
+  });
+
+  // Get a specific chat
+  app.get('/api/chats/:id', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ error: 'Chat not found' });
+      }
+      
+      if (chat.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      return res.json(chat);
+    } catch (error) {
+      console.error('Error fetching chat:', error);
+      res.status(500).json({ error: 'Failed to fetch chat' });
+    }
+  });
+
+  // Get messages for a chat
+  app.get('/api/chats/:id/messages', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ error: 'Chat not found' });
+      }
+      
+      if (chat.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      const messages = await storage.getChatMessages(chatId);
+      return res.json(messages);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+  });
+
+  // Add a message to a chat
+  app.post('/api/chats/:id/messages', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ error: 'Chat not found' });
+      }
+      
+      if (chat.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      const message = await storage.createChatMessage({
+        chatId,
+        role: req.body.role,
+        content: req.body.content,
+        createdAt: new Date()
+      });
+      
+      return res.status(201).json(message);
+    } catch (error) {
+      console.error('Error creating message:', error);
+      res.status(500).json({ error: 'Failed to create message' });
+    }
+  });
+
+  // Chat endpoint for AI responses
   app.post('/api/chat', requireTokenAuth, async (req: Request, res: Response) => {
     try {
       // Process chat message (handled by external code)
