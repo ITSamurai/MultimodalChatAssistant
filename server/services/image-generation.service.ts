@@ -133,10 +133,35 @@ const categorizeDiagramType = (prompt: string): {
     }
   ];
   
-  // Find the matching category based on keywords
-  let matchedCategory = diagramTypes.find(type => 
-    type.keywords.some(keyword => lowercasePrompt.includes(keyword))
-  ) || diagramTypes[1]; // Default to process diagrams if no match
+  // First, create a scoring system for each category based on keyword matches
+  const categoryScores = diagramTypes.map(type => {
+    // Count how many keywords from this category are in the prompt
+    const matchCount = type.keywords.filter(keyword => lowercasePrompt.includes(keyword)).length;
+    return {
+      category: type,
+      score: matchCount,
+      // Add a small random factor to break ties and add variety
+      finalScore: matchCount + (Math.random() * 0.5)
+    };
+  });
+
+  console.log('Category scores:');
+  categoryScores.forEach(cat => {
+    console.log(`${cat.category.category}: ${cat.score} (final: ${cat.finalScore.toFixed(2)})`);
+  });
+  
+  // Select the category with highest score, or random if all scores are 0
+  const highestScore = Math.max(...categoryScores.map(c => c.finalScore));
+  
+  // If we have some matches, use the highest scored category
+  let matchedCategory = highestScore > 0 
+    ? categoryScores.find(c => c.finalScore === highestScore)?.category
+    : diagramTypes[Math.floor(Math.random() * diagramTypes.length)]; // Random category if no matches
+    
+  // If still no match, default to process diagrams
+  if (!matchedCategory) {
+    matchedCategory = diagramTypes[1]; // Default to process diagrams if no match
+  }
   
   // Create a unique hash-like value from the prompt to ensure consistent but different results
   const promptHash = Array.from(prompt)
@@ -188,6 +213,17 @@ export const generateDiagram = async (
     
     // Build a unique enhanced prompt that will force different diagrams each time
     const enhancedPrompt = `${prompt} (Unique request ID: ${reqTimestamp}-${reqUuid})`;
+    
+    // Log more detailed debugging information
+    console.log('DIAGRAM DEBUG INFO:');
+    console.log(`Original prompt: "${prompt}"`);
+    console.log(`Enhanced prompt: "${enhancedPrompt}"`);
+    console.log(`Category: ${diagramInfo.category}`);
+    console.log(`Specific type: ${diagramInfo.specificType}`);
+    console.log(`Colors: Primary=${diagramInfo.colors.primary}, Secondary=${diagramInfo.colors.secondary}, Accent=${diagramInfo.colors.accent}`);
+    console.log(`Elements: ${diagramInfo.elements.join(', ')}`);
+    console.log(`Layout: ${diagramInfo.layout}`);
+    console.log(`Timestamp: ${reqTimestamp}, UUID: ${reqUuid}`);
     
     // Try to use Draw.IO first if requested
     if (useDrawIO) {
