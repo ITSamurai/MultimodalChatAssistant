@@ -33,87 +33,132 @@ const ensureDirectoriesExist = async () => {
 };
 
 /**
- * Enhance prompt with specific diagram language based on the diagram type
- * Includes variability to ensure uniqueness in generated diagrams
+ * Categorize the diagram type based on prompt content
+ * Returns a specific diagram type to guide the generation process
  */
-const enhancePrompt = (prompt: string, isNetworkDiagram: boolean): string => {
-  // Add RiverMeadow terminology and diagram-specific enhancements
-  let enhancedPrompt = prompt;
+const categorizeDiagramType = (prompt: string): {
+  category: string;
+  specificType: string;
+  colors: { primary: string; secondary: string; accent: string };
+  elements: string[];
+  layout: string;
+} => {
   const lowercasePrompt = prompt.toLowerCase();
   
-  // Add a unique identifier to ensure different results each time
-  const uniqueId = Date.now().toString().slice(-4);
-  enhancedPrompt += ` (Request ID: ${uniqueId})`;
-  
-  // Detect diagram theme from prompt for more specific enhancements
-  const isCloudFocused = lowercasePrompt.includes('cloud') || 
-                        lowercasePrompt.includes('aws') ||
-                        lowercasePrompt.includes('azure') ||
-                        lowercasePrompt.includes('gcp');
-                        
-  const isSoftwareFocused = lowercasePrompt.includes('software') || 
-                           lowercasePrompt.includes('application') ||
-                           lowercasePrompt.includes('program') ||
-                           lowercasePrompt.includes('code');
-                           
-  const isProcessFocused = lowercasePrompt.includes('process') || 
-                          lowercasePrompt.includes('workflow') ||
-                          lowercasePrompt.includes('steps') ||
-                          lowercasePrompt.includes('procedure');
-                          
-  const isOsMigrationFocused = lowercasePrompt.includes('os migration') ||
-                              lowercasePrompt.includes('os-based migration') ||
-                              (lowercasePrompt.includes('os') && lowercasePrompt.includes('migration'));
-  
-  // Select different enhancement styles based on request type
-  const enhancementVariants = [];
-  
-  if (isNetworkDiagram) {
-    if (isCloudFocused) {
-      enhancementVariants.push(
-        " Create a visually distinct cloud architecture showing source systems, target cloud environments, and RiverMeadow Migration Server. Use cloud provider icons and show network connections between on-premises and cloud components.",
-        " Design a modern cloud infrastructure diagram showing migration paths from on-premises to cloud targets via RiverMeadow. Include security components and data flow directions.",
-        " Illustrate a detailed cloud migration architecture with source systems, target environments, and the RiverMeadow platform. Show all network connections and security boundaries."
-      );
-    } else {
-      enhancementVariants.push(
-        " Design a comprehensive network diagram showing source systems, target systems, and RiverMeadow Migration Server. Include network connections, firewalls, and data flow direction with appropriate networking icons.",
-        " Create a detailed infrastructure diagram with source and target environments connected through RiverMeadow's migration platform. Show all network components and connectivity paths.",
-        " Illustrate the network topology for RiverMeadow's migration solution, showing detailed connections between source servers, the migration platform, and target environments."
-      );
+  // Define specific diagram types with their associated elements and styling
+  const diagramTypes = [
+    {
+      category: 'network',
+      keywords: ['network', 'infrastructure', 'cloud', 'aws', 'azure', 'gcp', 'server', 'topology'],
+      specificTypes: [
+        'cloud-migration-architecture', 
+        'hybrid-network-topology', 
+        'data-center-infrastructure', 
+        'secure-network-design'
+      ],
+      colorSets: [
+        { primary: '#4285F4', secondary: '#34A853', accent: '#EA4335' }, // Google-inspired
+        { primary: '#0078D4', secondary: '#50E6FF', accent: '#D83B01' }, // Azure-inspired
+        { primary: '#232F3E', secondary: '#FF9900', accent: '#7D8998' }  // AWS-inspired
+      ],
+      elementSets: [
+        ['servers', 'cloud services', 'firewalls', 'load balancers', 'VPNs'],
+        ['virtual machines', 'security groups', 'subnets', 'storage', 'databases'],
+        ['containers', 'APIs', 'gateways', 'CDN', 'edge locations']
+      ],
+      layouts: ['horizontal', 'vertical', 'hierarchical', 'hub-and-spoke']
+    },
+    {
+      category: 'process',
+      keywords: ['process', 'workflow', 'steps', 'procedure', 'flowchart', 'sequence'],
+      specificTypes: [
+        'migration-workflow', 
+        'assessment-decision-tree', 
+        'deployment-process', 
+        'validation-pipeline'
+      ],
+      colorSets: [
+        { primary: '#3498DB', secondary: '#2ECC71', accent: '#E74C3C' },
+        { primary: '#8E44AD', secondary: '#F1C40F', accent: '#16A085' },
+        { primary: '#2C3E50', secondary: '#E67E22', accent: '#ECF0F1' }
+      ],
+      elementSets: [
+        ['decision points', 'actions', 'inputs/outputs', 'start/end points'],
+        ['validation steps', 'conditional branches', 'loops', 'subprocess blocks'],
+        ['system interactions', 'user actions', 'data transformations', 'notifications']
+      ],
+      layouts: ['top-down', 'left-to-right', 'swim lanes', 'circular']
+    },
+    {
+      category: 'software',
+      keywords: ['software', 'application', 'program', 'code', 'component', 'architecture'],
+      specificTypes: [
+        'microservice-architecture', 
+        'component-diagram', 
+        'system-integration-map', 
+        'data-flow-architecture'
+      ],
+      colorSets: [
+        { primary: '#6236FF', secondary: '#41B883', accent: '#FF5757' },
+        { primary: '#61DAFB', secondary: '#F9A825', accent: '#6D4C41' },
+        { primary: '#7E57C2', secondary: '#26A69A', accent: '#EF5350' }
+      ],
+      elementSets: [
+        ['services', 'APIs', 'databases', 'user interfaces', 'external systems'],
+        ['modules', 'libraries', 'data stores', 'message queues', 'caches'],
+        ['controllers', 'models', 'views', 'middleware', 'authentication']
+      ],
+      layouts: ['layered', 'component-based', 'service-oriented', 'event-driven']
+    },
+    {
+      category: 'os-migration',
+      keywords: ['os migration', 'operating system', 'platform migration', 'system upgrade'],
+      specificTypes: [
+        'os-transformation-process', 
+        'cross-platform-migration', 
+        'application-compatibility-workflow', 
+        'os-upgrade-lifecycle'
+      ],
+      colorSets: [
+        { primary: '#0078D4', secondary: '#107C10', accent: '#D83B01' }, // Windows-inspired
+        { primary: '#E95420', secondary: '#77216F', accent: '#F2C500' }, // Ubuntu-inspired
+        { primary: '#4285F4', secondary: '#34A853', accent: '#FBBC05' }  // Chrome OS-inspired
+      ],
+      elementSets: [
+        ['source OS', 'target OS', 'application compatibility', 'data migration', 'testing'],
+        ['system assessment', 'backup', 'deployment', 'verification', 'rollback options'],
+        ['user profiles', 'settings', 'drivers', 'services', 'security configurations']
+      ],
+      layouts: ['migration path', 'parallel tracks', 'staged approach', 'automated pipeline']
     }
-  } else if (isProcessFocused) {
-    enhancementVariants.push(
-      " Create a detailed flowchart showing the key steps, decision points, and workflow in RiverMeadow's migration process. Include clearly marked start and end points with distinct visual elements.",
-      " Design a comprehensive process diagram illustrating the RiverMeadow migration workflow with all steps from initial assessment to final validation. Use distinctive shapes for different process types.",
-      " Illustrate the sequential steps in the RiverMeadow migration process, showing all decision points, actions, and outcomes with clear connections between steps."
-    );
-  } else if (isSoftwareFocused) {
-    enhancementVariants.push(
-      " Create a component diagram showing the software architecture, interfaces, and data flow in the RiverMeadow system. Include API connections and integration points with external systems.",
-      " Design a software architecture diagram that illustrates how RiverMeadow's components interact with each other and with external systems. Show data flow and system boundaries.",
-      " Illustrate the software components and their relationships within the RiverMeadow platform, including all services, interfaces, and connections to source and target environments."
-    );
-  } else if (isOsMigrationFocused) {
-    enhancementVariants.push(
-      " Design a unique OS migration diagram showing the complete workflow from source OS assessment to target OS deployment using RiverMeadow's platform. Include all key steps with detailed labels.",
-      " Create a comprehensive visualization of the OS migration process showing both technical and business considerations. Include steps for data migration, application compatibility, and post-migration testing.",
-      " Illustrate a detailed OS migration path with specific focus on the technical challenges and solutions provided by RiverMeadow. Show all components involved in the migration process."
-    );
-  } else {
-    // Generic enhancement variants as fallback
-    enhancementVariants.push(
-      " Create a clear and detailed diagram illustrating the migration process or architecture in the context of RiverMeadow's cloud migration platform. Use distinctive visual elements.",
-      " Design a comprehensive visualization of RiverMeadow's migration solution, showing key components, processes, and relationships with clear visual hierarchy.",
-      " Illustrate the complete RiverMeadow migration ecosystem, including all major components and their relationships in a visually engaging layout."
-    );
-  }
+  ];
   
-  // Select a random enhancement variant to ensure uniqueness
-  const randomIndex = Math.floor(Math.random() * enhancementVariants.length);
-  enhancedPrompt += enhancementVariants[randomIndex];
+  // Find the matching category based on keywords
+  let matchedCategory = diagramTypes.find(type => 
+    type.keywords.some(keyword => lowercasePrompt.includes(keyword))
+  ) || diagramTypes[1]; // Default to process diagrams if no match
   
-  return enhancedPrompt;
+  // Create a unique hash-like value from the prompt to ensure consistent but different results
+  const promptHash = Array.from(prompt)
+    .reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) & 0xFFFFFFFF, 0)
+    .toString();
+  
+  // Use the hash to deterministically but uniquely select diagram attributes
+  const hashDigits = promptHash.split('').map(d => parseInt(d));
+  
+  // Select a specific type, color set, element set, and layout based on the hash
+  const typeIndex = hashDigits[0] % matchedCategory.specificTypes.length;
+  const colorIndex = hashDigits[1] % matchedCategory.colorSets.length;
+  const elementIndex = hashDigits[2] % matchedCategory.elementSets.length;
+  const layoutIndex = hashDigits[3] % matchedCategory.layouts.length;
+  
+  return {
+    category: matchedCategory.category,
+    specificType: matchedCategory.specificTypes[typeIndex],
+    colors: matchedCategory.colorSets[colorIndex],
+    elements: matchedCategory.elementSets[elementIndex],
+    layout: matchedCategory.layouts[layoutIndex]
+  };
 };
 
 /**
@@ -132,132 +177,84 @@ export const generateDiagram = async (
     // Make sure necessary directories exist
     await ensureDirectoriesExist();
     
-    // Determine if this is a network diagram request
-    const isNetworkDiagram = detectNetworkDiagramRequest(prompt);
-    console.log(`Network diagram detection: ${isNetworkDiagram ? 'Yes' : 'No'}`);
+    // Create a unique time-based identifier
+    const reqTimestamp = Date.now();
+    const reqUuid = uuidv4().substring(0, 8);
     
-    // Enhance the prompt with specific diagram language
-    const enhancedPrompt = enhancePrompt(prompt, isNetworkDiagram);
+    // Get detailed diagram type information to ensure uniqueness
+    const diagramInfo = categorizeDiagramType(prompt);
+    console.log(`Diagram type: ${diagramInfo.category} / ${diagramInfo.specificType}`);
+    console.log(`Color scheme: ${diagramInfo.colors.primary}, layout: ${diagramInfo.layout}`);
+    
+    // Build a unique enhanced prompt that will force different diagrams each time
+    const enhancedPrompt = `${prompt} (Unique request ID: ${reqTimestamp}-${reqUuid})`;
     
     // Try to use Draw.IO first if requested
     if (useDrawIO) {
       try {
-        console.log('Attempting to generate Draw.IO diagram');
+        console.log('Generating Draw.IO diagram with categorized style');
         
-        // Detect specific diagram types from the prompt
-        const lowercasePrompt = prompt.toLowerCase();
-        const isCloudFocused = lowercasePrompt.includes('cloud') || 
-                              lowercasePrompt.includes('aws') ||
-                              lowercasePrompt.includes('azure') ||
-                              lowercasePrompt.includes('gcp');
-        
-        const isSoftwareFocused = lowercasePrompt.includes('software') || 
-                                 lowercasePrompt.includes('application') ||
-                                 lowercasePrompt.includes('program') ||
-                                 lowercasePrompt.includes('code');
-        
-        const isOsMigrationFocused = lowercasePrompt.includes('os migration') ||
-                                    lowercasePrompt.includes('os-based migration') ||
-                                    (lowercasePrompt.includes('os') && lowercasePrompt.includes('migration'));
-        
-        // Define the system prompt for Draw.IO XML generation based on diagram type
+        // Create a unique system prompt based on the diagram category
         let systemMessage = "";
-        if (isNetworkDiagram) {
-          systemMessage = "You are an expert at creating network architecture diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow migration architecture. Use different icons for different types of network components. Include detailed labels for all diagram elements.";
-        } else if (isOsMigrationFocused) {
-          systemMessage = "You are an expert at creating OS migration diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes the OS migration process with RiverMeadow. Use distinctive shapes and colors for different phases of migration. Include detailed labels and connections.";
-        } else if (isSoftwareFocused) {
-          systemMessage = "You are an expert at creating software architecture diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow software components and interfaces. Use appropriate icons for different types of software components. Include clear labels and connection types.";
-        } else {
-          systemMessage = "You are an expert at creating flowchart diagrams using Draw.IO (diagrams.net). Generate only valid XML for Draw.IO that visualizes RiverMeadow migration processes. Use varied shapes and colors for different process types. Include detailed labels and clear directional flow.";
+        
+        switch (diagramInfo.category) {
+          case 'network':
+            systemMessage = `You are an expert at creating network architecture diagrams using Draw.IO (diagrams.net). 
+Generate a ${diagramInfo.specificType} diagram with a ${diagramInfo.layout} layout.
+Use color scheme: primary=${diagramInfo.colors.primary}, secondary=${diagramInfo.colors.secondary}, accent=${diagramInfo.colors.accent}.
+Include these elements: ${diagramInfo.elements.join(', ')}.
+Generate ONLY valid XML for Draw.IO without any explanations or markdown formatting.`;
+            break;
+            
+          case 'process':
+            systemMessage = `You are an expert at creating flowchart diagrams using Draw.IO (diagrams.net).
+Generate a ${diagramInfo.specificType} diagram with a ${diagramInfo.layout} layout.
+Use color scheme: primary=${diagramInfo.colors.primary}, secondary=${diagramInfo.colors.secondary}, accent=${diagramInfo.colors.accent}.
+Include these elements: ${diagramInfo.elements.join(', ')}.
+Generate ONLY valid XML for Draw.IO without any explanations or markdown formatting.`;
+            break;
+            
+          case 'software':
+            systemMessage = `You are an expert at creating software architecture diagrams using Draw.IO (diagrams.net).
+Generate a ${diagramInfo.specificType} diagram with a ${diagramInfo.layout} layout.
+Use color scheme: primary=${diagramInfo.colors.primary}, secondary=${diagramInfo.colors.secondary}, accent=${diagramInfo.colors.accent}.
+Include these elements: ${diagramInfo.elements.join(', ')}.
+Generate ONLY valid XML for Draw.IO without any explanations or markdown formatting.`;
+            break;
+            
+          case 'os-migration':
+            systemMessage = `You are an expert at creating OS migration diagrams using Draw.IO (diagrams.net).
+Generate a ${diagramInfo.specificType} diagram with a ${diagramInfo.layout} layout.
+Use color scheme: primary=${diagramInfo.colors.primary}, secondary=${diagramInfo.colors.secondary}, accent=${diagramInfo.colors.accent}.
+Include these elements: ${diagramInfo.elements.join(', ')}.
+Generate ONLY valid XML for Draw.IO without any explanations or markdown formatting.`;
+            break;
+            
+          default:
+            systemMessage = `You are an expert at creating diagrams using Draw.IO (diagrams.net).
+Generate a migration process diagram with a top-down layout.
+Use consistent, professional colors and shapes.
+Generate ONLY valid XML for Draw.IO without any explanations or markdown formatting.`;
         }
         
-        // Define the user message based on diagram type
-        let userMessage = "";
-        
-        if (isNetworkDiagram) {
-          // Network architecture diagram instructions
-          if (isCloudFocused) {
-            userMessage = `Create a detailed cloud architecture diagram in Draw.IO XML format for: ${enhancedPrompt}
-            
-Include these elements in your design:
-1. Source on-premises systems with appropriate icons
-2. RiverMeadow Migration Server and related components
-3. Target cloud environments with cloud-specific icons (AWS/Azure/GCP as appropriate)
-4. Network connections showing data flow between components
-5. Security elements like firewalls, VPNs, and secure connections
-6. Clear labels for all components and connections
-7. Use different colors for source, migration, and target environments
-8. Group related components together visually
-9. Add a title and brief legend
+        // Create a detailed user prompt with specific styling requirements
+        const userMessage = `Create a unique and visually distinct diagram in Draw.IO XML format for: ${enhancedPrompt}
 
-Make the diagram visually distinct with a professional appearance. Use appropriate cloud icons for different services. Only return valid Draw.IO XML without any explanation.`;
-          } else {
-            userMessage = `Create a network infrastructure diagram in Draw.IO XML format for: ${enhancedPrompt}
-            
-Include these elements in your design:
-1. Source servers or systems with hardware-appropriate icons
-2. RiverMeadow Migration Server and related components
-3. Target environments (physical or virtual)
-4. Network connections between components showing data flow direction
-5. Security elements like firewalls and network boundaries
-6. Use appropriate icons for servers, routers, switches, storage, and other hardware
-7. Clear labels for all components and connections
-8. Use different colors to distinguish different network segments
-9. Include a title and brief legend
+Please follow these specific requirements:
+1. Create a diagram with title "${diagramInfo.specificType} - RiverMeadow"
+2. Use a ${diagramInfo.layout} layout structure
+3. Use these exact color HEX values:
+   - Primary elements: ${diagramInfo.colors.primary}
+   - Secondary elements: ${diagramInfo.colors.secondary}
+   - Accent elements: ${diagramInfo.colors.accent}
+4. Include these specific elements: ${diagramInfo.elements.join(', ')}
+5. Use appropriate icons, shapes, and styles for a professional appearance
+6. Include clear labels for all components
+7. Use different shapes for different types of elements
+8. Add a title and brief legend
+9. Diagram ID must be set to "${reqTimestamp}-${reqUuid}"
 
-Make the diagram visually professional with clear component relationships. Only return valid Draw.IO XML without any explanation.`;
-          }
-        } else if (isOsMigrationFocused) {
-          // OS migration diagram instructions
-          userMessage = `Create a unique OS migration diagram in Draw.IO XML format for: ${enhancedPrompt}
-          
-Design a comprehensive diagram that includes:
-1. Source OS environment with appropriate icons and labels
-2. Target OS environment with distinctive representation
-3. RiverMeadow migration components and tools
-4. Migration workflow with clear step sequence
-5. Data and application migration paths
-6. Decision points and validation steps
-7. Pre and post-migration activities
-8. Use different shapes and colors for different phases
-9. Include a title and timeline elements if appropriate
-
-Make this diagram visually distinct from generic migration flowcharts. Highlight technical aspects specific to OS migration. Only return valid Draw.IO XML without any explanation.`;
-        } else if (isSoftwareFocused) {
-          // Software architecture diagram instructions
-          userMessage = `Create a software architecture diagram in Draw.IO XML format for: ${enhancedPrompt}
-          
-Design a detailed software diagram that includes:
-1. RiverMeadow software components with appropriate icons
-2. Component relationships and dependencies
-3. APIs and integration points
-4. Data flow between components
-5. External systems and interfaces
-6. User interaction points
-7. Clear labels for all components and interfaces
-8. Use different shapes and colors for different component types
-9. Group related functionality together
-10. Include a title and legend
-
-Make the diagram technically precise with modern software architecture elements. Only return valid Draw.IO XML without any explanation.`;
-        } else {
-          // Default process flowchart instructions
-          userMessage = `Create a flowchart diagram in Draw.IO XML format for: ${enhancedPrompt}
-          
-Design a clear process flow that includes:
-1. Distinctive start and end points
-2. All key decision points with different outcome paths
-3. Main process steps in logical sequence
-4. Connections between steps showing process flow
-5. Use different colors and shapes to distinguish between different types of steps
-6. Include subprocess groupings if appropriate
-7. Clear labels for all steps and decisions
-8. Time or sequence indicators if relevant
-9. Include a title that describes the specific process
-
-Make this flowchart visually distinctive with professional styling. Only return valid Draw.IO XML without any explanation.`;
-        }
+IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown formatting, or code blocks`;
         
         const response = await openai.chat.completions.create({
           model: "gpt-4o",
@@ -293,7 +290,24 @@ Make this flowchart visually distinctive with professional styling. Only return 
         await writeFile(xmlPath, cleanXml);
         
         // Create HTML for the Draw.IO diagram using string concatenation
-        const titleText = isNetworkDiagram ? 'RiverMeadow Network Architecture' : 'RiverMeadow Migration Diagram';
+        // Get a more specific title based on diagram category
+        let titleText = '';
+        switch (diagramInfo.category) {
+          case 'network':
+            titleText = `RiverMeadow ${diagramInfo.specificType}`;
+            break;
+          case 'process':
+            titleText = `RiverMeadow ${diagramInfo.specificType}`;
+            break;
+          case 'software':
+            titleText = `RiverMeadow ${diagramInfo.specificType}`;
+            break;
+          case 'os-migration':
+            titleText = `RiverMeadow ${diagramInfo.specificType}`;
+            break;
+          default:
+            titleText = 'RiverMeadow Migration Diagram';
+        }
         let drawioHtml = "<!DOCTYPE html>";
         drawioHtml += "<html lang=\"en\">";
         drawioHtml += "<head>";
