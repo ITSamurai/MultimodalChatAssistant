@@ -292,6 +292,15 @@ Please follow these specific requirements:
 
 IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown formatting, or code blocks`;
         
+        // Log the entire request to help debug
+        console.log('\n\n==== DIAGRAM GENERATION REQUEST ====');
+        console.log('System Message:');
+        console.log(systemMessage);
+        console.log('\nUser Message:');
+        console.log(userMessage);
+        console.log('Temperature: 0.8, Model: gpt-4o');
+        console.log('==============================\n\n');
+        
         const response = await openai.chat.completions.create({
           model: "gpt-4o",
           messages: [
@@ -299,11 +308,17 @@ IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown for
             { role: "user", content: userMessage }
           ],
           max_tokens: 4000,
-          temperature: 0.8,  // Increased temperature for more variation
+          temperature: 1.0,  // Maximum temperature for highest variation
         });
         
+        // Log response
+        console.log('\n\n==== DIAGRAM GENERATION RESPONSE (TRUNCATED) ====');
+        const responseContent = response.choices[0].message.content || "";
+        console.log(responseContent.substring(0, 200) + '...[TRUNCATED]');
+        console.log('==============================\n\n');
+        
         // Extract the Draw.IO XML from the response
-        const drawioXml = response.choices[0].message.content?.trim() || "";
+        const drawioXml = responseContent.trim() || "";
         
         // Clean up XML - remove markdown code blocks if present
         const cleanXml = drawioXml
