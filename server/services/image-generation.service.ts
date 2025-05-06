@@ -630,8 +630,14 @@ IMPORTANT: Return ONLY the raw Draw.IO XML without any explanation, markdown for
             titleText = `RiverMeadow ${diagramInfo.specificType}`;
             break;
           case 'os-migration':
-            titleText = `RiverMeadow ${diagramInfo.mermaid')) {
-      console.error('Invalid diagram response received');
+            titleText = `RiverMeadow ${diagramInfo.specificType}`;
+            break;
+          default:
+            titleText = `RiverMeadow Diagram`;
+        }
+
+        if (!messageContent || !messageContent.includes('mermaid')) {
+          console.error('Invalid diagram response received');
       throw new Error('Failed to generate valid diagram');
     }
 
