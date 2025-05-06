@@ -1,4 +1,4 @@
-// Basic imports
+// image-generation.service.ts
 import { writeFile, mkdir } from 'fs/promises';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -13,8 +13,10 @@ const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 const GENERATED_IMAGES_DIR = path.join(UPLOADS_DIR, 'generated');
 const PNG_DIR = path.join(UPLOADS_DIR, 'png');
 
-// Create necessary directories for storing images
-const ensureDirectoriesExist = async () => {
+/**
+ * Ensure all necessary directories exist
+ */
+export const ensureDirectoriesExist = async (): Promise<void> => {
   try {
     if (!fs.existsSync(UPLOADS_DIR)) {
       await mkdir(UPLOADS_DIR);
@@ -27,11 +29,215 @@ const ensureDirectoriesExist = async () => {
     }
   } catch (error) {
     console.error('Error creating directories:', error);
+    throw new Error('Failed to create necessary directories');
   }
 };
 
-// Simple diagram generation function
-const generateDiagram = async (
+/**
+ * Process the GPT response to extract key components for the diagram
+ */
+const extractDiagramComponentsFromContext = (context: string[]): {
+  title: string;
+  nodes: string[];
+  connections: Array<{from: string, to: string, label?: string}>;
+  categories: Record<string, string[]>;
+} => {
+  const combinedContext = context.join(' ');
+  
+  // Default values for RiverMeadow diagram if context is insufficient
+  const defaultComponents = {
+    title: "RiverMeadow Cloud Migration Platform",
+    nodes: ["RiverMeadow Platform", "Source Environment", "Target Environment", "Migration Process"],
+    connections: [
+      {from: "Source Environment", to: "Migration Process"},
+      {from: "Migration Process", to: "Target Environment"}
+    ],
+    categories: {
+      "Migration Types": ["P2V", "V2C", "C2C", "Hardware Refresh"],
+      "Cloud Platforms": ["AWS", "Azure", "Google Cloud", "VMware"]
+    }
+  };
+  
+  // Try to extract better components from the context
+  if (combinedContext.length > 100) {
+    const cloudPlatforms = ["AWS", "Azure", "Google Cloud", "VMware", "OpenShift", "IBM Cloud"]
+      .filter(platform => combinedContext.includes(platform));
+      
+    const migrationTypes = [];
+    if (combinedContext.includes("Physical to Virtual") || combinedContext.includes("P2V")) 
+      migrationTypes.push("Physical to Virtual (P2V)");
+    if (combinedContext.includes("Virtual to Cloud") || combinedContext.includes("V2C")) 
+      migrationTypes.push("Virtual to Cloud (V2C)");
+    if (combinedContext.includes("Cloud to Cloud") || combinedContext.includes("C2C")) 
+      migrationTypes.push("Cloud to Cloud (C2C)");
+    if (combinedContext.includes("Physical to Cloud") || combinedContext.includes("P2C")) 
+      migrationTypes.push("Physical to Cloud (P2C)");
+    
+    const features = [];
+    if (combinedContext.includes("data migration")) features.push("Data Migration");
+    if (combinedContext.includes("live migration")) features.push("Live Migration");
+    if (combinedContext.includes("non-intrusive")) features.push("Non-Intrusive Migration");
+    if (combinedContext.includes("disaster recovery")) features.push("Disaster Recovery");
+    if (combinedContext.includes("workload optimization")) features.push("Workload Optimization");
+    
+    return {
+      title: "RiverMeadow Migration Solution",
+      nodes: ["RiverMeadow Platform", "Source Infrastructure", "Target Cloud", "Migration Services"],
+      connections: [
+        {from: "Source Infrastructure", to: "RiverMeadow Platform", label: "Extract"},
+        {from: "RiverMeadow Platform", to: "Target Cloud", label: "Deploy"},
+        {from: "Migration Services", to: "RiverMeadow Platform", label: "Support"}
+      ],
+      categories: {
+        "Migration Types": migrationTypes.length > 0 ? migrationTypes : defaultComponents.categories["Migration Types"],
+        "Cloud Platforms": cloudPlatforms.length > 0 ? cloudPlatforms : defaultComponents.categories["Cloud Platforms"],
+        "Features": features.length > 0 ? features : ["Automated Migration", "Secure Transfer", "Performance Optimization"]
+      }
+    };
+  }
+  
+  return defaultComponents;
+};
+
+/**
+ * Creates a Draw.io diagram XML with specified components
+ */
+const createDrawioXML = (components: {
+  title: string;
+  nodes: string[];
+  connections: Array<{from: string, to: string, label?: string}>;
+  categories: Record<string, string[]>;
+}): string => {
+  const {title, nodes, connections, categories} = components;
+  
+  // Generate unique ID for the diagram
+  const diagramId = `diagram-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  
+  // Create XML content with header
+  let xmlContent = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="${diagramId}" name="${title}">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />`;
+  
+  // Helper function to generate unique IDs for cells
+  const getCellId = (() => {
+    let counter = 2; // Start from 2 as 0 and 1 are reserved
+    return () => counter++;
+  })();
+  
+  // Map to store node IDs by name for creating connections
+  const nodeMap = new Map<string, number>();
+  
+  // Add the central node - always RiverMeadow
+  const centralNodeId = getCellId();
+  nodeMap.set("RiverMeadow Platform", centralNodeId);
+  
+  xmlContent += `
+        <!-- Central Node -->
+        <mxCell id="${centralNodeId}" value="&lt;b&gt;${nodes[0]}&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="460" y="350" width="140" height="140" as="geometry" />
+        </mxCell>`;
+  
+  // Add other primary nodes
+  const primaryNodeStyles = [
+    "rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;",
+    "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;"
+  ];
+  
+  // Skip the first node (RiverMeadow Platform) as it's already added
+  for (let i = 1; i < nodes.length; i++) {
+    const nodeId = getCellId();
+    const nodeName = nodes[i];
+    nodeMap.set(nodeName, nodeId);
+    
+    // Position nodes around the central node
+    const angle = (i - 1) * (2 * Math.PI / (nodes.length - 1));
+    const x = 460 + 250 * Math.cos(angle);
+    const y = 350 + 200 * Math.sin(angle);
+    
+    xmlContent += `
+        <!-- Primary Node: ${nodeName} -->
+        <mxCell id="${nodeId}" value="${nodeName}" style="${primaryNodeStyles[i % primaryNodeStyles.length]}" vertex="1" parent="1">
+          <mxGeometry x="${x}" y="${y}" width="140" height="60" as="geometry" />
+        </mxCell>`;
+  }
+  
+  // Add connections between nodes
+  for (const connection of connections) {
+    const fromId = nodeMap.get(connection.from);
+    const toId = nodeMap.get(connection.to);
+    
+    if (fromId && toId) {
+      const connId = getCellId();
+      xmlContent += `
+        <!-- Connection from ${connection.from} to ${connection.to} -->
+        <mxCell id="${connId}" value="${connection.label || ""}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="${fromId}" target="${toId}">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>`;
+    }
+  }
+  
+  // Add category sections
+  let categoryY = 600;
+  
+  for (const [categoryName, items] of Object.entries(categories)) {
+    // Add category title
+    const categoryTitleId = getCellId();
+    xmlContent += `
+        <!-- ${categoryName} Category -->
+        <mxCell id="${categoryTitleId}" value="&lt;b&gt;${categoryName}&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="${categoryY}" width="200" height="40" as="geometry" />
+        </mxCell>`;
+    
+    // Add category items
+    const itemsPerRow = 3;
+    const itemWidth = 120;
+    const itemHeight = 40;
+    const itemSpacing = 20;
+    
+    let colorIndex = 0;
+    const categoryColors = [
+      "fillColor=#e1d5e7;strokeColor=#9673a6;", // Purple
+      "fillColor=#fff2cc;strokeColor=#d6b656;", // Yellow
+      "fillColor=#f8cecc;strokeColor=#b85450;"  // Red
+    ];
+    
+    for (let i = 0; i < items.length; i++) {
+      const itemId = getCellId();
+      const item = items[i];
+      
+      const row = Math.floor(i / itemsPerRow);
+      const col = i % itemsPerRow;
+      
+      const x = 200 + col * (itemWidth + itemSpacing) - (row * 20); // Slight indent per row
+      const y = categoryY + 50 + row * (itemHeight + 10);
+      
+      xmlContent += `
+        <mxCell id="${itemId}" value="${item}" style="rounded=1;whiteSpace=wrap;html=1;${categoryColors[colorIndex]}" vertex="1" parent="1">
+          <mxGeometry x="${x}" y="${y}" width="${itemWidth}" height="${itemHeight}" as="geometry" />
+        </mxCell>`;
+    }
+    
+    categoryY += 50 + Math.ceil(items.length / itemsPerRow) * (itemHeight + 10) + 30;
+    colorIndex = (colorIndex + 1) % categoryColors.length;
+  }
+  
+  // Close XML structure
+  xmlContent += `
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>`;
+  
+  return xmlContent;
+};
+
+/**
+ * Main function to generate a diagram based on a prompt and knowledge context
+ */
+export const generateDiagram = async (
   prompt: string,
   knowledgeContext: string[] = [],
   useDrawIO: boolean = true
@@ -45,202 +251,51 @@ const generateDiagram = async (
     // Make sure necessary directories exist
     await ensureDirectoriesExist();
     
-    // Generate a unique filename
+    // Generate a unique filename with timestamp and random string
     const timestamp = Date.now();
     const uniqueId = `${timestamp}-${Math.random().toString(36).substring(2, 8)}`;
-    const mmdFilename = `diagram_${uniqueId}.drawio`;
+    const drawioFilename = `diagram_${uniqueId}.drawio`;
     
-    // Create a simple HTML file with DrawIO diagram
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>RiverMeadow Diagram</title>
-        <meta charset="utf-8">
-      </head>
-      <body>
-        <div>
-          <h1>Diagram for: ${prompt}</h1>
-          <p>Generated diagram based on your prompt.</p>
-          <div class="diagram">
-            <!-- Placeholder for diagram content -->
-            <pre>Generated diagram: ${prompt}</pre>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    console.log('Generating diagram for prompt:', prompt);
     
-    const htmlFilename = `diagram_${uniqueId}.html`;
-    const htmlPath = path.join(GENERATED_IMAGES_DIR, htmlFilename);
-    await writeFile(htmlPath, htmlContent);
+    // Extract meaningful components from the knowledge context
+    const diagramComponents = extractDiagramComponentsFromContext(knowledgeContext);
     
-    // For RiverMeadow, create a more comprehensive diagram
-    
-    // Check if the knowledge context contains relevant info about RiverMeadow
-    let relevantContext = '';
-    if (knowledgeContext && knowledgeContext.length > 0) {
-      // Join all context into a single string for analysis
-      relevantContext = knowledgeContext.join(' ');
+    // If the prompt contains specific keywords, modify the default diagram
+    const lowerPrompt = prompt.toLowerCase();
+    if (lowerPrompt.includes('migration')) {
+      diagramComponents.title = "RiverMeadow Migration Process";
+      // Enhance with migration-specific content
+      diagramComponents.categories["Migration Steps"] = [
+        "Discovery", "Assessment", "Planning", "Migration", "Validation", "Cutover"
+      ];
+    } else if (lowerPrompt.includes('disaster recovery') || lowerPrompt.includes('dr')) {
+      diagramComponents.title = "RiverMeadow Disaster Recovery Solution";
+      // Enhance with DR-specific content
+      diagramComponents.categories["Recovery Components"] = [
+        "Backup", "Replication", "Failover", "Failback", "Testing"
+      ];
+    } else if (lowerPrompt.includes('architecture')) {
+      diagramComponents.title = "RiverMeadow System Architecture";
+      // Enhance with architecture-specific content
+      diagramComponents.categories["System Components"] = [
+        "Control Plane", "Data Plane", "API Gateway", "Authentication", "Scheduling Engine"
+      ];
     }
     
-    console.log('Creating comprehensive RiverMeadow diagram based on context and prompt');
+    // Generate Draw.io XML
+    const drawioXml = createDrawioXML(diagramComponents);
     
-    // Create a detailed DrawIO diagram for RiverMeadow
-    const drawioPath = path.join(GENERATED_IMAGES_DIR, mmdFilename);
+    // Save the Draw.io file
+    const drawioPath = path.join(GENERATED_IMAGES_DIR, drawioFilename);
+    await writeFile(drawioPath, drawioXml);
     
-    // Rich diagram XML with proper styling and organization
-    const diagramXml = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="RiverMeadow Assistant" version="21.2.9">
-  <diagram id="rivermeadow-diagram-${uniqueId}" name="RiverMeadow Migration Platform">
-    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
-      <root>
-        <mxCell id="0" />
-        <mxCell id="1" parent="0" />
-        
-        <!-- Central Node: RiverMeadow Platform -->
-        <mxCell id="2" value="&lt;b&gt;RiverMeadow&lt;/b&gt;&lt;br&gt;Cloud Migration Platform" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="460" y="350" width="140" height="140" as="geometry" />
-        </mxCell>
-        
-        <!-- Migration Use Cases Title -->
-        <mxCell id="3" value="&lt;b&gt;Migration Use Cases&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="200" y="180" width="160" height="40" as="geometry" />
-        </mxCell>
-        
-        <!-- Migration Use Cases -->
-        <mxCell id="4" value="Physical to Virtual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="140" y="240" width="120" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="5" value="Physical to Cloud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="140" y="290" width="120" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="6" value="Virtual to Virtual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="270" y="240" width="120" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="7" value="Virtual to Cloud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="270" y="290" width="120" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="8" value="Cloud to Cloud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="200" y="340" width="120" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="9" value="Cloud to Virtual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="200" y="390" width="120" height="40" as="geometry" />
-        </mxCell>
-        
-        <!-- Deployment Options Title -->
-        <mxCell id="10" value="&lt;b&gt;Deployment Options&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="690" y="180" width="160" height="40" as="geometry" />
-        </mxCell>
-        
-        <!-- Deployment Options -->
-        <mxCell id="11" value="Public SaaS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="710" y="240" width="120" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="12" value="Private SaaS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="710" y="290" width="120" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="13" value="On-premise" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="710" y="340" width="120" height="40" as="geometry" />
-        </mxCell>
-        
-        <!-- Platform Features Title -->
-        <mxCell id="14" value="&lt;b&gt;Platform Features&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="450" y="180" width="160" height="40" as="geometry" />
-        </mxCell>
-        
-        <!-- Platform Features -->
-        <mxCell id="15" value="Non-intrusive on live workloads" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
-          <mxGeometry x="420" y="240" width="220" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="16" value="Secure automated migration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
-          <mxGeometry x="420" y="280" width="220" height="30" as="geometry" />
-        </mxCell>
-        
-        <!-- Cloud Platforms Title -->
-        <mxCell id="17" value="&lt;b&gt;Supported Cloud Platforms&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="200" y="600" width="200" height="40" as="geometry" />
-        </mxCell>
-        
-        <!-- Cloud Platforms -->
-        <mxCell id="18" value="AWS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="140" y="660" width="80" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="19" value="Azure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="240" y="660" width="80" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="20" value="Google Cloud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="340" y="660" width="100" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="21" value="Red Hat OpenShift" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="230" y="710" width="120" height="40" as="geometry" />
-        </mxCell>
-        
-        <!-- Additional Services Title -->
-        <mxCell id="22" value="&lt;b&gt;Additional Services&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="660" y="600" width="160" height="40" as="geometry" />
-        </mxCell>
-        
-        <!-- Additional Services -->
-        <mxCell id="23" value="Disaster Recovery Solutions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="630" y="660" width="220" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="24" value="Workload Optimization" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="630" y="710" width="220" height="40" as="geometry" />
-        </mxCell>
-        
-        <!-- Connections from central node -->
-        <mxCell id="25" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="16">
-          <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="550" y="430" as="sourcePoint" />
-            <mxPoint x="600" y="380" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="26" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="9">
-          <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="550" y="430" as="sourcePoint" />
-            <mxPoint x="600" y="380" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="27" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="13">
-          <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="550" y="430" as="sourcePoint" />
-            <mxPoint x="600" y="380" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="28" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="30">
-          <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="550" y="430" as="sourcePoint" />
-            <mxPoint x="530" y="560" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        
-        <!-- Connection node between platforms and services -->
-        <mxCell id="30" value="Migration Services" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="470" y="520" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="31" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="30" target="17">
-          <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="550" y="430" as="sourcePoint" />
-            <mxPoint x="600" y="380" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="32" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="30" target="22">
-          <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="550" y="430" as="sourcePoint" />
-            <mxPoint x="600" y="380" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-      </root>
-    </mxGraphModel>
-  </diagram>
-</mxfile>`
-    
-    await writeFile(drawioPath, diagramXml);
+    console.log(`Diagram generated successfully: ${drawioPath}`);
     
     return {
-      imagePath: `/uploads/generated/${htmlFilename}`,
-      mmdPath: `/uploads/generated/${mmdFilename}`,
-      mmdFilename,
+      imagePath: `/uploads/generated/${drawioFilename}`,
+      mmdPath: `/uploads/generated/${drawioFilename}`,
+      mmdFilename: drawioFilename,
       altText: prompt.substring(0, 255) // Limit alt text length
     };
   } catch (error) {
@@ -249,20 +304,22 @@ const generateDiagram = async (
   }
 };
 
-// This is a utility function to determine if we should generate a diagram for a given prompt
-const isImageGenerationRequest = (prompt: string): boolean => {
-  const lowercasePrompt = prompt.toLowerCase();
+/**
+ * Function to determine if a prompt is requesting an image generation
+ */
+export const isImageGenerationRequest = (prompt: string): boolean => {
+  const lowerPrompt = prompt.toLowerCase();
   
-  return lowercasePrompt.includes('diagram') || 
-         lowercasePrompt.includes('chart') || 
-         lowercasePrompt.includes('visual') ||
-         lowercasePrompt.includes('image') ||
-         lowercasePrompt.includes('picture');
-};
-
-// Export necessary functions
-export {
-  generateDiagram,
-  ensureDirectoriesExist,
-  isImageGenerationRequest
+  // Match diagram-related keywords
+  return lowerPrompt.includes('diagram') || 
+         lowerPrompt.includes('chart') || 
+         lowerPrompt.includes('visual') ||
+         lowerPrompt.includes('image') ||
+         lowerPrompt.includes('picture') ||
+         lowerPrompt.includes('draw') ||
+         lowerPrompt.includes('create') && (
+           lowerPrompt.includes('migration') ||
+           lowerPrompt.includes('architecture') ||
+           lowerPrompt.includes('infrastructure')
+         );
 };
