@@ -22,7 +22,15 @@ import {
   generateEmbedding,
   querySimilarVectors
 } from './services/pinecone.service';
-import { generateDiagram } from './services/image-generation.service';
+// We'll dynamically import the generateDiagram function
+let generateDiagram: any;
+
+// Set up a promise to import the function before we need it
+const importGenerateDiagram = import('./services/image-generation.service').then(module => {
+  generateDiagram = module.generateDiagram;
+}).catch(err => {
+  console.error('Error importing generateDiagram:', err);
+});
 import { setupAuth, requireTokenAuth, hashPassword, verifyAuthToken } from './auth';
 
 export async function registerRoutes(app: Express): Promise<Server> {

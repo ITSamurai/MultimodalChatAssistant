@@ -1,7 +1,17 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import OpenAI from 'openai';
 import { storage } from '../storage';
-import { generateDiagram, isImageGenerationRequest } from './image-generation.service';
+// Placeholder for dynamic import
+let generateDiagram: any;
+let isImageGenerationRequest: any;
+
+// We'll dynamically import these functions later
+const imageGenerationModule = import('./image-generation.service').then(module => {
+  generateDiagram = module.generateDiagram;
+  isImageGenerationRequest = module.isImageGenerationRequest;
+}).catch(err => {
+  console.error('Error importing image-generation.service:', err);
+});
 
 // Initialize Pinecone client
 const pinecone = new Pinecone({
