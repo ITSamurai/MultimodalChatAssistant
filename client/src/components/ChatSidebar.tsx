@@ -39,59 +39,7 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const { toast } = useToast();
 
-  // Load chats for the current user initially - but only once when the user first loads
-  useEffect(() => {
-    const userDidChange = user !== null && user !== undefined;
-    if (userDidChange) {
-      console.log("User authenticated, initial chats load");
-      const loadOnce = setTimeout(() => refreshChats(), 100);
-      return () => clearTimeout(loadOnce);
-    }
-  }, [user?.id]);
-  
-  // Refresh chats when location changes to chat routes
-  useEffect(() => {
-    // Only refresh if entering or switching between chat routes
-    if (location.startsWith('/chat')) {
-      const now = Date.now();
-      // Debounce refreshes to prevent too many API calls
-      if (now - lastRefresh > 1500) {
-        console.log("Location changed to chat route, refreshing sidebar");
-        refreshChats();
-        setLastRefresh(now);
-      }
-    }
-  }, [location, refreshChats]);
-  
-  // Listen for chat title update events
-  useEffect(() => {
-    // Listen for the 'chat-title-changed' event from our context
-    const handleChatTitleChanged = (event: CustomEvent) => {
-      console.log('Received chat title event:', event.type);
-      
-      // Instead of calling refreshChats which makes a network request,
-      // we can directly update the specific chat's title locally
-      if (event.type === 'chat-title-changed' || event.type === 'chat-title-updated') {
-        // The context already handles this state update, no need to do anything here
-      } else if (event.type === 'reload-chats') {
-        // Only reload from server on explicit reload event
-        console.log('Explicit reload-chats event received');
-        refreshChats();
-      }
-    };
-
-    // Also handle the older event types for backwards compatibility
-    window.addEventListener('chat-title-updated', handleChatTitleChanged as EventListener);
-    window.addEventListener('chat-title-changed', handleChatTitleChanged as EventListener);
-    window.addEventListener('reload-chats', handleChatTitleChanged as EventListener);
-    
-    return () => {
-      window.removeEventListener('chat-title-updated', handleChatTitleChanged as EventListener);
-      window.removeEventListener('chat-title-changed', handleChatTitleChanged as EventListener);
-      window.removeEventListener('reload-chats', handleChatTitleChanged as EventListener);
-    };
-  }, [refreshChats]);
-
+  // Function to create a new chat
   const createNewChat = async () => {
     if (!user) return;
     
@@ -122,6 +70,67 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
       });
     }
   };
+
+  // Load chats for the current user initially - but only once when the user first loads
+  useEffect(() => {
+    const userDidChange = user !== null && user !== undefined;
+    if (userDidChange) {
+      console.log("User authenticated, initial chats load");
+      const loadOnce = setTimeout(() => refreshChats(), 100);
+      return () => clearTimeout(loadOnce);
+    }
+  }, [user?.id]);
+  
+  // Refresh chats when location changes to chat routes
+  useEffect(() => {
+    // Only refresh if entering or switching between chat routes
+    if (location.startsWith('/chat')) {
+      const now = Date.now();
+      // Debounce refreshes to prevent too many API calls
+      if (now - lastRefresh > 1500) {
+        console.log("Location changed to chat route, refreshing sidebar");
+        refreshChats();
+        setLastRefresh(now);
+      }
+    }
+  }, [location, refreshChats]);
+  
+  // Listen for chat title update events and other sidebar events
+  useEffect(() => {
+    // Listen for the 'chat-title-changed' event from our context
+    const handleChatTitleChanged = (event: CustomEvent) => {
+      console.log('Received chat title event:', event.type);
+      
+      // Instead of calling refreshChats which makes a network request,
+      // we can directly update the specific chat's title locally
+      if (event.type === 'chat-title-changed' || event.type === 'chat-title-updated') {
+        // The context already handles this state update, no need to do anything here
+      } else if (event.type === 'reload-chats') {
+        // Only reload from server on explicit reload event
+        console.log('Explicit reload-chats event received');
+        refreshChats();
+      }
+    };
+    
+    // Handle the create-new-chat event from the welcome page
+    const handleCreateNewChat = () => {
+      console.log('Create new chat event received');
+      createNewChat();
+    };
+
+    // Also handle the older event types for backwards compatibility
+    window.addEventListener('chat-title-updated', handleChatTitleChanged as EventListener);
+    window.addEventListener('chat-title-changed', handleChatTitleChanged as EventListener);
+    window.addEventListener('reload-chats', handleChatTitleChanged as EventListener);
+    window.addEventListener('create-new-chat', handleCreateNewChat);
+    
+    return () => {
+      window.removeEventListener('chat-title-updated', handleChatTitleChanged as EventListener);
+      window.removeEventListener('chat-title-changed', handleChatTitleChanged as EventListener);
+      window.removeEventListener('reload-chats', handleChatTitleChanged as EventListener);
+      window.removeEventListener('create-new-chat', handleCreateNewChat);
+    };
+  }, [refreshChats, createNewChat]);
 
   const deleteChat = async (chatId: number) => {
     try {

@@ -6,7 +6,8 @@ import { KnowledgeBaseChat } from '@/components/KnowledgeBaseChat';
 import { apiRequest } from '@/lib/queryClient';
 import { Chat } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function ChatPage() {
   const { id } = useParams<{ id?: string }>();
