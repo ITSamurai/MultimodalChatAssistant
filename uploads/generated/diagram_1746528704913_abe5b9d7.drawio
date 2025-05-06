@@ -1,0 +1,54 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="RiverMeadow Migration Process" id="flowchart">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Start Point -->
+        <mxCell id="start" value="Start" style="ellipse;whiteSpace=wrap;fillColor=#d9e8fb;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="80" height="40" as="geometry" />
+        </mxCell>
+        <!-- Main Process Steps -->
+        <mxCell id="step1" value="Assess Source Environment" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="250" y="100" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="step2" value="Plan Migration Strategy" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="450" y="100" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="step3" value="Execute Migration" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="650" y="100" width="160" height="60" as="geometry" />
+        </mxCell>
+        <!-- Decision Point -->
+        <mxCell id="decision1" value="Migration Successful?" style="rhombus;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="850" y="100" width="100" height="60" as="geometry" />
+        </mxCell>
+        <!-- End Points -->
+        <mxCell id="endSuccess" value="End (Success)" style="ellipse;whiteSpace=wrap;fillColor=#d9e8fb;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="50" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="endFail" value="End (Failure)" style="ellipse;whiteSpace=wrap;fillColor=#d9e8fb;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="150" width="80" height="40" as="geometry" />
+        </mxCell>
+        <!-- Connections -->
+        <mxCell id="edge1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="start" target="step1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="step1" target="step2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="step2" target="step3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="step3" target="decision1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="decision1" target="endSuccess">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge6" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="decision1" target="endFail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

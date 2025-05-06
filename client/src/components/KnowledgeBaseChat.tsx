@@ -238,20 +238,23 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
   const isDiagramRequest = (content: string): boolean => {
     // More specific diagram request detection with stronger contextual clues
     
-    // First pattern: explicit drawing requests
-    const explicitDrawRequest = /(?:create|generate|draw|make|show|give\sme)\s+(?:a|an|the)?\s*(?:diagram|chart|graph|visualization|flow)/i.test(content);
+    // First pattern: explicit drawing or visualization requests
+    const explicitVisualRequest = /(?:create|generate|draw|make|show|give\sme|visualize|illustrate|display)\s+(?:a|an|the)?\s*(?:diagram|chart|graph|visualization|flow|image|picture|illustration|visual|visual explanation)/i.test(content);
     
     // Second pattern: domain-specific diagram requests
-    const domainSpecificRequest = /(?:network|architecture|infrastructure|system|migration|flow)\s+(?:diagram|visualization|chart)/i.test(content);
+    const domainSpecificRequest = /(?:network|architecture|infrastructure|system|migration|flow|hardware|software|process)\s+(?:diagram|visualization|chart|image|picture|visual|illustration)/i.test(content);
     
-    // Third pattern: RiverMeadow-specific diagram requests that we know will generate diagrams
-    const riverMeadowSpecificRequest = /RiverMeadow\s+(?:migration|diagram|workflow|framework|process).*(?:diagram|visual|chart)/i.test(content);
+    // Third pattern: RiverMeadow-specific requests that we know will generate diagrams
+    const riverMeadowSpecificRequest = /RiverMeadow\s+(?:migration|diagram|workflow|framework|process).*(?:diagram|visual|chart|image|picture|illustration|overview)/i.test(content);
     
     // Fourth pattern: explicit mentions of diagram tools
     const diagramToolRequest = /(?:draw\.io|graphviz|mermaid|visio|lucidchart)/i.test(content);
     
-    // Return true only if any of these specific patterns match
-    return explicitDrawRequest || domainSpecificRequest || riverMeadowSpecificRequest || diagramToolRequest;
+    // Fifth pattern: requests for visual explanations
+    const visualExplanationRequest = /(?:explain|describe|show)\s+(?:visually|with\s+a\s+diagram|with\s+an\s+image|with\s+a\s+picture|with\s+a\s+visual)/i.test(content);
+    
+    // Return true if any of these specific patterns match
+    return explicitVisualRequest || domainSpecificRequest || riverMeadowSpecificRequest || diagramToolRequest || visualExplanationRequest;
   };
   
   // State to track if the current request is likely a diagram request
