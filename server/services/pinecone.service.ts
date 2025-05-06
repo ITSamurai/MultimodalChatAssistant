@@ -388,7 +388,7 @@ ${latestUserMessage}`;
 
     // Add information about generated image if available
     if (generatedImage) {
-      systemContent += `\n\nNote: I've generated a diagram to help illustrate this information. Please refer to it in your response and explain what it shows.`;
+      systemContent += `\n\nIMPORTANT: I've generated a visual diagram for this response. The diagram is already visible to the user below this message. DO NOT say you cannot create visuals or diagrams. DO NOT describe how to create a diagram. Instead, directly reference the diagram like "As you can see in the diagram below" and explain the key elements and what they represent regarding RiverMeadow. The diagram shows the RiverMeadow cloud migration platform with its features, deployment options, migration use cases, and supported cloud platforms.`;
     } else if (imageGenerationAttempted) {
       // Add a note about failed image generation for better user experience
       systemContent += `\n\nNote: The user requested a diagram, but image generation failed due to API access restrictions. Please explain that you cannot generate actual diagrams, but offer a text-based description of what the diagram would look like instead. Be specific and detailed in your description of the diagram components.`;
