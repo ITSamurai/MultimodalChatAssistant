@@ -11,6 +11,7 @@ import { useChatTitles } from '@/hooks/use-chat-titles';
 import { ToastAction } from "@/components/ui/toast";
 import { Progress } from "@/components/ui/progress";
 import { AppConfig, defaultConfig } from "@/lib/config-types";
+import { DiagramViewer } from '@/components/DiagramViewer';
 
 // Add TypeScript interface for mermaid API in Window
 declare global {
@@ -516,95 +517,12 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                             <div className="relative w-full bg-white p-4">
                               {/* Show the diagram directly as an image */}
                               <p className="text-sm text-muted-foreground mb-2">{ref.caption || 'Generated Diagram'}</p>
-                            
-                              {/* Diagram container */}
-                              <div className="relative border rounded-lg overflow-hidden bg-white">
-                                {/* Calculate zoom factor from state or default to 50% */}
-                                <div 
-                                  className="relative w-full"
-                                  style={{ height: '400px' }}
-                                >
-                                  <iframe 
-                                    src={getFullUrl(ref.imagePath!)} 
-                                    className="w-full h-full"
-                                    style={{
-                                      transform: `scale(${diagramZooms[ref.imagePath!] || 0.5})`,
-                                      transformOrigin: 'top left',
-                                      width: diagramZooms[ref.imagePath!] ? `${100 / diagramZooms[ref.imagePath!]}%` : '200%',
-                                      height: diagramZooms[ref.imagePath!] ? `${100 / diagramZooms[ref.imagePath!]}%` : '200%',
-                                      pointerEvents: 'auto', // Allow interactions with the iframe
-                                    }}
-                                  />
-                                </div>
-                                
-                                {/* Controls overlay */}
-                                <div className="absolute top-2 right-2 bg-white/70 backdrop-blur-sm rounded-md shadow p-1 flex gap-1">
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => {
-                                      // Decrease zoom: current * 0.9 or default * 0.9
-                                      const currentZoom = diagramZooms[ref.imagePath!] || 0.5;
-                                      const newZoom = Math.max(0.1, currentZoom * 0.9);
-                                      setDiagramZooms({
-                                        ...diagramZooms,
-                                        [ref.imagePath!]: newZoom
-                                      });
-                                      // Store zoom preference
-                                      localStorage.setItem(`diagram_zoom_${ref.imagePath}`, newZoom.toString());
-                                    }}
-                                  >
-                                    <ZoomOut className="h-4 w-4" />
-                                  </Button>
-                                  
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => {
-                                      // Increase zoom: current * 1.1 or default * 1.1
-                                      const currentZoom = diagramZooms[ref.imagePath!] || 0.5;
-                                      const newZoom = Math.min(2, currentZoom * 1.1);
-                                      setDiagramZooms({
-                                        ...diagramZooms,
-                                        [ref.imagePath!]: newZoom
-                                      });
-                                      // Store zoom preference
-                                      localStorage.setItem(`diagram_zoom_${ref.imagePath}`, newZoom.toString());
-                                    }}
-                                  >
-                                    <ZoomIn className="h-4 w-4" />
-                                  </Button>
-                                  
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => {
-                                      // Reset to default 50% zoom or full view
-                                      const defaultZoom = 0.5;
-                                      setDiagramZooms({
-                                        ...diagramZooms,
-                                        [ref.imagePath!]: defaultZoom
-                                      });
-                                      // Store zoom preference
-                                      localStorage.setItem(`diagram_zoom_${ref.imagePath}`, defaultZoom.toString());
-                                    }}
-                                  >
-                                    <Maximize className="h-4 w-4" />
-                                  </Button>
-                                  
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => downloadDiagram(ref.imagePath!, index)}
-                                  >
-                                    <Download className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
+                              
+                              {/* Use our new DiagramViewer component */}
+                              <DiagramViewer 
+                                diagramPath={ref.imagePath!} 
+                                altText={ref.caption || 'RiverMeadow Migration Diagram'} 
+                              />
                             </div>
                           ) : (
                             // Regular image
