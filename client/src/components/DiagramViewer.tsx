@@ -37,6 +37,7 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
     const loadSvg = async () => {
       setLoading(true);
       setError(null);
+      setSvgContent(''); // Clear existing content
       
       try {
         // Extract base filename (without extension)
@@ -44,9 +45,14 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
         // Get just the filename part, not the full path
         const filenameOnly = baseFilename.split('/').pop() || baseFilename;
         
-        // Attempt to load SVG
-        const svgUrl = getFullUrl(`/api/diagram-svg/${filenameOnly}.drawio`);
-        const response = await fetch(svgUrl);
+        // Attempt to load SVG with cache-busting
+        const svgUrl = getFullUrl(`/api/diagram-svg/${filenameOnly}.drawio?t=${Date.now()}`);
+        const response = await fetch(svgUrl, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
         
         if (!response.ok) {
           throw new Error(`Failed to load diagram (${response.status})`);
