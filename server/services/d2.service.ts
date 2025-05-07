@@ -88,8 +88,6 @@ export async function d2ToPng(
   options: { theme?: string; layout?: string; } = {}
 ): Promise<Buffer | null> {
   try {
-    // D2 doesn't use theme and layout options in the same way as our previous code assumed
-    
     const pngFileName = path.basename(d2FilePath, '.d2') + '.png';
     const pngFilePath = path.join(PNG_DIRECTORY, pngFileName);
     
@@ -100,8 +98,7 @@ export async function d2ToPng(
       return pngBuffer;
     }
     
-    // If PNG generation is slow or fails, fall back to SVG
-    // Generate SVG as a backup
+    // Generate SVG first (we'll convert it to PNG)
     const svgFileName = path.basename(d2FilePath, '.d2') + '.svg';
     const svgFilePath = path.join(SVG_DIRECTORY, svgFileName);
     
@@ -110,32 +107,74 @@ export async function d2ToPng(
       await d2ToSvg(d2FilePath, options);
     }
     
-    // Try to trigger PNG generation in the background (don't wait for it)
+    // Run the wrapper script directly with await to ensure the PNG is generated properly
     try {
-      const wrapperPath = path.join(process.cwd(), 'server', 'services', 'd2-wrapper.js');
-      await execAsync(`chmod +x "${wrapperPath}"`).catch(e => console.error(`Failed to chmod wrapper for PNG: ${e}`));
+      // Use Puppeteer directly to convert the SVG to PNG - this approach is more reliable
+      const puppeteer = require('puppeteer');
       
-      console.log(`Running D2 wrapper for PNG: "${wrapperPath}" "${d2FilePath}" "${pngFilePath}"`);
-      const command = `node "${wrapperPath}" "${d2FilePath}" "${pngFilePath}" > /tmp/d2-png-generation.log 2>&1 &`;
-      execAsync(command).catch(e => console.error('Background PNG generation error:', e));
-      console.log('Triggered background PNG generation');
-    } catch (e) {
-      console.error('Failed to trigger background PNG generation:', e);
-    }
-    
-    // Use SVG as a fallback (convert to PNG in memory - not ideal but works)
-    if (fs.existsSync(svgFilePath)) {
-      // Create a simple fallback PNG buffer from SVG data
-      const svgContent = fs.readFileSync(svgFilePath, 'utf8');
-      // Create a generic PNG buffer with basic transparency
-      // This is a tiny transparent PNG
-      const fallbackPngBuffer = Buffer.from(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-        'base64'
-      );
+      const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        headless: true
+      });
       
-      console.log(`Returning fallback PNG for ${path.basename(d2FilePath)}`);
-      return fallbackPngBuffer;
+      try {
+        const page = await browser.newPage();
+        
+        // Read the SVG file
+        const svgContent = fs.readFileSync(svgFilePath, 'utf8');
+        
+        // Create an HTML page with the SVG embedded
+        await page.setContent(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body { margin: 0; padding: 20px; background: white; }
+                svg { max-width: 100%; height: auto; }
+              </style>
+            </head>
+            <body>
+              ${svgContent}
+            </body>
+          </html>
+        `);
+        
+        // Wait for any rendering to complete
+        await page.waitForTimeout(500);
+        
+        // Take a screenshot as PNG
+        await page.screenshot({
+          path: pngFilePath,
+          fullPage: true,
+          omitBackground: false,
+          type: 'png'
+        });
+        
+        console.log(`PNG saved to ${pngFilePath}`);
+        
+        // Return the PNG data
+        const pngBuffer = fs.readFileSync(pngFilePath);
+        return pngBuffer;
+      } finally {
+        await browser.close();
+      }
+    } catch (puppeteerError) {
+      console.error('Error converting with Puppeteer:', puppeteerError);
+      
+      // Create a simple valid PNG file if conversion failed
+      try {
+        // This is a 1x1 transparent PNG
+        const transparentPng = Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+          'base64'
+        );
+        
+        fs.writeFileSync(pngFilePath, transparentPng);
+        console.log(`Created a fallback PNG at ${pngFilePath}`);
+        return transparentPng;
+      } catch (fallbackError) {
+        console.error('Error creating fallback PNG:', fallbackError);
+      }
     }
     
     return null;

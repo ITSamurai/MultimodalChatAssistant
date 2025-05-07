@@ -104,7 +104,56 @@ try {
     throw new Error('D2 did not generate an output file');
   }
   
-  console.log(`Successfully generated diagram: ${outputFile}`);
+  // If this is a PNG output file, we need to handle it specially
+  if (outputFile.toLowerCase().endsWith('.png')) {
+    // D2 doesn't natively support PNG export, so we'll use a different approach
+    // 1. First create an SVG version
+    const svgOutputFile = outputFile.replace(/\.png$/i, '.svg');
+    execSync(`"${localD2}" "${inputFile}" "${svgOutputFile}"`, { stdio: 'inherit' });
+    
+    // 2. Now convert SVG to PNG using a browser-based approach
+    const playwright = await import('playwright');
+    const browser = await playwright.chromium.launch();
+    const page = await browser.newPage();
+    
+    try {
+      // Read the SVG file
+      const svgContent = fs.readFileSync(svgOutputFile, 'utf8');
+      
+      // Create an HTML page with the SVG
+      await page.setContent(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { margin: 0; background: white; }
+              svg { max-width: 1200px; }
+            </style>
+          </head>
+          <body>
+            ${svgContent}
+          </body>
+        </html>
+      `);
+      
+      // Take a screenshot
+      const screenshot = await page.screenshot({ 
+        path: outputFile, 
+        type: 'png',
+        fullPage: true,
+        omitBackground: false
+      });
+      
+      console.log(`Successfully generated PNG diagram: ${outputFile}`);
+    } catch (pngError) {
+      console.error(`Error generating PNG: ${pngError.message}`);
+      throw pngError;
+    } finally {
+      await browser.close();
+    }
+  } else {
+    console.log(`Successfully generated diagram: ${outputFile}`);
+  }
 } catch (error) {
   console.error(`D2 execution failed: ${error.message}`);
   
