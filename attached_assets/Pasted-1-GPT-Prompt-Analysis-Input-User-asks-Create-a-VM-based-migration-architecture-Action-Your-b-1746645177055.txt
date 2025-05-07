@@ -1,0 +1,91 @@
+1. GPT Prompt Analysis
+Input: User asks: “Create a VM-based migration architecture”
+
+Action:
+
+Your backend sends this to GPT with system instructions like:
+
+“You are a diagram schema generator. Given a prompt, return D2 syntax that describes the requested architecture visually.”
+
+Output (example D2 syntax):
+
+d2
+Copy
+Edit
+title: "VM-Based Migration Architecture"
+
+SourceEnv: "Source Environment"
+RiverMeadow: "RiverMeadow Platform"
+TargetEnv: "Target Cloud Environment"
+
+SourceEnv -> RiverMeadow: "Migrate VMs"
+RiverMeadow -> TargetEnv: "Deploy Instances"
+🧩 2. Diagram Schema Translator (GPT-based or deterministic)
+This is a translator module that:
+
+Parses GPT responses (if in JSON) OR
+
+Uses prompt + rules to generate .d2 deterministically
+
+You can run this as:
+
+ts
+Copy
+Edit
+const d2Code = await generateD2FromPrompt(userPrompt);
+Or use a fallback template in case GPT times out.
+
+🖥️ 3. Server-Side Diagram Renderer (D2 CLI)
+This is your Express route (as in previous response):
+
+ts
+Copy
+Edit
+POST /api/render-d2
+Body: { d2: "<d2 code here>" }
+The server:
+
+Writes .d2 to a temp file
+
+Calls: d2 --layout elk input.d2 output.svg
+
+Returns raw SVG content
+
+✅ Output is cache-busted and safe for direct browser display or download
+
+🌐 4. Rendered SVG/PNG Display
+In the frontend:
+
+Send the D2 code to /api/render-d2
+
+Receive the SVG
+
+Inject into <div dangerouslySetInnerHTML={{ __html: svgContent }} />
+
+OR: Provide a download button:
+
+js
+Copy
+Edit
+const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+const url = URL.createObjectURL(blob);
+🧪 Optional Enhancements
+Feature	Tool / Strategy
+Icons in diagrams	D2 supports custom icons + icon: syntax
+Save + version diagrams	Store .d2 + .svg files on server
+PNG export	Use d2 --format=png or SVG-to-PNG lib
+Diagram reuse + linking	Add IDs + metadata in D2 output
+Diagram editing	Link to d2lang.com/play with prefilled code
+
+🧰 Folder Structure (Recommended)
+bash
+Copy
+Edit
+/services
+  - diagram-translator.ts     # GPT + fallback logic
+  - diagram-renderer.ts       # Calls D2 CLI
+/routes
+  - diagram.ts                # /api/render-d2 route
+/components
+  - DiagramViewer.tsx         # Interactive frontend viewer
+/public/uploads               # Saved diagrams

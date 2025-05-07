@@ -9,8 +9,13 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { initializePineconeIndex } from './services/pinecone.service';
 import OpenAI from 'openai';
-import { drawioToSvg, ensureDirectoriesExist, drawioToPng } from './services/drawio.service';
+import { 
+  ensureDirectoriesExist, 
+  drawioToSvg, 
+  drawioToPng
+} from './services/drawio.service.simple';
 import { generateDiagram, isDiagramGenerationRequest } from './services/diagram-generation.service';
+import { registerDiagramRoutes } from './routes/diagram.routes';
 
 // Define custom types
 interface ChatResponse {
@@ -33,9 +38,12 @@ let pineconeIndex: any = null;
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Ensure all necessary directories exist at startup
-ensureDirectoriesExist().catch(err => {
+try {
+  ensureDirectoriesExist();
+  console.log('Created necessary directories for uploads and diagrams');
+} catch (err) {
   console.error('Error creating upload directories:', err);
-});
+}
 
 // Utility function to get embeddings from OpenAI
 async function getEmbedding(text: string): Promise<number[]> {
@@ -76,6 +84,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   // Set up authentication routes - must be awaited since it's now async
   await setupAuth(app);
+  
+  // Register diagram-related routes
+  registerDiagramRoutes(app);
   
   // API endpoint to serve Draw.IO XML directly - no authentication required
   app.get('/api/diagram-xml/:fileName', async (req: Request, res: Response) => {
@@ -631,17 +642,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const randomId = Math.random().toString(36).substring(2, 10);
           const cacheBustingPath = `${diagramResult.svgPath}?ver=${uniqueTimestamp}-${randomId}`;
           
-          console.log(`Successfully generated diagram: ${diagramResult.fileName}`);
+          console.log(`Successfully generated diagram: ${path.basename(diagramResult.svgPath)}`);
           console.log(`Cache-busting path for frontend: ${cacheBustingPath}`);
           
           // Add reference to the diagram with both the actual path and a cache-busting path
           diagramReference = {
             type: 'image',
-            imagePath: cacheBustingPath, // Use the version with cache-busting
+            imagePath: diagramResult.svgPath + '?t=' + Date.now(), // Use the version with cache-busting
             realPath: diagramResult.svgPath, // Store the real path too
-            caption: `RiverMeadow ${diagramResult.diagramType} Diagram`,
+            caption: `RiverMeadow ${diagramResult.diagramTitle || 'Generated'} Diagram`,
             content: latestUserMessage,
-            timestamp: uniqueTimestamp.toString()
+            timestamp: Date.now().toString()
           };
         } catch (diagramError) {
           console.error('Error generating diagram:', diagramError);
