@@ -25,36 +25,95 @@ export interface DiagramGenerationResult {
  */
 export function isDiagramGenerationRequest(message: string): boolean {
   // Lowercase the message for case-insensitive matching
-  const lowerMessage = message.toLowerCase();
+  const lowerMessage = message.toLowerCase().trim();
   
-  // Keywords that strongly indicate a diagram request
-  const diagramKeywords = [
-    'create a diagram',
-    'generate a diagram', 
-    'draw a diagram',
-    'make a diagram',
-    'diagram showing',
+  // Strong keywords that directly indicate diagram generation
+  const strongKeywords = [
+    'generate diagram',
     'create diagram',
     'draw diagram',
+    'make diagram',
+    'build diagram',
+    'produce diagram',
+    'design diagram',
+    'provide diagram',
+    'diagram of',
     'diagram for',
+    'diagram about'
+  ];
+  
+  // General diagram type keywords 
+  const diagramTypeKeywords = [
     'flowchart',
     'architecture diagram',
     'visual representation',
-    'D2 diagram',
     'network diagram',
     'system diagram',
+    'structure diagram',
+    'organization diagram',
     'process flow',
     'workflow diagram',
-    'show me a diagram',
-    'visualize',
-    'create a visual',
+    'organizational chart',
+    'component diagram',
+    'deployment diagram',
+    'entity relationship',
+    'data flow',
+    'sequence diagram',
+    'class diagram',
+    'uml diagram',
     'migration diagram',
     'migration architecture',
     'cloud migration flow'
   ];
   
-  // Check if the message contains any of the diagram keywords
-  return diagramKeywords.some(keyword => lowerMessage.includes(keyword));
+  // Visual action keywords
+  const visualActionKeywords = [
+    'visualize',
+    'create a visual',
+    'show me a diagram',
+    'display diagram',
+    'diagram showing'
+  ];
+  
+  // Combine all keywords
+  const allKeywords = [...strongKeywords, ...diagramTypeKeywords, ...visualActionKeywords];
+  
+  // Check for strong indicator keywords directly
+  for (const keyword of strongKeywords) {
+    if (lowerMessage.includes(keyword)) {
+      console.log(`Detected diagram request with strong keyword: "${keyword}"`);
+      return true;
+    }
+  }
+  
+  // For other keywords, look for diagram-related words
+  const hasDiagramWord = lowerMessage.includes('diagram') || 
+                         lowerMessage.includes('chart') || 
+                         lowerMessage.includes('flowchart') || 
+                         lowerMessage.includes('visual');
+                          
+  // If the word "diagram" or related terms are present, check if any other keywords match
+  if (hasDiagramWord) {
+    for (const keyword of allKeywords) {
+      if (lowerMessage.includes(keyword)) {
+        console.log(`Detected diagram request with keyword: "${keyword}"`);
+        return true;
+      }
+    }
+  }
+  
+  // Special case for messages that start with "generate" and contain structure/organization related terms
+  if (lowerMessage.startsWith('generate') || lowerMessage.startsWith('create')) {
+    const structureTerms = ['structure', 'organization', 'hierarchy', 'layout', 'architecture'];
+    for (const term of structureTerms) {
+      if (lowerMessage.includes(term)) {
+        console.log(`Detected potential diagram request with structure term: "${term}"`);
+        return true;
+      }
+    }
+  }
+  
+  return false;
 }
 
 /**
@@ -68,28 +127,74 @@ export async function generateD2Script(prompt: string): Promise<{
     console.log('Generating D2 script from prompt:', prompt);
     
     // Create a system prompt that instructs GPT to generate a D2 script
-    const systemPrompt = "You are an expert at creating network diagrams using the D2 language. " +
-    "The user will provide a description of a diagram they want to create for RiverMeadow's cloud migration platform. " +
-    "Generate a complete, valid D2 diagram script based on the user's description.\n\n" +
-    "Important rules:\n" +
-    "1. Use D2 language syntax, not mermaid or any other format.\n" +
-    "2. Always include 'direction: right' as the first line to set layout direction.\n" +
-    "3. Keep node definitions simple with just the label.\n" +
-    "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
-    "5. Always create connections between components using the -> operator.\n" +
-    "6. Do NOT include a title block as our D2 version doesn't support it.\n" +
-    "7. Keep the diagram focused and not too complex (max 10-15 elements).\n\n" +
-    "Example D2 diagram:\n" +
-    "```\n" +
-    "direction: right\n\n" +
-    "source: \"Source Environment\"\n" +
-    "target: \"Target Cloud\"\n" +
-    "rivermeadow: \"RiverMeadow SaaS\"\n" +
-    "discovery: \"Discovery\"\n" +
-    "migration: \"Migration\"\n\n" +
-    "source -> discovery -> rivermeadow -> migration -> target\n" +
-    "```\n\n" +
-    "Return only valid D2 code without any additional comments or explanations.";
+    // Determine if this is an organization structure diagram or a technical diagram
+    const isOrganizationDiagram = prompt.toLowerCase().includes('structure') || 
+                                  prompt.toLowerCase().includes('organization') || 
+                                  prompt.toLowerCase().includes('hierarchy') || 
+                                  prompt.toLowerCase().includes('company');
+    
+    let systemPrompt;
+    
+    if (isOrganizationDiagram) {
+      // System prompt for organizational/structure diagrams
+      systemPrompt = "You are an expert at creating organizational and structural diagrams using the D2 language. " +
+      "The user is requesting a diagram related to RiverMeadow's organization, structure or hierarchy. " +
+      "Generate a complete, valid D2 diagram script that represents an organizational structure.\n\n" +
+      "Important rules:\n" +
+      "1. Use D2 language syntax, not mermaid or any other format.\n" +
+      "2. For organizational diagrams, use 'direction: down' as the first line to represent hierarchy.\n" +
+      "3. Keep node definitions simple with just the label.\n" +
+      "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
+      "5. Use -> for connections between components to show reporting lines or relationships.\n" +
+      "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
+      "7. Include key organizational elements like leadership, departments, and teams.\n\n" +
+      "Example D2 organizational diagram:\n" +
+      "```\n" +
+      "direction: down\n\n" +
+      "ceo: \"CEO\"\n" +
+      "cto: \"CTO\"\n" +
+      "cfo: \"CFO\"\n" +
+      "vp_sales: \"VP Sales\"\n" +
+      "engineering: \"Engineering\"\n" +
+      "product: \"Product\"\n" +
+      "finance: \"Finance\"\n" +
+      "sales: \"Sales\"\n\n" +
+      "ceo -> cto\n" +
+      "ceo -> cfo\n" +
+      "ceo -> vp_sales\n" +
+      "cto -> engineering\n" +
+      "cto -> product\n" +
+      "cfo -> finance\n" +
+      "vp_sales -> sales\n" +
+      "```\n\n" +
+      "Return only valid D2 code without any additional comments or explanations.";
+    } else {
+      // System prompt for technical/migration diagrams
+      systemPrompt = "You are an expert at creating network diagrams using the D2 language. " +
+      "The user will provide a description of a diagram they want to create for RiverMeadow's cloud migration platform. " +
+      "Generate a complete, valid D2 diagram script based on the user's description.\n\n" +
+      "Important rules:\n" +
+      "1. Use D2 language syntax, not mermaid or any other format.\n" +
+      "2. Always include 'direction: right' as the first line to set layout direction.\n" +
+      "3. Keep node definitions simple with just the label.\n" +
+      "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
+      "5. Always create connections between components using the -> operator.\n" +
+      "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
+      "7. Keep the diagram focused and not too complex (max 10-15 elements).\n\n" +
+      "Example D2 diagram:\n" +
+      "```\n" +
+      "direction: right\n\n" +
+      "source: \"Source Environment\"\n" +
+      "target: \"Target Cloud\"\n" +
+      "rivermeadow: \"RiverMeadow SaaS\"\n" +
+      "discovery: \"Discovery\"\n" +
+      "migration: \"Migration\"\n\n" +
+      "source -> discovery -> rivermeadow -> migration -> target\n" +
+      "```\n\n" +
+      "Return only valid D2 code without any additional comments or explanations.";
+    }
+    
+    console.log(`Using ${isOrganizationDiagram ? 'organizational' : 'technical'} diagram system prompt`);
     
     // Send the prompt to OpenAI to generate the D2 script
     const completion = await openai.chat.completions.create({
