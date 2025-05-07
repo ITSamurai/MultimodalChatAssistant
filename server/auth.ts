@@ -8,22 +8,90 @@ import MemoryStore from "memorystore";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
-// Add a simple token-based auth mechanism
-const authTokens = new Map<string, number>(); // token -> userId
+// Add a token-based auth mechanism with persistence
+interface TokenData {
+  userId: number;
+  expiresAt: number;
+}
+
+// Store tokens in memory but with persistence capabilities
+const authTokens = new Map<string, TokenData>(); // token -> { userId, expiresAt }
+
+// Token expiration time (7 days in milliseconds)
+const TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000;
 
 // Generate a new auth token for a user
 function generateAuthToken(userId: number): string {
   const token = randomBytes(32).toString('hex');
-  authTokens.set(token, userId);
+  const expiresAt = Date.now() + TOKEN_EXPIRY;
+  
+  authTokens.set(token, { userId, expiresAt });
+  
+  // Save tokens to storage for persistence
+  saveTokensToStorage();
+  
   return token;
 }
 
 // Verify an auth token
 export async function verifyAuthToken(token: string): Promise<SelectUser | null> {
-  const userId = authTokens.get(token);
-  if (!userId) return null;
+  const tokenData = authTokens.get(token);
+  if (!tokenData) return null;
   
-  return await storage.getUser(userId) || null;
+  // Check if token is expired
+  if (tokenData.expiresAt < Date.now()) {
+    // Token expired, remove it
+    authTokens.delete(token);
+    saveTokensToStorage();
+    return null;
+  }
+  
+  // Refresh token expiration on use
+  tokenData.expiresAt = Date.now() + TOKEN_EXPIRY;
+  authTokens.set(token, tokenData);
+  saveTokensToStorage();
+  
+  return await storage.getUser(tokenData.userId) || null;
+}
+
+// Helper to persist tokens
+function saveTokensToStorage() {
+  try {
+    // Convert Map to a serializable object
+    const tokens: Record<string, TokenData> = {};
+    authTokens.forEach((data, token) => {
+      tokens[token] = data;
+    });
+    
+    // Store in storage
+    storage.saveConfig({ auth_tokens: tokens });
+  } catch (error) {
+    console.error('Error saving auth tokens:', error);
+  }
+}
+
+// Load tokens from storage
+async function loadTokensFromStorage() {
+  try {
+    const config = await storage.getConfig();
+    const tokens = config.auth_tokens || {};
+    
+    // Clear existing tokens
+    authTokens.clear();
+    
+    // Add tokens from storage
+    Object.entries(tokens).forEach(([token, data]) => {
+      const tokenData = data as TokenData;
+      if (tokenData.expiresAt > Date.now()) {
+        // Only load non-expired tokens
+        authTokens.set(token, tokenData);
+      }
+    });
+    
+    console.log(`Loaded ${authTokens.size} valid auth tokens from storage`);
+  } catch (error) {
+    console.error('Error loading auth tokens:', error);
+  }
 }
 
 // Token authentication middleware
@@ -85,7 +153,10 @@ export async function requireTokenAuth(req: Request, res: Response, next: NextFu
   next();
 }
 
-export function setupAuth(app: Express) {
+export async function setupAuth(app: Express) {
+  // Load auth tokens from storage
+  await loadTokensFromStorage();
+  
   const MemStore = MemoryStore(session);
   
   const sessionSettings: session.SessionOptions = {

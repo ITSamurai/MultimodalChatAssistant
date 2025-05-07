@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net" modified="2025-05-07T15:20:50.579Z" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="diagram-1746631226579-stv86j" name="Operating System Migration Platform Architecture">
+    <mxGraphModel dx="1752" dy="853" grid="0" gridSize="16" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1173" pageHeight="1054" background="#ffffff" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Central Node -->
+        <mxCell id="2" value="&lt;b&gt;RiverMeadow Platform&lt;/b&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="585" y="230" width="150" height="150" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Hypervisor Connector -->
+        <mxCell id="3" value="Hypervisor Connector" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="405" y="227.5" width="140" height="53" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: OS Transformation Engine -->
+        <mxCell id="4" value="OS Transformation Engine" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="766" y="234" width="122" height="56" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: OS Discovery Module -->
+        <mxCell id="5" value="OS Discovery Module" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#b0e3e6;strokeColor=#0e8088;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="449.5" y="345.5" width="141" height="63" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Runtime Configuration Manager -->
+        <mxCell id="6" value="Runtime Configuration Manager" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="777.5" y="341" width="121" height="56" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: OS Template Repository -->
+        <mxCell id="7" value="OS Template Repository" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="415" y="496.5" width="148" height="61" as="geometry" />
+        </mxCell>
+        <!-- Connection from OS Discovery Module to RiverMeadow Platform -->
+        <mxCell id="8" value="System Fingerprinting" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=diamondThin;endFill=1;" edge="1" parent="1" source="5" target="2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from RiverMeadow Platform to OS Transformation Engine -->
+        <mxCell id="9" value="Migration Orchestration" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;endArrow=block;endFill=1;" edge="1" parent="1" source="2" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from OS Template Repository to OS Transformation Engine -->
+        <mxCell id="10" value="Template Provisioning" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;dashed=1;dashPattern=1 4;" edge="1" parent="1" source="7" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from OS Transformation Engine to Hypervisor Connector -->
+        <mxCell id="11" value="VM Deployment" style="edgeStyle=orthogonalEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;" edge="1" parent="1" source="4" target="3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Hypervisor Connector to Runtime Configuration Manager -->
+        <mxCell id="12" value="Post-Migration Tuning" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="3" target="6">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Supported OS Types Category -->
+        <mxCell id="13" value="&lt;b&gt;Supported OS Types&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="671" y="607" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="Windows Server" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="668" y="655" width="110" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="RHEL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="808" y="662" width="110" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="Ubuntu" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="947" y="661" width="110" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="CentOS" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="664" y="710" width="110" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="SUSE Linux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="800" y="709" width="110" height="42" as="geometry" />
+        </mxCell>
+        <!-- Migration Capabilities Category -->
+        <mxCell id="19" value="&lt;b&gt;Migration Capabilities&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="671" y="791" width="195" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="20" value="OS Version Upgrade" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="666" y="846" width="112" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="P2V Conversion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="795" y="837" width="112" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="Cross-Hypervisor Movement" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="923" y="838" width="112" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="OS Configuration Transfer" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="656" y="895" width="112" height="35" as="geometry" />
+        </mxCell>
+        <!-- Technical Components Category -->
+        <mxCell id="24" value="&lt;b&gt;Technical Components&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="671" y="961" width="188" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="Boot Volume Handler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="668" y="1014" width="103" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="Registry Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="786" y="1016" width="103" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="27" value="Driver Injection" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="662" y="1076" width="103" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="28" value="Network Configurator" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1073" width="103" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
