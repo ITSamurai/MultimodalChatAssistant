@@ -4,15 +4,16 @@
  * This service handles the generation of diagrams using OpenAI's API
  * for intent understanding and D2 for diagram creation.
  */
-
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import OpenAI from 'openai';
 import { saveD2Script, d2ToSvg, d2ToPng } from './d2.service';
 
 // Initialize OpenAI client
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
-// Interface for diagram generation results
 export interface DiagramGenerationResult {
   success: boolean;
   diagramTitle: string;
@@ -25,172 +26,100 @@ export interface DiagramGenerationResult {
  * Determines if a user message is requesting a diagram generation
  */
 export function isDiagramGenerationRequest(message: string): boolean {
-  const message_lower = message.toLowerCase();
-  
-  // Check for direct diagram-related keywords
+  // Keywords that might indicate a diagram request
   const diagramKeywords = [
-    'create diagram', 'generate diagram', 'make diagram',
-    'draw diagram', 'diagram of', 'diagram for',
-    'create a diagram', 'generate a diagram', 'make a diagram',
-    'draw a diagram', 'visualize', 'visualization',
-    'flow chart', 'flowchart', 'architecture diagram', 
-    'network diagram', 'system diagram', 'migration diagram',
-    'process flow', 'workflow diagram'
+    'diagram', 'chart', 'draw', 'visualize', 'visualise', 
+    'illustrate', 'create a diagram', 'architecture', 'flow', 
+    'topology', 'network', 'infrastructure', 'migration',
+    'show me a diagram', 'can you draw', 'generate a diagram',
+    'make a diagram', 'create a visualization', 'design a diagram',
+    'migration diagram', 'workflow diagram', 'process diagram',
+    'explain with a diagram', 'represent graphically'
   ];
+
+  const messageLower = message.toLowerCase();
   
-  // Return true if any of the diagram keywords are present
-  return diagramKeywords.some(keyword => message_lower.includes(keyword));
+  // Check if any of the keywords are present in the message
+  return diagramKeywords.some(keyword => messageLower.includes(keyword.toLowerCase()));
 }
 
 /**
  * Generates a D2 diagram script based on a user prompt
  */
 export async function generateD2Script(prompt: string): Promise<{
-  script: string;
-  title: string;
+  d2Script: string;
+  diagramTitle: string;
 }> {
   try {
-    console.log('Generating D2 script for prompt:', prompt);
-    
-    // Create system prompt for D2 script generation
+    // Define a system prompt that guides the AI to generate a D2 script
     const systemPrompt = `
-      You are an expert diagram generator that creates D2 scripts (https://d2lang.com/).
-      When given a request to create a diagram, you will ONLY output valid D2 script code
-      that can be processed by the D2 CLI tool.
-      
-      Guidelines:
-      1. Always include a title for the diagram using D2 comments (# Title)
-      2. Use appropriate shapes, colors, and styles to make the diagram visually appealing
-      3. Create proper connections between diagram elements with arrows
-      4. Group related items using containers where appropriate
-      5. Use styles consistent with professional technical diagrams
-      6. For cloud migration diagrams, show source environment, migration process, and target environment
-      7. For architecture diagrams, include all essential components and their relationships
-      8. Output ONLY valid D2 code without any explanations or markdown
-      
-      D2 Example:
-      
-      # Cloud Migration Architecture
-      
-      source: {
-        shape: cloud
-        label: "Source Environment"
-        style: {
-          fill: "#f5f5f5"
-          stroke: "#6c757d"
-        }
-        
-        vm1: {
-          shape: rectangle
-          label: "VM1\\nApplication Server"
-          style: {
-            fill: "#e6f7ff"
-            stroke: "#1890ff"
-          }
-        }
-        
-        vm2: {
-          shape: rectangle
-          label: "VM2\\nDatabase Server"
-          style: {
-            fill: "#e6f7ff"
-            stroke: "#1890ff"
-          }
-        }
-      }
-      
-      migration: {
-        shape: circle
-        label: "RiverMeadow\\nMigration Platform"
-        style: {
-          fill: "#fff2e8"
-          stroke: "#fa8c16"
-        }
-      }
-      
-      target: {
-        shape: cloud
-        label: "Target Environment"
-        style: {
-          fill: "#f6ffed"
-          stroke: "#52c41a"
-        }
-        
-        cloud_vm1: {
-          shape: rectangle
-          label: "Cloud VM1\\nApplication Server"
-          style: {
-            fill: "#f6ffed"
-            stroke: "#52c41a"
-          }
-        }
-        
-        cloud_vm2: {
-          shape: rectangle
-          label: "Cloud VM2\\nDatabase Server"
-          style: {
-            fill: "#f6ffed"
-            stroke: "#52c41a"
-          }
-        }
-      }
-      
-      source.vm1 -> migration: "Discovery"
-      source.vm2 -> migration: "Discovery"
-      migration -> target.cloud_vm1: "Transform & Deploy"
-      migration -> target.cloud_vm2: "Transform & Deploy"
+You are an expert RiverMeadow diagram creator. Generate structured D2 format diagrams based on user requests.
+
+D2 diagram syntax guidelines:
+- Use straightforward syntax: direction: right
+- Define nodes with labels: aws: {label: "AWS Cloud"; shape: cloud}
+- Create connections: aws -> onprem
+- Style with colors: shape: circle; style.fill: blue
+- Group related items: network: { server1; server2 }
+- Support complex diagrams with nested structures
+- Use cloud shapes for cloud platforms
+- Use server shapes for servers
+- Use cylindrical shapes for databases
+- Include clear labels for all components
+- Use appropriate colors for visual distinction
+- Support both infrastructure and flow diagrams
+- Keep the diagram clean and readable
+
+For migration diagrams specifically:
+- Show clear source and target environments
+- Include migration paths with directional arrows
+- Highlight key migration components
+- Show data flow during migration
+- Include relevant migration tools or services
+- Use the RiverMeadow box as the central migration orchestrator when appropriate
+
+ONLY output the complete D2 script and nothing else. Do not include explanations, comments or anything other than just the raw D2 syntax.
     `;
-    
-    // Create the OpenAI request
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+
+    // Use OpenAI to generate the diagram script
+    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. Do not change this unless explicitly requested by the user
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Create a D2 diagram for: ${prompt}` }
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Create a diagram based on this prompt: ${prompt}` }
       ],
       temperature: 0.7,
       max_tokens: 2000,
     });
-    
-    // Extract the D2 script from the response
-    const d2Script = response.choices[0].message.content?.trim() || '';
-    
-    // Extract the title from the D2 script (first line with # is usually the title)
-    const titleMatch = d2Script.match(/^#\s*(.+)$/m);
-    const title = titleMatch ? titleMatch[1].trim() : 'Generated Diagram';
-    
+
+    // Extract the D2 script from the completion
+    const d2Script = completion.choices[0].message.content?.trim() || '';
+
+    // Generate a title based on the prompt
+    const titleCompletion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { 
+          role: "system", 
+          content: "Generate a short, descriptive title (maximum 5-6 words) for a diagram based on the user's prompt. Return ONLY the title with no quotes or additional text." 
+        },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 50,
+    });
+
+    const diagramTitle = titleCompletion.choices[0].message.content?.trim() || 'Generated Diagram';
+
     return {
-      script: d2Script,
-      title
+      d2Script,
+      diagramTitle
     };
   } catch (error) {
     console.error('Error generating D2 script:', error);
-    
-    // Return a simple default D2 script as fallback
-    return {
-      script: `
-# Error Generating Diagram
-
-error: {
-  shape: hexagon
-  label: "Error Generating Diagram"
-  style: {
-    fill: "#fff0f0"
-    stroke: "#ff4d4f"
-  }
-  
-  message: {
-    shape: rectangle
-    label: "Failed to generate D2 script\\nfor this request"
-    style: {
-      fill: "#fff0f0"
-      stroke: "#ff4d4f"
-    }
-  }
-}
-`,
-      title: 'Error Generating Diagram'
-    };
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to generate D2 script: ${errorMessage}`);
   }
 }
 
@@ -199,28 +128,34 @@ error: {
  */
 export async function generateDiagram(prompt: string): Promise<DiagramGenerationResult> {
   try {
-    // Step 1: Generate the D2 script and title from the prompt
-    const { script, title } = await generateD2Script(prompt);
+    // Generate the D2 script and title
+    const { d2Script, diagramTitle } = await generateD2Script(prompt);
     
-    // Step 2: Save the D2 script to a file
-    const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const d2Path = saveD2Script(script, sanitizedTitle);
+    // Create a sanitized identifier for the file
+    const identifier = diagramTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '_')
+      .substring(0, 40);
     
-    // Step 3: Convert the D2 script to SVG
+    // Save the D2 script to a file
+    const d2Path = saveD2Script(d2Script, identifier);
+    
+    // Generate the SVG from the D2 script
     await d2ToSvg(d2Path);
     
-    // Step 4: Convert the D2 script to PNG
+    // Generate the PNG from the D2 script
     await d2ToPng(d2Path);
     
-    // Step 5: Construct the file paths
-    const baseName = path.basename(d2Path, '.d2');
-    const svgPath = path.join(process.cwd(), 'uploads', 'svg', `${baseName}.svg`);
-    const pngPath = path.join(process.cwd(), 'uploads', 'png', `${baseName}.png`);
+    // Determine the SVG and PNG paths
+    const svgFileName = path.basename(d2Path, '.d2') + '.svg';
+    const svgPath = path.join(process.cwd(), 'uploads', 'svg', svgFileName);
     
-    // Return the result
+    const pngFileName = path.basename(d2Path, '.d2') + '.png';
+    const pngPath = path.join(process.cwd(), 'uploads', 'png', pngFileName);
+    
     return {
       success: true,
-      diagramTitle: title,
+      diagramTitle,
       d2Path,
       svgPath,
       pngPath
