@@ -277,6 +277,9 @@ export async function setupAuth(app: Express) {
         // Generate token for API access - pass request for device tracking
         const token = generateAuthToken(user.id, req);
         
+        // Set token in Authorization header
+        res.setHeader('Authorization', `Bearer ${token}`);
+        
         // Return user data with token
         return res.status(200).json({
           ...user,
@@ -293,6 +296,40 @@ export async function setupAuth(app: Express) {
     });
   });
 
+  // Token refresh endpoint
+  app.post("/api/auth/refresh", async (req, res) => {
+    try {
+      // Check for existing token
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        const user = await verifyAuthToken(token, req);
+        
+        if (user) {
+          // Generate a fresh token
+          const newToken = generateAuthToken(user.id, req);
+          
+          // Set the new token in Authorization header
+          res.setHeader('Authorization', `Bearer ${newToken}`);
+          
+          return res.status(200).json({ 
+            success: true, 
+            message: 'Token refreshed successfully' 
+          });
+        }
+      }
+      
+      // No valid token found
+      return res.status(200).json({ 
+        success: false, 
+        message: 'No valid token to refresh' 
+      });
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      res.status(500).json({ error: 'Failed to refresh token' });
+    }
+  });
+
   app.get("/api/user", async (req, res) => {
     try {
       // First check for token-based authentication
@@ -302,6 +339,10 @@ export async function setupAuth(app: Express) {
         const user = await verifyAuthToken(token, req);
         
         if (user) {
+          // Set token in Authorization header to ensure client always has fresh token
+          const newToken = generateAuthToken(user.id, req);
+          res.setHeader('Authorization', `Bearer ${newToken}`);
+          
           return res.json(user);
         }
       }
