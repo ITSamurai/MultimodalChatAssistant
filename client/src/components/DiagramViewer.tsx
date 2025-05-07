@@ -263,19 +263,8 @@ export function DiagramViewer({
     }
   };
 
-  // Function to extract diagram type from path (AWS, OS, etc.)
-  const extractDiagramType = (): string => {
-    console.log("=>>>>>>>", diagramPath);
-    if (!diagramPath) return "Migration";
-
-    const lowerPath = diagramPath.toLowerCase();
-    if (lowerPath.includes("aws")) return "AWS Migration";
-    if (lowerPath.includes("os")) return "OS Migration";
-    if (lowerPath.includes("azure")) return "Azure Migration";
-    if (lowerPath.includes("cloud")) return "Cloud Migration";
-    if (lowerPath.includes("network")) return "Network";
-    return "Migration";
-  };
+  // Using a constant diagram type instead of extracting from path
+  const diagramType = "Migration";
 
   // Fallback image URL construction based on path
   const getFallbackImageUrl = (): string => {
@@ -287,7 +276,7 @@ export function DiagramViewer({
     <div className="flex flex-col w-full bg-white rounded-lg shadow-sm my-4 overflow-hidden">
       <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-gray-50">
         <h3 className="text-base font-medium text-gray-800 m-0">
-          RiverMeadow {extractDiagramType()} Diagram
+          RiverMeadow {diagramType} Diagram
         </h3>
         <div className="flex items-center gap-2">
           <Button
@@ -348,7 +337,7 @@ export function DiagramViewer({
             <div className="relative w-full max-w-[90%] h-[300px] overflow-hidden border border-gray-200 rounded-lg">
               <img
                 src={getFallbackImageUrl()}
-                alt={`${extractDiagramType()} diagram`}
+                alt={`${diagramType} diagram`}
                 className="object-contain w-full h-full"
               />
             </div>

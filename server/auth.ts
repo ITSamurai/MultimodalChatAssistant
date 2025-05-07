@@ -179,8 +179,8 @@ export async function requireTokenAuth(req: Request, res: Response, next: NextFu
 
   const token = authHeader.split(' ')[1];
   
-  // Verify token and get user
-  const user = await verifyAuthToken(token);
+  // Verify token and get user - pass the request object for better metadata tracking
+  const user = await verifyAuthToken(token, req);
   if (!user) {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
@@ -274,8 +274,8 @@ export async function setupAuth(app: Express) {
           return next(err);
         }
         
-        // Generate token for API access
-        const token = generateAuthToken(user.id);
+        // Generate token for API access - pass request for device tracking
+        const token = generateAuthToken(user.id, req);
         
         // Return user data with token
         return res.status(200).json({
@@ -299,7 +299,7 @@ export async function setupAuth(app: Express) {
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
-        const user = await verifyAuthToken(token);
+        const user = await verifyAuthToken(token, req);
         
         if (user) {
           return res.json(user);
