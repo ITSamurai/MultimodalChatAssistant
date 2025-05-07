@@ -1,0 +1,79 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="VM Based Migration" id="7Tt0f7V1IDxv1nZrWyus">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Source OS Environment -->
+        <mxCell id="2" value="Source OS" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="80" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <!-- Target OS Environment -->
+        <mxCell id="3" value="Target OS" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="600" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <!-- RiverMeadow Migration Platform -->
+        <mxCell id="4" value="RiverMeadow Migration Platform" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="320" y="220" width="180" height="60" as="geometry" />
+        </mxCell>
+        <!-- Data Transfer -->
+        <mxCell id="5" value="Data Transfer" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="320" y="320" width="180" height="60" as="geometry" />
+        </mxCell>
+        <!-- Configuration -->
+        <mxCell id="6" value="Configuration" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="320" y="420" width="180" height="60" as="geometry" />
+        </mxCell>
+        <!-- Application Migration -->
+        <mxCell id="7" value="Application Migration" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="320" y="520" width="180" height="60" as="geometry" />
+        </mxCell>
+        <!-- Pre-Migration Validation -->
+        <mxCell id="8" value="Pre-Migration Validation" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="80" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        <!-- Post-Migration Validation -->
+        <mxCell id="9" value="Post-Migration Validation" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="600" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        <!-- Connections -->
+        <mxCell id="10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="8" target="2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="210" as="sourcePoint" />
+            <mxPoint x="200" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="2" target="4">
+          <mxGeometry relative="1" as="geometry" />
+          <mxPoint x="200" y="280" as="sourcePoint" />
+          <mxPoint x="320" y="250" as="targetPoint" />
+        </mxCell>
+        <mxCell id="12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+          <mxPoint x="410" y="280" as="sourcePoint" />
+          <mxPoint x="410" y="320" as="targetPoint" />
+        </mxCell>
+        <mxCell id="13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+          <mxPoint x="410" y="380" as="sourcePoint" />
+          <mxPoint x="410" y="420" as="targetPoint" />
+        </mxCell>
+        <mxCell id="14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry relative="1" as="geometry" />
+          <mxPoint x="410" y="480" as="sourcePoint" />
+          <mxPoint x="410" y="520" as="targetPoint" />
+        </mxCell>
+        <mxCell id="15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="7" target="3">
+          <mxGeometry relative="1" as="geometry" />
+          <mxPoint x="410" y="580" as="sourcePoint" />
+          <mxPoint x="600" y="520" as="targetPoint" />
+        </mxCell>
+        <mxCell id="16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;" edge="1" parent="1" source="3" target="9">
+          <mxGeometry relative="1" as="geometry" />
+          <mxPoint x="600" y="340" as="sourcePoint" />
+          <mxPoint x="720" y="240" as="targetPoint" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

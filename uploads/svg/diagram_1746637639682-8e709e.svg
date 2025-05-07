@@ -1,0 +1,97 @@
+
+<svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
+  <!-- RiverMeadow Migration Diagram (ID: 7K7lR9o5Y-3y7e7cjlBL) -->
+  <style>
+    text { font-family: Arial, sans-serif; }
+    .title { font-size: 24px; font-weight: bold; }
+    .subtitle { font-size: 16px; fill: #666; }
+    .node { fill: #dae8fc; stroke: #6c8ebf; stroke-width: 2; }
+    .edge { stroke: #82b366; stroke-width: 2; marker-end: url(#arrowhead); }
+    .node-label { font-size: 14px; fill: #333; }
+    .footer { font-size: 12px; fill: #999; }
+  </style>
+  
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#ffffff" />
+  
+  <!-- Title -->
+  <text x="550" y="40" class="title" text-anchor="middle">VM Based Migration</text>
+  <text x="550" y="70" class="subtitle" text-anchor="middle">RiverMeadow Migration Diagram</text>
+  
+  <!-- Definitions -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#82b366" />
+    </marker>
+  </defs>
+  
+  <!-- Diagram content -->
+  <g transform="translate(50, 100)">
+
+    <rect id="node-2" x="28" y="140" width="112" height="42" 
+      rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+    <text x="84" y="166" 
+      class="node-label" text-anchor="middle">Source OS Environment</text>
+
+    <rect id="node-3" x="434" y="140" width="112" height="42" 
+      rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+    <text x="490" y="166" 
+      class="node-label" text-anchor="middle">Target OS Environment</text>
+
+    <rect id="node-4" x="224" y="140" width="140" height="42" 
+      rx="5" ry="5" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" />
+    <text x="294" y="166" 
+      class="node-label" text-anchor="middle">RiverMeadow Migration Platform</text>
+
+    <rect id="node-5" x="224" y="224" width="84" height="28" 
+      rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2" />
+    <text x="266" y="243" 
+      class="node-label" text-anchor="middle">Data Transfer</text>
+
+    <rect id="node-6" x="224" y="266" width="112" height="28" 
+      rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2" />
+    <text x="280" y="285" 
+      class="node-label" text-anchor="middle">Configuration Migration</text>
+
+    <rect id="node-7" x="224" y="308" width="112" height="28" 
+      rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2" />
+    <text x="280" y="327" 
+      class="node-label" text-anchor="middle">Application Migration</text>
+
+    <rect id="node-8" x="28" y="70" width="125.99999999999999" height="28" 
+      rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="2" />
+    <text x="91" y="89" 
+      class="node-label" text-anchor="middle">Pre-Migration Validation</text>
+
+    <rect id="node-9" x="434" y="70" width="125.99999999999999" height="28" 
+      rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="2" />
+    <text x="497" y="89" 
+      class="node-label" text-anchor="middle">Post-Migration Validation</text>
+
+    <line x1="84" y1="161" x2="294" y2="161" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="294" y1="161" x2="490" y2="161" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="294" y1="161" x2="266" y2="238" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="266" y1="238" x2="280" y2="280" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="280" y1="280" x2="280" y2="322" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="91" y1="84" x2="84" y2="161" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="490" y1="161" x2="497" y2="84" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+  </g>
+  
+  <!-- Footer -->
+  <text x="550" y="830" class="footer" text-anchor="middle">
+    Generated: 2025-05-07T17:07:19.684Z
+  </text>
+</svg>

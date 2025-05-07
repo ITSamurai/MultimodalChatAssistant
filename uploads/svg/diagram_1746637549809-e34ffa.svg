@@ -1,0 +1,97 @@
+
+<svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
+  <!-- RiverMeadow Migration Diagram (ID: A1B2C) -->
+  <style>
+    text { font-family: Arial, sans-serif; }
+    .title { font-size: 24px; font-weight: bold; }
+    .subtitle { font-size: 16px; fill: #666; }
+    .node { fill: #dae8fc; stroke: #6c8ebf; stroke-width: 2; }
+    .edge { stroke: #82b366; stroke-width: 2; marker-end: url(#arrowhead); }
+    .node-label { font-size: 14px; fill: #333; }
+    .footer { font-size: 12px; fill: #999; }
+  </style>
+  
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#ffffff" />
+  
+  <!-- Title -->
+  <text x="550" y="40" class="title" text-anchor="middle">OS Migration Diagram</text>
+  <text x="550" y="70" class="subtitle" text-anchor="middle">RiverMeadow Migration Diagram</text>
+  
+  <!-- Definitions -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#82b366" />
+    </marker>
+  </defs>
+  
+  <!-- Diagram content -->
+  <g transform="translate(50, 100)">
+
+    <rect id="node-2" x="56" y="140" width="112" height="70" 
+      rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+    <text x="112" y="180" 
+      class="node-label" text-anchor="middle">Source OS Environment</text>
+
+    <rect id="node-3" x="392" y="140" width="112" height="70" 
+      rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+    <text x="448" y="180" 
+      class="node-label" text-anchor="middle">Target OS Environment</text>
+
+    <rect id="node-4" x="224" y="140" width="112" height="70" 
+      rx="5" ry="5" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" />
+    <text x="280" y="180" 
+      class="node-label" text-anchor="middle">RiverMeadow Migration Platform</text>
+
+    <rect id="node-5" x="224" y="49" width="112" height="42" 
+      rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2" />
+    <text x="280" y="75" 
+      class="node-label" text-anchor="middle">Data Transfer</text>
+
+    <rect id="node-6" x="224" y="244.99999999999997" width="112" height="42" 
+      rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2" />
+    <text x="280" y="271" 
+      class="node-label" text-anchor="middle">Configuration</text>
+
+    <rect id="node-7" x="224" y="329" width="112" height="42" 
+      rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2" />
+    <text x="280" y="355" 
+      class="node-label" text-anchor="middle">Application Migration</text>
+
+    <rect id="node-8" x="56" y="49" width="112" height="42" 
+      rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="2" />
+    <text x="112" y="75" 
+      class="node-label" text-anchor="middle">Pre-Migration Validation</text>
+
+    <rect id="node-9" x="392" y="329" width="112" height="42" 
+      rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="2" />
+    <text x="448" y="355" 
+      class="node-label" text-anchor="middle">Post-Migration Validation</text>
+
+    <line x1="112" y1="175" x2="280" y2="175" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="280" y1="175" x2="448" y2="175" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="112" y1="70" x2="112" y2="175" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="280" y1="175" x2="448" y2="350" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="280" y1="70" x2="280" y2="175" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="280" y1="175" x2="280" y2="266" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+
+    <line x1="280" y1="266" x2="280" y2="350" 
+      stroke="#82b366" stroke-width="2" marker-end="url(#arrowhead)" />
+  </g>
+  
+  <!-- Footer -->
+  <text x="550" y="830" class="footer" text-anchor="middle">
+    Generated: 2025-05-07T17:05:55.984Z
+  </text>
+</svg>
