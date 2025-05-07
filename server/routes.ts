@@ -425,7 +425,8 @@ Explain that this diagram was generated based on their request, and they can dow
     }
   });
   
-  // This diagram generation endpoint has been moved to diagram.routes.ts
+  // Register diagram routes
+  registerDiagramRoutes(app);
   
   // Create the HTTP server
   const httpServer = createServer(app);
