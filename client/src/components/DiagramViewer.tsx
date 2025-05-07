@@ -20,7 +20,15 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
   useEffect(() => {
     setIsLoading(true);
     setError(null);
-    setImageUrl(diagramPath);
+    
+    // If the path doesn't start with http or /, add the api prefix
+    let finalUrl = diagramPath;
+    if (!diagramPath.startsWith('http') && !diagramPath.startsWith('/api/')) {
+      finalUrl = `/api${diagramPath}`;
+    }
+    
+    console.log('Loading diagram from:', finalUrl);
+    setImageUrl(finalUrl);
     
     // Simulate loading the diagram
     const timer = setTimeout(() => {
@@ -100,15 +108,22 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
           </div>
         ) : (
           <div className="overflow-auto inline-block min-w-fit">
+            <div className="text-xs text-gray-500 mb-2">Debug: Loading from {imageUrl}</div>
             <img 
               src={imageUrl} 
               alt={altText}
               style={{ 
                 transform: `scale(${zoomLevel / 100})`,
                 transformOrigin: 'center center',
-                transition: 'transform 0.2s ease-in-out'
+                transition: 'transform 0.2s ease-in-out',
+                border: '1px solid #eee',
+                minWidth: '300px',
+                minHeight: '200px'
               }}
-              onError={() => setError('Failed to load diagram')}
+              onError={(e) => {
+                console.error('Image loading error:', e);
+                setError(`Failed to load diagram from ${imageUrl}`);
+              }}
             />
           </div>
         )}
