@@ -300,6 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // API endpoint to download a diagram as PNG (full version) - no authentication required
+  // API endpoint to download the full diagram file
   app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
     try {
       // Remove any query parameters from the filename
