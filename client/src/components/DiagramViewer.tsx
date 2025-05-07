@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ZoomIn, ZoomOut, Download, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { getFullUrl } from '@/lib/config';
@@ -32,7 +32,10 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
   const maxZoom = 3;
   const zoomStep = 0.1;
   
-  // Load SVG content
+  // Load SVG content - using timestamp directly for cache busting
+  // Create unique ID for this particular diagram instance to avoid caching
+  const diagramUniqueKey = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  
   useEffect(() => {
     const loadSvg = async () => {
       setLoading(true);
@@ -45,21 +48,35 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
         // Get just the filename part, not the full path
         const filenameOnly = baseFilename.split('/').pop() || baseFilename;
         
-        // More aggressive cache busting with timestamp and random value
-        const cacheBuster = `t=${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        // Ultra-aggressive cache busting with timestamp, random value, and unique key
+        const cacheBuster = `t=${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${diagramUniqueKey}`;
         
-        // Attempt to load SVG with strong cache-busting
+        // Attempt to load SVG with ultra-strong cache-busting
         const svgUrl = getFullUrl(`/api/diagram-svg/${filenameOnly}.drawio?${cacheBuster}`);
         console.log('Loading diagram from:', svgUrl);
         
+        // Use multiple techniques to prevent caching:
+        // 1. Fetch API cache: 'no-store' option
+        // 2. HTTP Headers for cache control
+        // 3. Random query parameter
+        // 4. Force browser to bypass cache with 'no-cache'
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
         const response = await fetch(svgUrl, {
-          cache: 'no-store',
+          method: 'GET',
+          cache: 'no-store', 
           headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
             'Pragma': 'no-cache',
-            'Expires': '0'
-          }
+            'Expires': '0',
+            'X-Requested-With': diagramUniqueKey // Custom header to help bypass CDN caches
+          },
+          credentials: 'same-origin',
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
           throw new Error(`Failed to load diagram (${response.status})`);
@@ -70,8 +87,11 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
           throw new Error('Invalid SVG content');
         }
         
-        // Store the SVG content
-        setSvgContent(svgText);
+        // Store the SVG content with a slight delay to ensure DOM is ready
+        setTimeout(() => {
+          setSvgContent(svgText);
+          setLoading(false);
+        }, 100);
         
         // Initialize zoom from localStorage or use default of 0.7
         const savedZoom = localStorage.getItem('diagram_zoom_level');
@@ -80,17 +100,23 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
         } else {
           setZoom(0.7); // Default starting zoom
         }
-        
-        setLoading(false);
       } catch (err) {
         console.error('Error loading diagram:', err);
         setLoading(false);
         setError(err instanceof Error ? err.message : 'Failed to load diagram');
+        
+        // Try one more time with a delay if it was a network error
+        if (err instanceof Error && err.name === 'AbortError') {
+          setTimeout(() => {
+            console.log('Retrying diagram load after timeout...');
+            loadSvg();
+          }, 2000);
+        }
       }
     };
     
     loadSvg();
-  }, [diagramPath]);
+  }, [diagramPath, diagramUniqueKey]);
   
   // Save zoom level to localStorage when it changes
   useEffect(() => {

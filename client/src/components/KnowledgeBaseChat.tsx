@@ -521,11 +521,13 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                               {/* Show the diagram directly as an image */}
                               <p className="text-sm text-muted-foreground mb-2">{ref.caption || 'Generated Diagram'}</p>
                               
-                              {/* Use our new DiagramViewer component */}
-                              <DiagramViewer 
-                                diagramPath={ref.imagePath!} 
-                                altText={ref.caption || 'RiverMeadow Migration Diagram'} 
-                              />
+                              {/* Force component re-creation with unique key for each diagram path */}
+                              <div key={`diagram-${ref.imagePath}-${Date.now()}`}>
+                                <DiagramViewer 
+                                  diagramPath={ref.imagePath!} 
+                                  altText={ref.caption || 'RiverMeadow Migration Diagram'} 
+                                />
+                              </div>
                             </div>
                           ) : (
                             // Regular image
