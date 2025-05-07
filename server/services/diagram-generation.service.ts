@@ -168,7 +168,7 @@ export async function generateD2Script(prompt: string): Promise<{
       // System prompt for application/software structure diagrams
       systemPrompt = "You are an expert at creating software architecture diagrams using the D2 language. " +
       "The user is requesting a diagram of RiverMeadow's application structure, software components, or system architecture. " +
-      "Generate a complete, valid D2 diagram script that represents a software architecture.\n\n" +
+      "Generate a complete, valid D2 diagram script that represents RiverMeadow's cloud migration software architecture.\n\n" +
       "Important rules:\n" +
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
       "2. For application architecture diagrams, use 'direction: down' as the first line.\n" +
@@ -176,34 +176,54 @@ export async function generateD2Script(prompt: string): Promise<{
       "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
       "5. Use -> for connections between components to show data flow or dependencies.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
-      "7. Include key application components like UI, API Layer, Database, Services, etc.\n\n" +
-      "Example D2 application structure diagram:\n" +
+      "7. Include all key RiverMeadow application components mentioned below.\n\n" +
+      "Example D2 application structure diagram for RiverMeadow:\n" +
       "```\n" +
       "direction: down\n\n" +
-      "user_interface: \"User Interface\"\n" +
-      "api_layer: \"API Layer\"\n" +
-      "business_logic: \"Business Logic\"\n" +
-      "data_services: \"Data Services\"\n" +
-      "database: \"Database\"\n" +
-      "auth_service: \"Authentication\"\n" +
-      "monitoring: \"Monitoring\"\n\n" +
-      "user_interface -> api_layer\n" +
-      "api_layer -> business_logic\n" +
-      "api_layer -> auth_service\n" +
-      "business_logic -> data_services\n" +
-      "data_services -> database\n" +
-      "monitoring -> user_interface\n" +
-      "monitoring -> api_layer\n" +
-      "monitoring -> business_logic\n" +
+      "web_dashboard: \"RiverMeadow Web Dashboard\"\n" +
+      "auth_service: \"Authentication Service\"\n" +
+      "api_gateway: \"API Gateway\"\n" +
+      "migration_orchestrator: \"Migration Orchestrator\"\n" +
+      "discovery_service: \"Discovery Service\"\n" +
+      "migration_engine: \"Migration Engine\"\n" +
+      "aws_connector: \"AWS Connector\"\n" +
+      "azure_connector: \"Azure Connector\"\n" +
+      "gcp_connector: \"GCP Connector\"\n" +
+      "vmware_connector: \"VMware Connector\"\n" +
+      "database: \"Migration Database\"\n" +
+      "storage_service: \"Storage Service\"\n" +
+      "monitoring: \"Monitoring & Alerting\"\n\n" +
+      "web_dashboard -> auth_service\n" +
+      "web_dashboard -> api_gateway\n" +
+      "api_gateway -> migration_orchestrator\n" +
+      "api_gateway -> discovery_service\n" +
+      "migration_orchestrator -> migration_engine\n" +
+      "migration_engine -> aws_connector\n" +
+      "migration_engine -> azure_connector\n" +
+      "migration_engine -> gcp_connector\n" +
+      "migration_engine -> vmware_connector\n" +
+      "migration_engine -> storage_service\n" +
+      "discovery_service -> aws_connector\n" +
+      "discovery_service -> azure_connector\n" +
+      "discovery_service -> gcp_connector\n" +
+      "discovery_service -> vmware_connector\n" +
+      "migration_orchestrator -> database\n" +
+      "discovery_service -> database\n" +
+      "monitoring -> web_dashboard\n" +
+      "monitoring -> api_gateway\n" +
+      "monitoring -> migration_engine\n" +
       "```\n\n" +
-      "For RiverMeadow's cloud migration platform, focus on components like:\n" +
-      "- User Interface (web dashboard)\n" +
-      "- API Layer\n" +
-      "- Migration Engine\n" +
-      "- Cloud Provider Connectors\n" +
-      "- Data Management services\n" +
-      "- Security components\n" +
-      "- Monitoring systems\n\n" +
+      "RiverMeadow's cloud migration platform includes these key components:\n" +
+      "- Web Dashboard: User interface for migration management\n" +
+      "- Authentication Service: Handles user auth and permissions\n" +
+      "- API Gateway: Central entry point for all API requests\n" +
+      "- Migration Orchestrator: Coordinates the migration workflow\n" +
+      "- Discovery Service: Analyzes source environments\n" +
+      "- Migration Engine: Core service that performs the actual migration\n" +
+      "- Cloud Provider Connectors: Interface with AWS, Azure, GCP, VMware\n" +
+      "- Storage Service: Manages VM disk images and snapshots\n" +
+      "- Migration Database: Stores migration metadata and state\n" +
+      "- Monitoring & Alerting: Tracks system health and migration progress\n\n" +
       "Return only valid D2 code without any additional comments or explanations.";
     } else if (isOrganizationDiagram) {
       // System prompt for organizational/structure diagrams

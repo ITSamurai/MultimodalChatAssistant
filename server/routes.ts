@@ -335,9 +335,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Latest user message:', latestUserMessage);
       
+      // Force diagram generation for specific types of requests related to RiverMeadow structure
+      const forceDiagram = 
+        latestUserMessage.toLowerCase().includes('rivermeadow') && 
+        (latestUserMessage.toLowerCase().includes('components') ||
+         latestUserMessage.toLowerCase().includes('application') ||
+         latestUserMessage.toLowerCase().includes('structure') ||
+         latestUserMessage.toLowerCase().includes('architecture') ||
+         latestUserMessage.toLowerCase().includes('create diagram') ||
+         latestUserMessage.toLowerCase().includes('generate diagram') ||
+         latestUserMessage.toLowerCase().includes('show') &&
+           latestUserMessage.toLowerCase().includes('visual'));
+      
       // Check if the message is requesting a diagram generation
-      const isDiagramRequest = isDiagramGenerationRequest(latestUserMessage);
-      console.log('Diagram generation requested?', isDiagramRequest ? 'YES' : 'NO', 'for prompt:', JSON.stringify(latestUserMessage));
+      const isDiagramRequest = forceDiagram || isDiagramGenerationRequest(latestUserMessage);
+      
+      if (forceDiagram) {
+        console.log('Forcing diagram generation for RiverMeadow structure request');
+      }
+      
+      console.log('Diagram generation requested?', isDiagramRequest ? (forceDiagram ? 'FORCED YES' : 'YES') : 'NO', 'for prompt:', JSON.stringify(latestUserMessage));
       
       // If this is a diagram request, generate a diagram
       let diagramReference = null;

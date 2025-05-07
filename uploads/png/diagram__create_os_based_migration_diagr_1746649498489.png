@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect width="100%" height="100%" fill="#f8f9fa" />
+  <rect x="50" y="50" width="700" height="500" fill="white" stroke="#e9ecef" stroke-width="2" rx="10" ry="10" />
+  
+  <text x="400" y="100" font-family="Arial" font-size="24" text-anchor="middle" fill="#cc0000">
+    D2 Diagram Generation Error
+  </text>
+  
+  <text x="400" y="150" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">
+    D2 Failed: Command failed: d2 "/home/runner/workspace/uploads/d2/diagram__create_os_based_migration_diagr_1746649498489.d2" "/home/runner/workspace/uploads/png/diagram__create_os_based_migration_diagr_1746649498489.png"
+  </text>
+  
+  <text x="400" y="190" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">
+    Input: diagram__create_os_based_migration_diagr_1746649498489.d2
+  </text>
+  
+  <rect x="100" y="220" width="600" height="300" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="5" ry="5" />
+  
+  <foreignObject x="120" y="240" width="560" height="260">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 12px; white-space: pre; color: #333; overflow: auto; height: 100%;">
+direction: right
+
+source: &quot;On-Prem Environment&quot;
+os_discovery: &quot;OS Discovery&quot;
+compatibility_check: &quot;Compatibility Check&quot;
+rivermeadow: &quot;RiverMeadow SaaS&quot;
+os_migration: &quot;OS Migration&quot;
+target: &quot;Target Cloud&quot;
+
+source -&gt; os_discovery -&gt; compatibility_check -&gt; rivermeadow -&gt; os_migration -&gt; target
+    </div>
+  </foreignObject>
+</svg>
+  
