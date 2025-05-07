@@ -1,0 +1,55 @@
+[vite] connecting...
+[vite] connected.
+Warning: VITE_OPENAI_API_KEY is not set. Please ensure you have set the OPENAI_API_KEY environment variable.
+Starting application with React...
+Found root element, rendering app
+Current location: /chat/87
+API request error (GET /api/user): 
+Error {}
+
+Error fetching user: 
+Error {}
+
+at t.value (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Current location: /auth
+Current location: /
+Current location: /auth
+Current location: /
+API request error (GET /api/chats): 
+Error {}
+
+at t.value (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error fetching chats: 
+Error {}
+
+API request error (POST /api/chat): 
+Error {}
+
+Error submitting prompt: 
+Error {}
+
+API request error (POST /api/chat): 
+Error {}
+
+at t.value (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error submitting prompt: 
+Error {}
+message: "Not authenticated"
+stack: "Error: Not authenticated↵ at apiRequest (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/src/lib/queryClient.ts:62:15)↵ at async handleSubmit (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/src/components/KnowledgeBaseChat.tsx:46:24)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+at t.value (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://625e2e3c-8ea9-4f6e-bf21-727140999035-00-pinobmfwm9kq.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
