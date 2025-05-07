@@ -360,9 +360,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Cache-busting path for frontend: ${cacheBustingPath}`);
           
           // Add reference to the diagram with both the actual path and a cache-busting path
+          // Convert the full path to a relative API path that the front end can use
+          const svgFileName = path.basename(diagramResult.svgPath);
+          
           diagramReference = {
             type: 'image',
-            imagePath: diagramResult.svgPath + '?t=' + Date.now(), // Use the version with cache-busting
+            imagePath: `/api/diagram-svg/${svgFileName}?t=${Date.now()}`, // Use API endpoint with cache-busting
             realPath: diagramResult.svgPath, // Store the real path too
             caption: `RiverMeadow ${diagramResult.diagramTitle || 'Generated'} Diagram`,
             content: latestUserMessage,
@@ -385,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
 Please reference the diagram in your response with this exact phrase: "As you can see in the diagram below..." and then describe what the diagram is showing.
 
-The diagram file is located at ${diagramReference.imagePath}, created with Draw.io XML format.
+The diagram file is served through the API and displayed below. It was created with D2, a modern diagram scripting language.
 
 The diagram shows a cloud migration workflow with components like source environment, RiverMeadow Platform, and target cloud environments.
 
