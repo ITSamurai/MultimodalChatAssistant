@@ -116,7 +116,7 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
                 <div key={refIndex} className="mt-2">
                   {reference.type === 'image' && (
                     <DiagramViewer 
-                      diagramPath={reference.imagePath} 
+                      diagramPath={reference.imagePath.startsWith('/') ? reference.imagePath : `/${reference.imagePath}`} 
                       altText={reference.caption}
                     />
                   )}
