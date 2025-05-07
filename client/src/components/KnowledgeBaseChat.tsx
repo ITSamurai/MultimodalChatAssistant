@@ -154,7 +154,7 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
     loadChatMessages();
   }, [chatId]);
   
-  // Function to download diagrams - simple version that directly gets PNG
+  // Function to download diagrams with enhanced support for attached_assets
   const downloadDiagram = async (imagePath: string, index: number) => {
     try {
       setIsLoading(true);
@@ -174,8 +174,43 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
       console.log(`Downloading diagram with path: ${imagePath}`);
       console.log(`Extracted filename: ${fileName}`);
       
-      // Check if it's a diagram (now using includes instead of endsWith to handle query params)
-      if (imagePath.includes('.html') || imagePath.includes('.drawio') || imagePath.includes('diagram-svg')) {
+      // Determine if this is:
+      // 1. An attached_assets image
+      // 2. A diagram (drawio, html, xml)
+      // 3. A regular image
+      
+      const isAttachedAsset = imagePath.includes('attached_assets');
+      const isDiagram = 
+        imagePath.includes('.html') || 
+        imagePath.includes('.drawio') || 
+        imagePath.includes('.xml') || 
+        imagePath.includes('diagram-svg') || 
+        imagePath.includes('rivermeadow_diagram');
+      
+      if (isAttachedAsset) {
+        console.log('Downloading attached asset directly');
+        // Direct download of the attached asset
+        const response = await fetch(getFullUrl(imagePath));
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `rivermeadow_diagram_${Date.now()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          
+          toast({
+            title: "Success", 
+            description: "Diagram downloaded successfully",
+          });
+        } else {
+          throw new Error('Failed to download attached asset');
+        }
+      } else if (isDiagram) {
         console.log(`Processing diagram: ${fileName}`);
         
         // Get the base filename without extension and without query params
@@ -193,18 +228,29 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           baseFileName = baseFileName.replace('.drawio', '');
         }
         
-        // Just download as PNG directly without options
-        const pngUrl = getFullUrl(`/api/download-full-diagram/${baseFileName}`);
-        console.log(`Downloading diagram from: ${pngUrl}`);
+        // Use the download API endpoint which handles multiple formats appropriately
+        const downloadUrl = getFullUrl(`/api/download-full-diagram/${baseFileName}`);
+        console.log(`Downloading diagram from: ${downloadUrl}`);
         
-        const response = await fetch(pngUrl);
+        const response = await fetch(downloadUrl);
         
         if (response.ok) {
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
+          
+          // Determine file extension based on Content-Type header
+          const contentType = response.headers.get('Content-Type');
+          let extension = 'drawio';  // Default extension
+          
+          if (contentType) {
+            if (contentType.includes('image/png')) extension = 'png';
+            else if (contentType.includes('image/jpeg')) extension = 'jpg';
+            else if (contentType.includes('image/svg+xml')) extension = 'svg';
+          }
+          
           const a = document.createElement('a');
           a.href = url;
-          a.download = `rivermeadow_diagram_${Date.now()}.png`;
+          a.download = `rivermeadow_diagram_${Date.now()}.${extension}`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
@@ -212,12 +258,12 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
           
           toast({
             title: "Success", 
-            description: "Diagram downloaded as PNG",
+            description: `Diagram downloaded as ${extension.toUpperCase()}`,
           });
         } else {
           toast({
             title: "Error",
-            description: "Failed to download diagram as PNG",
+            description: "Failed to download diagram",
             variant: "destructive",
           });
         }
