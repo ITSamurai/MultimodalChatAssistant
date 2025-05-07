@@ -164,20 +164,33 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
         description: "Preparing diagram for download...",
       });
       
-      // Extract the filename from the path for server request
-      const pathParts = imagePath.split('/');
+      // Extract the base path without query parameters
+      const pathWithoutParams = imagePath.split('?')[0];
+      
+      // Extract the filename from the clean path for server request
+      const pathParts = pathWithoutParams.split('/');
       const fileName = pathParts[pathParts.length - 1];
       
-      // Check if it's an HTML diagram for Draw.IO
-      if (imagePath.endsWith('.html') || imagePath.includes('diagram-svg')) {
+      console.log(`Downloading diagram with path: ${imagePath}`);
+      console.log(`Extracted filename: ${fileName}`);
+      
+      // Check if it's a diagram (now using includes instead of endsWith to handle query params)
+      if (imagePath.includes('.html') || imagePath.includes('.drawio') || imagePath.includes('diagram-svg')) {
         console.log(`Processing diagram: ${fileName}`);
         
-        // Get the base filename without extension
+        // Get the base filename without extension and without query params
         let baseFileName = fileName;
-        if (fileName.endsWith('.html')) {
-          baseFileName = fileName.replace('.html', '');
-        } else if (fileName.endsWith('.xml')) {
-          baseFileName = fileName.replace('.xml', '');
+        
+        // Remove any query parameters
+        baseFileName = baseFileName.split('?')[0];
+        
+        // Handle various extensions
+        if (baseFileName.includes('.html')) {
+          baseFileName = baseFileName.replace('.html', '');
+        } else if (baseFileName.includes('.xml')) {
+          baseFileName = baseFileName.replace('.xml', '');
+        } else if (baseFileName.includes('.drawio')) {
+          baseFileName = baseFileName.replace('.drawio', '');
         }
         
         // Just download as PNG directly without options
@@ -510,8 +523,8 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                   {message.references
                     .filter(ref => ref.type === 'image' && ref.imagePath)
                     .map((ref, index) => {
-                      // Check if it's a diagram (ends with .drawio or .html)
-                      const isDiagram = ref.imagePath?.endsWith('.drawio') || ref.imagePath?.endsWith('.html');
+                      // Check if it's a diagram (contains .drawio or .html, regardless of query params)
+                      const isDiagram = ref.imagePath?.includes('.drawio') || ref.imagePath?.includes('.html');
                       
                       return (
                         <div key={index} className="rounded-lg overflow-hidden border border-gray-200">
