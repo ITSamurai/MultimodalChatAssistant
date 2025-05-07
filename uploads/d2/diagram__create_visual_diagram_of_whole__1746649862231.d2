@@ -1,0 +1,19 @@
+direction: right
+
+source: "Source Environment"
+target: "Target Cloud"
+rivermeadow: "RiverMeadow SaaS"
+discovery: "Discovery"
+migration: "Migration"
+orchestration: "Orchestration"
+assessment: "Assessment"
+automation: "Automation"
+reporting: "Reporting"
+security: "Security"
+optimization: "Optimization"
+
+source -> discovery -> assessment -> orchestration -> rivermeadow
+rivermeadow -> automation -> migration -> target
+migration -> reporting
+rivermeadow -> security
+target -> optimization

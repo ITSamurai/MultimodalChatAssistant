@@ -407,9 +407,9 @@ Please reference the diagram in your response with this exact phrase: "As you ca
 
 The diagram file is served through the API and displayed below. It was created with D2, a modern diagram scripting language.
 
-The diagram shows a cloud migration workflow with components like source environment, RiverMeadow Platform, and target cloud environments.
+The diagram shows a RiverMeadow cloud migration workflow with components as requested by the user.
 
-Explain that this diagram was generated based on their request, and they can download it or explore it interactively right in the chat. The diagram is interactive, allowing zoom, pan, and download options.`
+Explain that this diagram was generated based on their request, and they can download it as a PNG file or explore it interactively right in the chat. Tell them to click the "Download PNG" button in the diagram viewer to save a high-quality PNG version of the diagram. The diagram viewer is also interactive, allowing zoom and pan functionality.`
         });
       }
       

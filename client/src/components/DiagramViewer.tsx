@@ -94,20 +94,30 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
   
   // Handle download
   const handleDownload = () => {
-    // Extract file extension from the path
-    const isDrawio = imageUrl.includes('.drawio');
-    const isSvg = imageUrl.includes('.svg');
-    const isPng = imageUrl.includes('.png');
+    // Extract base file name without path and query parameters
+    const fileNameMatch = imageUrl.match(/\/([^/?]+)\.(svg|png|drawio|d2)/);
+    const baseFileName = fileNameMatch ? fileNameMatch[1] : 'diagram';
     
-    // Determine file extension based on url
-    let fileExtension = 'png'; // Default to PNG
-    if (isDrawio) fileExtension = 'drawio';
-    else if (isSvg) fileExtension = 'svg';
+    // Convert SVG path to PNG path for download
+    let downloadUrl = imageUrl;
+    if (imageUrl.includes('.svg')) {
+      // Replace 'diagram-svg' with 'diagram-png' to get PNG version
+      downloadUrl = imageUrl.replace('/api/diagram-svg/', '/api/diagram-png/');
+      downloadUrl = downloadUrl.replace('.svg', '.png');
+    }
     
     // Create download link
     const a = document.createElement('a');
-    a.href = imageUrl;
-    a.download = `diagram.${fileExtension}`;
+    a.href = downloadUrl;
+    a.download = `${baseFileName}.png`;
+    
+    // Log information for debugging
+    console.log('Download information:', {
+      originalUrl: imageUrl,
+      downloadUrl: downloadUrl,
+      fileName: `${baseFileName}.png`
+    });
+    
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -132,8 +142,14 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
               <RefreshCw className="h-4 w-4" />
             </Button>
           )}
-          <Button variant="ghost" size="icon" onClick={handleDownload}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleDownload}
+            className="flex items-center gap-1"
+          >
             <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Download PNG</span>
           </Button>
         </div>
       </div>
