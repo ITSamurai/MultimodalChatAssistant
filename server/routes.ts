@@ -69,9 +69,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Diagram not found' });
       }
       
-      const fileContent = fs.readFileSync(filePath, 'utf8');
+      // Read file contents properly without trying to add query params to the fs call
+      // Use same technique as in diagram-svg route to bypass filesystem cache
+      const fileDescriptor = fs.openSync(filePath, 'r');
+      const fileStats = fs.fstatSync(fileDescriptor);
+      const fileSize = fileStats.size;
+      const buffer = Buffer.alloc(fileSize);
+      fs.readSync(fileDescriptor, buffer, 0, fileSize, 0);
+      fs.closeSync(fileDescriptor);
+      
+      const fileContent = buffer.toString('utf8');
+      
+      // Set aggressive no-cache headers
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
       res.setHeader('Content-Type', 'application/xml');
       res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.drawio"`);
+      
       return res.status(200).send(fileContent);
     } catch (error) {
       console.error('Error serving diagram XML:', error);
@@ -255,6 +271,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // In a real implementation, we would convert the Draw.IO XML to PNG
       // For now, return a placeholder PNG
+      // Set aggressive no-cache headers
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
       res.setHeader('Content-Type', 'image/png');
       res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.png"`);
       

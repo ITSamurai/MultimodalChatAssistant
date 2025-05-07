@@ -254,7 +254,9 @@ Based on this information, provide the JSON structure for creating a diagram abo
         { role: 'user', content: userPrompt }
       ],
       response_format: { type: 'json_object' },
-      temperature: 1.2 // Further increased temperature for maximum variation
+      temperature: 1.4, // Maximum temperature value for greatest variation
+      presence_penalty: 0.9, // High presence penalty to discourage repetition
+      frequency_penalty: 0.9 // High frequency penalty to encourage unique words
     });
     
     // Parse the JSON response
@@ -606,7 +608,9 @@ Remember this is for a specific request with ID: ${randomSeed}-${currentTime}-${
         { role: 'user', content: userPrompt }
       ],
       temperature: 1.4, // Maximum temperature value for greatest variation
-      max_tokens: 1000
+      max_tokens: 1000,
+      presence_penalty: 0.9, // High presence penalty to discourage repetition
+      frequency_penalty: 0.9 // High frequency penalty to encourage unique words
     });
     
     // Extract the response content
