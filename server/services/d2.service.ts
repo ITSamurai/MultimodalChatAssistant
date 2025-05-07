@@ -110,9 +110,10 @@ export async function d2ToPng(
     // Run the wrapper script directly with await to ensure the PNG is generated properly
     try {
       // Use Puppeteer directly to convert the SVG to PNG - this approach is more reliable
-      const puppeteer = require('puppeteer');
+      // Use dynamic import for ESM compatibility
+      const puppeteer = await import('puppeteer');
       
-      const browser = await puppeteer.launch({
+      const browser = await puppeteer.default.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
         headless: true
       });
@@ -140,7 +141,7 @@ export async function d2ToPng(
         `);
         
         // Wait for any rendering to complete
-        await page.waitForTimeout(500);
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // Take a screenshot as PNG
         await page.screenshot({

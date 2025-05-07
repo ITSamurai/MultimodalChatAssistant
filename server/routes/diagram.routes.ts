@@ -138,12 +138,12 @@ export function registerDiagramRoutes(app: Express) {
   app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
     try {
       // Get the requested format (default to PNG)
-      const format = req.query.format || 'png';
+      const format = (req.query.format as string) || 'png';
       const baseName = req.params.fileName.replace(/\.[^/.]+$/, ""); // remove extension if any
       
       // Determine the appropriate file path based on format
-      let filePath;
-      let contentType;
+      let filePath = '';
+      let contentType = 'application/octet-stream'; // Default content type
       
       if (format === 'png') {
         // Try to find PNG file
@@ -161,7 +161,8 @@ export function registerDiagramRoutes(app: Express) {
       
       // If file doesn't exist with exact name, try to find a file with similar name
       if (!fs.existsSync(filePath)) {
-        const targetDir = path.join(process.cwd(), 'uploads', format === 'png' ? 'png' : format === 'svg' ? 'svg' : 'd2');
+        const formatDir = format === 'png' ? 'png' : format === 'svg' ? 'svg' : 'd2';
+        const targetDir = path.join(process.cwd(), 'uploads', formatDir);
         
         if (fs.existsSync(targetDir)) {
           const files = fs.readdirSync(targetDir);
@@ -180,7 +181,8 @@ export function registerDiagramRoutes(app: Express) {
       // Set headers for download
       res.setHeader('Content-Type', contentType);
       // Set a more appropriate filename based on the format
-      const downloadFilename = `${baseName}.${format === 'd2' ? 'd2' : format === 'svg' ? 'svg' : 'png'}`;
+      const fileExtension = format === 'd2' ? 'd2' : format === 'svg' ? 'svg' : 'png';
+      const downloadFilename = `${baseName}.${fileExtension}`;
       res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
       return res.sendFile(filePath);
     } catch (error) {

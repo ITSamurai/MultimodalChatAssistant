@@ -98,29 +98,30 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
     const fileNameMatch = imageUrl.match(/\/([^/?]+)\.(svg|png|drawio|d2)/);
     const baseFileName = fileNameMatch ? fileNameMatch[1] : 'diagram';
     
-    // Convert SVG path to PNG path for download
-    let downloadUrl = imageUrl;
-    if (imageUrl.includes('.svg')) {
-      // Replace 'diagram-svg' with 'diagram-png' to get PNG version
-      downloadUrl = imageUrl.replace('/api/diagram-svg/', '/api/diagram-png/');
-      downloadUrl = downloadUrl.replace('.svg', '.png');
-    }
-    
-    // Create download link
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = `${baseFileName}.png`;
+    // For direct download, use a server endpoint that always returns PNG
+    // Build a downloadable URL using the download endpoint
+    const baseNameWithoutExtension = baseFileName.split('.')[0];
+    const downloadUrl = `/api/download-full-diagram/${baseNameWithoutExtension}?format=png&t=${Date.now()}`;
     
     // Log information for debugging
     console.log('Download information:', {
       originalUrl: imageUrl,
       downloadUrl: downloadUrl,
-      fileName: `${baseFileName}.png`
+      fileName: `${baseNameWithoutExtension}.png`
     });
+    
+    // Create download link
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `${baseNameWithoutExtension}.png`;
+    a.target = '_blank'; // Open in new tab to help with download
     
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    
+    // Show a message to the user
+    alert('If the diagram PNG is empty, please try right-clicking on the diagram and selecting "Save Image As..." instead.');
   };
   
   return (
