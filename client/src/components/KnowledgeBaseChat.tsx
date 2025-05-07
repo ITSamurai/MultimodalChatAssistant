@@ -440,8 +440,17 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
       };
       
       // Check if we actually got a diagram in the response (using includes to handle query params)
+      // Use improved detection to handle query parameters
       const hasDiagram = assistantMessage.references?.some(
-        ref => ref.type === 'image' && (ref.imagePath?.includes('.html') || ref.imagePath?.includes('.drawio'))
+        ref => ref.type === 'image' && (
+          ref.imagePath?.includes('.html') || 
+          ref.imagePath?.includes('.drawio') || 
+          ref.imagePath?.includes('.xml') ||
+          // Also detect png fallback path
+          ref.imagePath?.includes('rivermeadow_diagram') ||
+          // Or just attached_assets paths
+          ref.imagePath?.includes('attached_assets')
+        )
       );
       
       // If we're showing diagram progress but didn't get a diagram, turn it off
@@ -523,8 +532,12 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                   {message.references
                     .filter(ref => ref.type === 'image' && ref.imagePath)
                     .map((ref, index) => {
-                      // Check if it's a diagram (contains .drawio or .html, regardless of query params)
-                      const isDiagram = ref.imagePath?.includes('.drawio') || ref.imagePath?.includes('.html');
+                      // Check if it's a diagram using the same logic as hasDiagram check
+                      const isDiagram = ref.imagePath?.includes('.drawio') || 
+                                      ref.imagePath?.includes('.html') || 
+                                      ref.imagePath?.includes('.xml') ||
+                                      ref.imagePath?.includes('rivermeadow_diagram') ||
+                                      ref.imagePath?.includes('attached_assets');
                       
                       return (
                         <div key={index} className="rounded-lg overflow-hidden border border-gray-200">

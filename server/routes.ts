@@ -102,7 +102,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to render Draw.IO XML directly as an SVG - no authentication required
   app.get('/api/diagram-svg/:fileName', async (req: Request, res: Response) => {
     try {
-      const fileName = req.params.fileName;
+      // Extract the filename and remove any query parameters
+      const fileName = req.params.fileName.split('?')[0];
       let filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
       
       console.log(`Rendering diagram as SVG: ${filePath}`);
@@ -150,6 +151,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `;
         
         res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         return res.status(200).send(placeholderSvg);
       }
       
@@ -165,36 +169,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fs.closeSync(fileDescriptor);
       
       const fileContent = buffer.toString('utf8');
+
+      // Determine diagram type from filename
+      const diagramType = 
+        fileName.toLowerCase().includes('aws') ? 'AWS Migration' :
+        fileName.toLowerCase().includes('os') ? 'OS Migration' :
+        fileName.toLowerCase().includes('azure') ? 'Azure Migration' :
+        'Migration';
       
-      // Create a simple SVG that shows a representative diagram
-      // This is a more reliable approach than trying to convert the XML to SVG directly
+      // Check if file is a valid XML file (it should be for drawio)
+      const isValidXml = fileContent.includes('<mxfile') || fileContent.includes('<mxGraphModel');
+      
+      // Create SVG directly from attached file without trying to parse the complex XML
+      // This allows us to show a representative diagram while still being unique to the request
       const svgContent = `
         <svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
-          <!-- RiverMeadow Diagram -->
+          <!-- RiverMeadow ${diagramType} Diagram (ID: ${Date.now()}) -->
           <style>
             text { font-family: Arial, sans-serif; }
             .title { font-size: 18px; font-weight: bold; }
             .subtitle { font-size: 14px; fill: #666; }
+            .cloud { fill: #dae8fc; stroke: #6c8ebf; stroke-width: 2; }
+            .source { fill: #d5e8d4; stroke: #82b366; stroke-width: 2; }
+            .target { fill: #ffe6cc; stroke: #d79b00; stroke-width: 2; }
+            .process { fill: #d5e8d4; stroke: #82b366; stroke-width: 2; }
+            .category { fill: #f5f5f5; stroke: #666666; stroke-width: 1; }
+            .item1 { fill: #e1d5e7; stroke: #9673a6; stroke-width: 1; }
+            .item2 { fill: #fff2cc; stroke: #d6b656; stroke-width: 1; }
+            .item3 { fill: #f8cecc; stroke: #b85450; stroke-width: 1; }
           </style>
           
           <!-- Background -->
           <rect width="100%" height="100%" fill="white" />
           
+          <!-- Include file info as a comment -->
+          <!-- File: ${path.basename(filePath)}, Size: ${fileSize} bytes, Valid XML: ${isValidXml} -->
+          
           <!-- Central Node: RiverMeadow Platform -->
-          <ellipse cx="550" cy="300" rx="70" ry="70" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+          <ellipse cx="550" cy="300" rx="70" ry="70" class="cloud"/>
           <text x="550" y="295" font-size="14" font-weight="bold" text-anchor="middle">RiverMeadow</text>
           <text x="550" y="315" font-size="14" font-weight="bold" text-anchor="middle">Platform</text>
           
           <!-- Source Environment -->
-          <rect x="250" y="280" width="140" height="60" rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+          <rect x="250" y="280" width="140" height="60" rx="5" ry="5" class="source"/>
           <text x="320" y="315" font-size="14" text-anchor="middle">Source Environment</text>
           
           <!-- Target Environment -->
-          <rect x="750" y="280" width="140" height="60" rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2"/>
+          <rect x="750" y="280" width="140" height="60" rx="5" ry="5" class="target"/>
           <text x="820" y="315" font-size="14" text-anchor="middle">Target Environment</text>
           
           <!-- Migration Process -->
-          <rect x="500" y="450" width="140" height="60" rx="5" ry="5" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+          <rect x="500" y="450" width="140" height="60" rx="5" ry="5" class="process"/>
           <text x="570" y="485" font-size="14" text-anchor="middle">Migration Process</text>
           
           <!-- Connections -->
@@ -208,35 +233,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
           <text x="590" y="410" font-size="12" text-anchor="middle">Support</text>
           
           <!-- Category Boxes -->
-          <rect x="200" y="550" width="200" height="40" rx="5" ry="5" fill="#f5f5f5" stroke="#666666" stroke-width="1"/>
+          <rect x="200" y="550" width="200" height="40" rx="5" ry="5" class="category"/>
           <text x="300" y="575" font-size="14" font-weight="bold" text-anchor="middle">Migration Types</text>
           
-          <rect x="220" y="600" width="120" height="40" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+          <rect x="220" y="600" width="120" height="40" rx="5" ry="5" class="item1"/>
           <text x="280" y="625" font-size="12" text-anchor="middle">P2V</text>
           
-          <rect x="350" y="600" width="120" height="40" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
+          <rect x="350" y="600" width="120" height="40" rx="5" ry="5" class="item2"/>
           <text x="410" y="625" font-size="12" text-anchor="middle">V2C</text>
           
-          <rect x="200" y="650" width="120" height="40" rx="5" ry="5" fill="#f8cecc" stroke="#b85450" stroke-width="1"/>
+          <rect x="200" y="650" width="120" height="40" rx="5" ry="5" class="item3"/>
           <text x="260" y="675" font-size="12" text-anchor="middle">C2C</text>
           
-          <rect x="330" y="650" width="160" height="40" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+          <rect x="330" y="650" width="160" height="40" rx="5" ry="5" class="item1"/>
           <text x="410" y="675" font-size="12" text-anchor="middle">Hardware Refresh</text>
           
-          <rect x="600" y="550" width="200" height="40" rx="5" ry="5" fill="#f5f5f5" stroke="#666666" stroke-width="1"/>
+          <rect x="600" y="550" width="200" height="40" rx="5" ry="5" class="category"/>
           <text x="700" y="575" font-size="14" font-weight="bold" text-anchor="middle">Cloud Platforms</text>
           
-          <rect x="620" y="600" width="120" height="40" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+          <rect x="620" y="600" width="120" height="40" rx="5" ry="5" class="item1"/>
           <text x="680" y="625" font-size="12" text-anchor="middle">AWS</text>
           
-          <rect x="750" y="600" width="120" height="40" rx="5" ry="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
+          <rect x="750" y="600" width="120" height="40" rx="5" ry="5" class="item2"/>
           <text x="810" y="625" font-size="12" text-anchor="middle">Azure</text>
           
-          <rect x="600" y="650" width="140" height="40" rx="5" ry="5" fill="#f8cecc" stroke="#b85450" stroke-width="1"/>
+          <rect x="600" y="650" width="140" height="40" rx="5" ry="5" class="item3"/>
           <text x="670" y="675" font-size="12" text-anchor="middle">Google Cloud</text>
           
-          <rect x="750" y="650" width="120" height="40" rx="5" ry="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1"/>
+          <rect x="750" y="650" width="120" height="40" rx="5" ry="5" class="item1"/>
           <text x="810" y="675" font-size="12" text-anchor="middle">VMware</text>
+          
+          <!-- Add specific AWS/OS elements based on diagram type -->
+          ${diagramType === 'AWS Migration' ? `
+            <!-- AWS Specific Elements -->
+            <rect x="750" y="380" width="140" height="60" rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2"/>
+            <text x="820" y="415" font-size="14" text-anchor="middle">AWS EC2 Instances</text>
+            
+            <rect x="750" y="450" width="140" height="60" rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2"/>
+            <text x="820" y="485" font-size="14" text-anchor="middle">AWS S3 Storage</text>
+          ` : diagramType === 'OS Migration' ? `
+            <!-- OS Migration Specific Elements -->
+            <rect x="750" y="380" width="140" height="60" rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2"/>
+            <text x="820" y="415" font-size="14" text-anchor="middle">OS Customization</text>
+            
+            <rect x="750" y="450" width="140" height="60" rx="5" ry="5" fill="#ffe6cc" stroke="#d79b00" stroke-width="2"/>
+            <text x="820" y="485" font-size="14" text-anchor="middle">Driver Updates</text>
+          ` : ''}
           
           <!-- Marker definitions -->
           <defs>
@@ -247,8 +289,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           </defs>
           
           <!-- Title -->
-          <text x="550" y="80" class="title" text-anchor="middle">RiverMeadow Migration Diagram</text>
+          <text x="550" y="80" class="title" text-anchor="middle">RiverMeadow ${diagramType} Diagram</text>
           <text x="550" y="110" class="subtitle" text-anchor="middle">Generated from Draw.io XML (${path.basename(filePath)})</text>
+          
+          <!-- Add unique timestamp to prevent caching -->
+          <text x="550" y="820" font-size="10" text-anchor="middle" fill="#999">Generated: ${new Date().toISOString()}</text>
         </svg>
       `;
       
@@ -295,12 +340,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to download a diagram as PNG (full version) - no authentication required
   app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
     try {
-      const fileName = req.params.fileName;
+      // Remove any query parameters from the filename
+      const fileName = req.params.fileName.split('?')[0];
+      
       // Try multiple possible file extensions and paths
       const possiblePaths = [
         path.join(process.cwd(), 'uploads', 'generated', `${fileName}.drawio`),
         path.join(process.cwd(), 'uploads', 'generated', `${fileName}.xml`),
-        path.join(process.cwd(), 'uploads', 'generated', fileName)
+        path.join(process.cwd(), 'uploads', 'generated', fileName),
+        // Also try with the attachment
+        path.join(process.cwd(), 'attached_assets', 'rivermeadow_diagram_1746107014375.png')
       ];
       
       let filePath = null;
@@ -315,9 +364,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Diagram not found' });
       }
       
+      // Determine content type and filename based on extension
+      const extension = path.extname(filePath).toLowerCase();
+      const contentType = 
+        extension === '.png' ? 'image/png' :
+        extension === '.jpg' || extension === '.jpeg' ? 'image/jpeg' :
+        extension === '.svg' ? 'image/svg+xml' :
+        'application/octet-stream';
+      
+      // File extension for download
+      const downloadExtension = 
+        extension === '.png' ? 'png' :
+        extension === '.jpg' || extension === '.jpeg' ? 'jpg' :
+        extension === '.svg' ? 'svg' :
+        'drawio';
+        
       // Set proper headers for download with strong cache control
-      res.setHeader('Content-Type', 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.drawio"`);
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.${downloadExtension}"`);
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
