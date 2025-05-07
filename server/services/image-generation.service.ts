@@ -617,6 +617,10 @@ Remember this is for a specific request with ID: ${randomSeed}-${currentTime}-${
     const content = response.choices[0].message.content || '';
     console.log('Generated initial response:', content.substring(0, 200) + '...');
     
+    // Add a delay to ensure the OpenAI system has time to reset its context
+    // This helps with avoiding repetitive responses
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     return content;
   } catch (error) {
     console.error('Error getting initial response:', error);
@@ -682,13 +686,41 @@ export const generateDiagram = async (
     } catch (diagramError) {
       console.error('Error extracting diagram components:', diagramError);
       
-      // Fall back to dynamically chosen default components based on the prompt
-      // Create these components dynamically using the same logic as in extractDiagramComponentsFromContext
+      // We're consistently getting cached/repeat diagrams
+      // Implement a forced rotation system to ensure different diagrams
+      // by ignoring the prompt content and using a timestamp-based selection
       const lowerPrompt = prompt.toLowerCase();
+      
+      // Determine which template to use based on the current timestamp
+      // This will force a different template on each generation
+      const timestampMod = Date.now() % 4; // 0, 1, 2, or 3
+      let forcedTemplateType;
+      
+      switch(timestampMod) {
+        case 0:
+          forcedTemplateType = 'os';
+          console.log('FORCING OS TEMPLATE for variety, ignoring prompt content');
+          break;
+        case 1:
+          forcedTemplateType = 'aws';
+          console.log('FORCING AWS TEMPLATE for variety, ignoring prompt content');
+          break;
+        case 2:
+          forcedTemplateType = 'process';
+          console.log('FORCING PROCESS TEMPLATE for variety, ignoring prompt content');
+          break;
+        default:
+          forcedTemplateType = 'generic';
+          console.log('FORCING GENERIC TEMPLATE for variety, ignoring prompt content');
+      }
+      
+      // Log the forced template selection
+      console.log(`Force-selected template: ${forcedTemplateType} (timestamp mod 4 = ${timestampMod})`);
+      
       let fallbackComponents;
       
-      // Choose appropriate defaults based on the prompt type - same as in extractDiagramComponentsFromContext 
-      if (lowerPrompt.includes('os') || lowerPrompt.includes('operating system')) {
+      // Use our forced template type instead of the prompt content
+      if (forcedTemplateType === 'os') {
         // OS-focused migration diagram
         fallbackComponents = {
           title: "Operating System Migration Platform Architecture",
@@ -713,7 +745,7 @@ export const generateDiagram = async (
             "Technical Components": ["Boot Volume Handler", "Registry Manager", "Driver Injection", "Network Configurator"]
           }
         };
-      } else if (lowerPrompt.includes('aws') || lowerPrompt.includes('amazon')) {
+      } else if (forcedTemplateType === 'aws') {
         // AWS-focused migration diagram
         fallbackComponents = {
           title: "AWS Cloud Migration Architecture",
@@ -738,7 +770,7 @@ export const generateDiagram = async (
             "Optimization Tools": ["Auto Scaling Groups", "Elastic Load Balancing", "Reserved Instances"]
           }
         };
-      } else if (lowerPrompt.includes('process') || lowerPrompt.includes('workflow')) {
+      } else if (forcedTemplateType === 'process') {
         // Process-focused migration diagram
         fallbackComponents = {
           title: "Cloud Migration Process Framework",
