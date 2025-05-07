@@ -28,12 +28,14 @@ let pineconeIndex: any = null;
 // Initialize OpenAI for text completions
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Import generateDiagram function dynamically
+// Import diagram-related functions dynamically
 let generateDiagram: Function;
-const importGenerateDiagram = import('./services/image-generation.service').then(module => {
+let isImageGenerationRequest: Function;
+const importDiagramFunctions = import('./services/image-generation.service').then(module => {
   generateDiagram = module.generateDiagram;
+  isImageGenerationRequest = module.isImageGenerationRequest;
 }).catch(err => {
-  console.error('Error importing generateDiagram:', err);
+  console.error('Error importing diagram functions:', err);
 });
 
 // Set up multer for file uploads
@@ -580,7 +582,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Latest user message:', latestUserMessage);
       
       // Check if the message is requesting an image generation
-      const isImageRequest = latestUserMessage.toLowerCase().includes('diagram');
+      // Use the improved detection function from image-generation.service.ts
+      const isImageRequest = isImageGenerationRequest(latestUserMessage);
       console.log('Image generation requested?', isImageRequest ? 'YES' : 'NO', 'for prompt:', JSON.stringify(latestUserMessage));
       
       // If this is a diagram request, generate a diagram

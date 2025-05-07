@@ -921,20 +921,53 @@ export const generateDiagram = async (
 
 /**
  * Function to determine if a prompt is requesting an image generation
+ * Enhanced to be more robust against spelling errors
  */
 export const isImageGenerationRequest = (prompt: string): boolean => {
   const lowerPrompt = prompt.toLowerCase();
   
-  // Match diagram-related keywords
-  return lowerPrompt.includes('diagram') || 
-         lowerPrompt.includes('chart') || 
-         lowerPrompt.includes('visual') ||
-         lowerPrompt.includes('image') ||
-         lowerPrompt.includes('picture') ||
-         lowerPrompt.includes('draw') ||
-         lowerPrompt.includes('create') && (
-           lowerPrompt.includes('migration') ||
+  // Functions to help with fuzzy matching
+  const containsFuzzy = (target: string, terms: string[]): boolean => {
+    return terms.some(term => {
+      // Check for exact match first
+      if (target.includes(term)) return true;
+      
+      // Check for common misspellings (e.g., diagam, diagrm, etc.)
+      if (term === 'diagram' && 
+          (target.includes('diag') || 
+           target.includes('diagr') || 
+           target.includes('diagra') ||
+           target.includes('diagam'))) {
+        console.log('Detected fuzzy match for "diagram"');
+        return true;
+      }
+      
+      return false;
+    });
+  };
+  
+  // Match diagram-related keywords including common misspellings
+  const diagramTerms = ['diagram', 'chart', 'visual', 'image', 'picture', 'draw', 'graph'];
+  const hasDiagramTerm = containsFuzzy(lowerPrompt, diagramTerms);
+  
+  // Always treat migration diagram requests as image generation requests
+  const hasMigrationContext = lowerPrompt.includes('migration') && 
+                             (lowerPrompt.includes('aws') || 
+                              lowerPrompt.includes('os') || 
+                              lowerPrompt.includes('cloud') ||
+                              lowerPrompt.includes('operating'));
+  
+  // Log detection reasoning for debugging
+  if (hasDiagramTerm) {
+    console.log('Diagram generation detected: diagram-related term found in prompt');
+  } else if (hasMigrationContext && lowerPrompt.includes('create')) {
+    console.log('Diagram generation detected: create migration context found in prompt');
+  }
+  
+  return hasDiagramTerm || 
+         (lowerPrompt.includes('create') && hasMigrationContext) ||
+         (lowerPrompt.includes('create') && (
            lowerPrompt.includes('architecture') ||
            lowerPrompt.includes('infrastructure')
-         );
+         ));
 };
