@@ -1,0 +1,71 @@
+
+<svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
+  <!-- RiverMeadow Migration Diagram (ID: os-migration-test-123) -->
+  <style>
+    text { font-family: Arial, sans-serif; }
+    .title { font-size: 24px; font-weight: bold; }
+    .subtitle { font-size: 14px; fill: #666; }
+    .component { fill: #dae8fc; stroke: #6c8ebf; stroke-width: 2; }
+    .connection { fill: #d5e8d4; stroke: #82b366; stroke-width: 1; }
+    .info { font-size: 16px; fill: #333; }
+    .warning { font-size: 14px; fill: #cc0000; }
+  </style>
+  
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#ffffff" />
+  
+  <!-- Title -->
+  <text x="550" y="50" class="title" text-anchor="middle">RiverMeadow OS Migration</text>
+  
+  <!-- Diagram representation -->
+  <rect x="100" y="100" width="900" height="600" rx="10" ry="10" fill="#f9f9f9" stroke="#dddddd" stroke-width="1" />
+  
+  <!-- Component information -->
+  <text x="550" y="180" class="info" text-anchor="middle">Diagram Components</text>
+  <text x="550" y="220" class="info" text-anchor="middle">Nodes: 24 | Connections: 4</text>
+  
+  <!-- Visual representation -->
+  
+    <circle cx="550" cy="425" r="60" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" />
+    <text x="550" y="425" text-anchor="middle" font-size="14">RiverMeadow</text>
+    <text x="550" y="445" text-anchor="middle" font-size="14">Platform</text>
+  
+        <rect x="650" y="400" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+        <text x="700" y="430" text-anchor="middle" font-size="12">Component 1</text>
+      
+        <line x1="550" y1="425" x2="700" y2="425" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
+      
+        <rect x="575" y="529.9038105676658" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+        <text x="625" y="559.9038105676658" text-anchor="middle" font-size="12">Component 2</text>
+      
+        <line x1="550" y1="425" x2="625" y2="554.9038105676658" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
+      
+        <rect x="425" y="529.9038105676658" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+        <text x="475" y="559.9038105676658" text-anchor="middle" font-size="12">Component 3</text>
+      
+        <line x1="550" y1="425" x2="475" y2="554.9038105676658" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
+      
+        <rect x="350" y="400" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+        <text x="400" y="430" text-anchor="middle" font-size="12">Component 4</text>
+      
+        <line x1="550" y1="425" x2="400" y2="425" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
+      
+        <rect x="424.99999999999994" y="270.0961894323342" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+        <text x="474.99999999999994" y="300.0961894323342" text-anchor="middle" font-size="12">Component 5</text>
+      
+        <line x1="550" y1="425" x2="474.99999999999994" y2="295.0961894323342" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
+      
+        <rect x="574.9999999999999" y="270.09618943233414" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+        <text x="624.9999999999999" y="300.09618943233414" text-anchor="middle" font-size="12">Component 6</text>
+      
+        <line x1="550" y1="425" x2="624.9999999999999" y2="295.09618943233414" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
+      
+  
+  <!-- Warning -->
+  <text x="550" y="720" class="warning" text-anchor="middle">⚠️ This is a preview. For full diagram interactivity,</text>
+  <text x="550" y="750" class="warning" text-anchor="middle">download the .drawio file and open in draw.io</text>
+  
+  <!-- Footer with timestamp -->
+  <text x="550" y="810" text-anchor="middle" font-size="12" fill="#999999">Generated: 2025-05-07T16:12:39.436Z</text>
+</svg>
+  

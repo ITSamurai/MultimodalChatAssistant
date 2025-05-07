@@ -264,25 +264,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/diagram-png/:fileName', async (req: Request, res: Response) => {
     try {
       const fileName = req.params.fileName;
-      const filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
+      let filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
+      
+      // Check for alternate paths if the exact one isn't found
+      if (!fs.existsSync(filePath)) {
+        // Try with different extensions
+        const baseFileName = fileName.replace(/\.(xml|drawio|html|png)$/, '');
+        const possiblePaths = [
+          path.join(process.cwd(), 'uploads', 'generated', baseFileName + '.drawio'),
+          path.join(process.cwd(), 'uploads', 'generated', baseFileName + '.xml'),
+          path.join(process.cwd(), 'uploads', 'generated', baseFileName),
+          path.join(process.cwd(), 'attached_assets', 'rivermeadow_diagram_1746107014375.png')
+        ];
+        
+        for (const testPath of possiblePaths) {
+          if (fs.existsSync(testPath)) {
+            console.log(`Found file at alternate path: ${testPath}`);
+            filePath = testPath;
+            break;
+          }
+        }
+      }
       
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ error: 'Diagram not found' });
       }
       
-      // In a real implementation, we would convert the Draw.IO XML to PNG
-      // For now, return a placeholder PNG
-      // Set aggressive no-cache headers
+      // For now, generate an SVG and inform the user that direct PNG is pending
+      // First, try to generate an SVG using our generator
+      let svgContent = '';
+      
+      try {
+        if (typeof drawioToSvg === 'function') {
+          // Use the SVG generator to create SVG content
+          svgContent = await drawioToSvg(filePath);
+          console.log('Generated SVG for PNG request');
+        }
+      } catch (svgError) {
+        console.error('Error generating SVG for PNG:', svgError);
+      }
+      
+      // If we successfully generated SVG, return it with appropriate headers
+      if (svgContent) {
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        // Note to client that this is an SVG fallback
+        res.setHeader('X-PNG-Fallback', 'Using SVG as PNG generation is not yet implemented');
+        return res.status(200).send(svgContent);
+      }
+      
+      // If SVG generation failed and this is a PNG already, serve it directly
+      if (filePath.toLowerCase().endsWith('.png')) {
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        
+        // Read the file and return it
+        const fileContent = fs.readFileSync(filePath);
+        return res.status(200).send(fileContent);
+      }
+      
+      // If all else fails, return a not implemented response
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
       res.setHeader('Surrogate-Control', 'no-store');
-      res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.png"`);
+      res.setHeader('Content-Type', 'text/plain');
       
-      // Return a placeholder PNG (in a real implementation, we would generate this)
-      // For now, just indicate not implemented
-      return res.status(501).send('PNG conversion not implemented yet');
+      return res.status(501).send('Direct PNG conversion is not implemented yet. Please use the SVG endpoint instead.');
     } catch (error) {
       console.error('Error generating PNG:', error);
       return res.status(500).json({ error: 'Failed to generate PNG' });
