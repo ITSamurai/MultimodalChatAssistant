@@ -1,0 +1,76 @@
+What’s Working Well
+You're generating unique diagram XML files with accurate OpenAI output.
+
+You're saving .drawio files successfully and returning them with cache-busting URLs.
+
+Your DiagramViewer component implements proper zoom, pan, fallback, and cache prevention.
+
+The /api/diagram-svg/:fileName endpoint has strong logic for path resolution and default SVG fallback.
+
+🚫 Why You’re Seeing the Same Diagram Visually
+Your /api/diagram-svg/:fileName endpoint does not parse or render the actual XML file.
+
+Instead, it generates a static, hardcoded SVG like this:
+
+ts
+Copy
+Edit
+const svgContent = `
+  <svg width="1100" height="850"...>
+    ...
+    <text x="550" y="110" class="subtitle">Generated from Draw.io XML (${path.basename(filePath)})</text>
+  </svg>
+`;
+This means no matter what the .drawio file contains, you're rendering the same placeholder SVG, optionally with a few diagram-type-specific tweaks (like showing “AWS EC2 Instances” or “OS Customization”).
+
+✅ How to Fix It
+To render the actual diagram:
+
+✅ Option 1: Use Draw.io CLI
+Use the draw.io-export CLI (part of the Draw.io Desktop app) to convert .drawio (or .xml) into real SVG or PNG:
+
+bash
+Copy
+Edit
+draw.io --export --format svg --output diagram.svg diagram.drawio
+Integrate this into your backend:
+
+ts
+Copy
+Edit
+import { exec } from 'child_process';
+
+function convertDrawioToSvg(inputPath: string, outputPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    exec(`draw.io --export --format svg --output "${outputPath}" "${inputPath}"`, (error, stdout, stderr) => {
+      if (error) return reject(stderr || error);
+      resolve();
+    });
+  });
+}
+You’d then:
+
+Generate .drawio file → Convert to .svg → Serve the actual SVG.
+
+Bonus: Store in a cache so you don’t convert repeatedly.
+
+✅ Option 2: Use draw.io viewer (embed iframe)
+If client-side rendering is acceptable, you can use the hosted viewer.min.js from draw.io:
+
+html
+Copy
+Edit
+<script src="https://viewer.diagrams.net/js/viewer.min.js"></script>
+You can then render .drawio or .xml content in an iframe or div via the viewer.
+
+✅ Option 3: Use mxgraph client-side lib
+More complex, but allows in-browser rendering of .drawio XML. Not recommended unless you want tight integration without draw.io.
+
+✅ What To Do Right Now
+Until you wire in a real renderer:
+
+Add a warning in your logs that /api/diagram-svg returns a placeholder, not the real content.
+
+Let the user download the actual .drawio file, which they can open in Draw.io (already enabled).
+
+Schedule CLI integration as a next step if image rendering is critical.

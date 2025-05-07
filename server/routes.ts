@@ -108,6 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
       
       console.log(`Rendering diagram as SVG: ${filePath}`);
+      console.log(`⚠️ WARNING: The SVG endpoint currently returns a static placeholder, not the actual diagram content. Consider downloading the .drawio file for editing in draw.io.`);
       
       // If we can't find the file, try multiple extensions and variations
       if (!fs.existsSync(filePath)) {

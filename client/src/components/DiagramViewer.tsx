@@ -275,9 +275,14 @@ export function DiagramViewer({
   return (
     <div className="flex flex-col w-full bg-white rounded-lg shadow-sm my-4 overflow-hidden">
       <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-gray-50">
-        <h3 className="text-base font-medium text-gray-800 m-0">
-          RiverMeadow {diagramType} Diagram
-        </h3>
+        <div>
+          <h3 className="text-base font-medium text-gray-800 m-0">
+            RiverMeadow {diagramType} Diagram
+          </h3>
+          <p className="text-xs text-amber-600 m-0 mt-1">
+            Note: This is a placeholder diagram. Use the Download button for the full diagram.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
