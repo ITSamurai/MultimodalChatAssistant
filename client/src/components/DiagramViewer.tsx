@@ -1,205 +1,240 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Loader2, ZoomIn, ZoomOut, Download, RefreshCw, Move } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { ZoomIn, ZoomOut, Download, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface DiagramViewerProps {
   diagramPath: string;
   altText?: string;
-  width?: number;
-  height?: number;
 }
 
+/**
+ * DiagramViewer component for displaying SVG diagrams with zoom, pan, and download functionality
+ */
 export function DiagramViewer({
   diagramPath,
-  altText = 'Diagram',
-  width = 800,
-  height = 600
+  altText = "Diagram",
 }: DiagramViewerProps) {
-  const [isLoading, setIsLoading] = useState(true);
+  // Basic states for the viewer
+  const [svgContent, setSvgContent] = useState("");
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(50); // Default zoom level (50%)
-  const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(0.7); // Default zoom level (70%)
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Load saved zoom level from localStorage
-  useEffect(() => {
-    const savedZoom = localStorage.getItem('diagramZoomLevel');
-    if (savedZoom) {
-      setZoom(parseInt(savedZoom, 10));
-    }
-  }, []);
-  
-  // Save zoom level to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem('diagramZoomLevel', zoom.toString());
-  }, [zoom]);
+  const { toast } = useToast();
 
-  // Reset position when diagram changes
+  // State for drag functionality
+  const isDragging = useRef(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const startPosition = useRef({ x: 0, y: 0 });
+  const startDragPosition = useRef({ x: 0, y: 0 });
+
+  // Load SVG content when diagramPath changes
   useEffect(() => {
-    setPosition({ x: 0, y: 0 });
-    setIsLoading(true);
-    setError(null);
+    if (!diagramPath) return;
+
+    const loadSvg = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Add a cache-busting parameter to ensure we get the latest version
+        const cacheBuster = `cache=${Date.now()}`;
+        const url = diagramPath.includes('?') 
+          ? `${diagramPath}&${cacheBuster}` 
+          : `${diagramPath}?${cacheBuster}`;
+          
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load diagram: ${response.status} ${response.statusText}`);
+        }
+        
+        const svgText = await response.text();
+        
+        if (!svgText || !svgText.includes('<svg')) {
+          throw new Error('Invalid SVG content received');
+        }
+        
+        setSvgContent(svgText);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading SVG:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load diagram');
+        setLoading(false);
+      }
+    };
+
+    loadSvg();
   }, [diagramPath]);
 
-  // Handle image load/error
-  const handleImageLoad = () => {
-    setIsLoading(false);
-  };
-
-  const handleImageError = () => {
-    setIsLoading(false);
-    setError('Failed to load diagram');
-  };
-
-  // Zoom controls
-  const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 10, 200)); // Max zoom 200%
-  };
-
-  const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 10, 10)); // Min zoom 10%
-  };
-
-  const handleReset = () => {
-    setZoom(50); // Reset to default
-    setPosition({ x: 0, y: 0 }); // Reset position
-  };
-
-  // Download diagram
-  const handleDownload = async () => {
-    try {
-      // Extract file name from path
-      const fileName = diagramPath.split('/').pop() || 'diagram';
-      
-      // Determine if this is an SVG or PNG path
-      const fileExtension = diagramPath.toLowerCase().endsWith('.svg') ? 'svg' : 'png';
-      const downloadName = `${fileName.split('.')[0]}.${fileExtension}`;
-      
-      // Fetch the image
-      const response = await fetch(diagramPath);
-      const blob = await response.blob();
-      
-      // Create download link
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = downloadName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Error downloading diagram:', error);
-    }
-  };
-
-  // Pan/drag functionality
+  // Mouse event handlers for drag functionality
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.button !== 0) return; // Only left mouse button
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    
+    isDragging.current = true;
+    startPosition.current = { x: e.clientX, y: e.clientY };
+    startDragPosition.current = { ...position };
+    
+    // Add a class to indicate dragging state
+    if (containerRef.current) {
+      containerRef.current.classList.add('dragging');
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
-    setPosition({ x: newX, y: newY });
+    if (!isDragging.current) return;
+    
+    const dx = e.clientX - startPosition.current.x;
+    const dy = e.clientY - startPosition.current.y;
+    
+    setPosition({
+      x: startDragPosition.current.x + dx,
+      y: startDragPosition.current.y + dy,
+    });
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
+    isDragging.current = false;
+    
+    // Remove dragging class
+    if (containerRef.current) {
+      containerRef.current.classList.remove('dragging');
+    }
+  };
+
+  // Handle zoom in/out with boundaries
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.1, 2.0));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.1, 0.2));
+  };
+
+  // Reset zoom and position
+  const handleReset = () => {
+    setZoom(0.7);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  // Download as PNG
+  const handleDownload = async () => {
+    try {
+      // Extract the filename from the path
+      const pathParts = diagramPath.split('/');
+      const fileName = pathParts[pathParts.length - 1].split('?')[0];
+      
+      // Download the original diagram file
+      const downloadUrl = `/api/download-full-diagram/${fileName}`;
+      
+      // Create a temporary link and trigger the download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `rivermeadow_diagram_${Date.now()}.drawio`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download Started",
+        description: "Your diagram is being downloaded.",
+      });
+    } catch (err) {
+      console.error('Error downloading diagram:', err);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download the diagram. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <Card className="overflow-hidden relative w-full max-w-full">
-      {/* Toolbar */}
-      <div className="absolute top-2 right-2 z-10 flex gap-1 bg-background/80 backdrop-blur p-1 rounded-md shadow-sm">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleZoomIn}
-          title="Zoom In"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleZoomOut}
-          title="Zoom Out"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleReset}
-          title="Reset View"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleDownload}
-          title="Download Diagram"
-        >
-          <Download className="h-4 w-4" />
-        </Button>
+    <div className="w-full rounded-lg border border-border bg-card overflow-hidden">
+      {/* Controls bar */}
+      <div className="flex items-center justify-between p-2 border-b border-border bg-muted/30">
+        <div className="text-sm font-medium">Diagram Viewer</div>
+        <div className="flex items-center space-x-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleZoomOut}
+            title="Zoom Out"
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <div className="text-xs px-2">
+            {Math.round(zoom * 100)}%
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleZoomIn}
+            title="Zoom In"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleReset}
+            title="Reset View"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleDownload}
+            title="Download Diagram"
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Pan indicator */}
-      <div className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur p-1 rounded-md shadow-sm flex items-center gap-1 text-xs">
-        <Move className="h-3 w-3" />
-        <span>Click and drag to pan</span>
-      </div>
-
-      {/* Zoom level indicator */}
-      <div className="absolute bottom-2 left-2 z-10 bg-background/80 backdrop-blur p-1 rounded-md shadow-sm text-xs">
-        {zoom}%
-      </div>
-
-      {/* Diagram container */}
-      <div 
+      {/* SVG container with drag functionality */}
+      <div
         ref={containerRef}
-        className="overflow-hidden relative h-[400px] w-full"
+        className="relative h-[500px] overflow-hidden bg-[#fafafa] cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-        
-        {error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-muted/50 text-destructive">
-            <p>{error}</p>
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
           </div>
         )}
 
-        <div
-          className="absolute transform transition-transform duration-0"
-          style={{
-            transform: `translate(${position.x}px, ${position.y}px) scale(${zoom / 100})`,
-            transformOrigin: 'center',
-          }}
-        >
-          <img
-            src={diagramPath}
-            alt={altText}
-            className="max-w-none"
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            style={{ width: width, height: height }}
+        {error && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-destructive p-4">
+            <div className="text-lg font-semibold mb-2">Error Loading Diagram</div>
+            <div className="text-sm text-center">{error}</div>
+          </div>
+        )}
+
+        {!loading && !error && svgContent && (
+          <div
+            className="absolute left-1/2 top-1/2 origin-center transition-transform duration-100"
+            style={{
+              transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+            }}
+            dangerouslySetInnerHTML={{ __html: svgContent }}
           />
-        </div>
+        )}
       </div>
-    </Card>
+
+      {/* Optional caption */}
+      <div className="p-2 text-sm text-muted-foreground border-t border-border">
+        {altText}
+      </div>
+    </div>
   );
 }

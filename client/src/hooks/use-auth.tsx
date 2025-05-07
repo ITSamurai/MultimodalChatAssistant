@@ -106,20 +106,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(errorData.error || 'Login failed');
       }
       
-      // Get response data
-      const userData = await response.json();
-      
-      // Check if token was sent in the response body
-      if (userData && userData.token) {
-        localStorage.setItem('authToken', userData.token);
-        console.log('Stored auth token from login response');
-        
-        // Remove token from user data before returning
-        const { token, ...userDataWithoutToken } = userData;
-        return userDataWithoutToken;
+      // Look for the token in the authorization header
+      const authHeader = response.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        localStorage.setItem('authToken', token);
       }
       
-      return userData;
+      return await response.json();
     },
     onSuccess: (userData: User) => {
       // Update the cached user data

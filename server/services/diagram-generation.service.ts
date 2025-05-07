@@ -236,19 +236,12 @@ Your task is to create a draw.io diagram based on the user's request.
 The output should be ONLY the draw.io XML content that can be directly loaded into draw.io.
 The XML should start with <mxfile> and end with </mxfile>.
 
-EXTREMELY IMPORTANT: All connections between elements must be from border to border, NEVER center to center.
-- Set all connections with attributes: exitX="1" exitY="0.5" entryX="0" entryY="0.5" (for side connections)
-- For elements with connections above/below: exitX="0.5" exitY="0" entryX="0.5" entryY="1" 
-- Always set source and target anchors at the border of shapes
-- Ensure connector lines never cross through any objects
-
 Here are some guidelines:
 1. Use appropriate colors, shapes, and connectors
 2. Include clear labels and titles
 3. Organize the elements logically
 4. Keep the diagram clean and easy to understand
 5. Use shadows, gradients and other visual effects sparingly for a professional look
-6. Set all connections with edge attribute: edge="1" to ensure proper routing
 
 For RiverMeadow diagrams, use:
 - Blue colors (#dae8fc fill, #6c8ebf border) for the RiverMeadow platform components
@@ -268,16 +261,9 @@ Focus on creating an Operating System migration diagram that shows:
 - Source OS environment (typically on the left)
 - Target OS environment (typically on the right)
 - RiverMeadow Migration Platform in the center
-- Clear migration paths with directional arrows connecting at the borders of shapes
+- Clear migration paths with directional arrows
 - Key components like data transfer, configuration, and application migration
 - Pre and post migration validation steps
-
-IMPORTANT TECHNICAL DETAILS:
-- Set exitX, exitY, entryX, entryY attributes on all connectors to force border connections
-- For horizontal flow connections, use: exitX="1" exitY="0.5" entryX="0" entryY="0.5"
-- Add sourcePerimeterSpacing="10" targetPerimeterSpacing="10" to create spacing between connectors and shapes
-- Use edge="1" parent="1" on all connections
-- All connections must be parent="1" to ensure they're rendered correctly
 `;
     
     case 'CLOUD_MIGRATION':
@@ -289,12 +275,6 @@ Focus on creating a Cloud Migration diagram that shows:
 - Migration paths for different workloads
 - Security and networking considerations
 - Integration points with cloud-native services
-
-IMPORTANT TECHNICAL DETAILS:
-- Set exitX, exitY, entryX, entryY attributes on all connectors to force border connections
-- For horizontal flow connections, use: exitX="1" exitY="0.5" entryX="0" entryY="0.5"
-- Add sourcePerimeterSpacing="10" targetPerimeterSpacing="10" to create spacing between connectors and shapes
-- Use edge="1" parent="1" on all connections
 `;
     
     case 'AWS_ARCHITECTURE':
@@ -306,12 +286,6 @@ Focus on creating an AWS Architecture diagram that shows:
 - Load balancers and auto-scaling groups
 - Storage solutions (S3, EBS, etc.)
 - Integration with RiverMeadow migration services
-
-IMPORTANT TECHNICAL DETAILS:
-- Set exitX, exitY, entryX, entryY attributes on all connectors to force border connections
-- For horizontal flow connections, use: exitX="1" exitY="0.5" entryX="0" entryY="0.5"
-- Add sourcePerimeterSpacing="10" targetPerimeterSpacing="10" to create spacing
-- Use edge="1" parent="1" on all connections
 `;
     
     case 'AZURE_ARCHITECTURE':
@@ -323,12 +297,6 @@ Focus on creating an Azure Architecture diagram that shows:
 - Security perimeters
 - Storage solutions
 - Integration with RiverMeadow migration services
-
-IMPORTANT TECHNICAL DETAILS:
-- Set exitX, exitY, entryX, entryY attributes on all connectors to force border connections
-- For horizontal flow connections, use: exitX="1" exitY="0.5" entryX="0" entryY="0.5"
-- Add sourcePerimeterSpacing="10" targetPerimeterSpacing="10" to create spacing
-- Use edge="1" parent="1" on all connections
 `;
     
     case 'NETWORK_DIAGRAM':
@@ -340,12 +308,6 @@ Focus on creating a Network diagram that shows:
 - Traffic flows with directional arrows
 - Security zones
 - Load balancers and proxies
-
-IMPORTANT TECHNICAL DETAILS:
-- Set exitX, exitY, entryX, entryY attributes on all connectors to force border connections
-- For horizontal flow connections, use: exitX="1" exitY="0.5" entryX="0" entryY="0.5"
-- Add sourcePerimeterSpacing="10" targetPerimeterSpacing="10" to create spacing
-- Use edge="1" parent="1" on all connections
 `;
     
     case 'WORKFLOW':
@@ -357,13 +319,6 @@ Focus on creating a Workflow diagram that shows:
 - Swimlanes if multiple parties are involved
 - Key milestones and deliverables
 - Timelines if applicable
-
-IMPORTANT TECHNICAL DETAILS:
-- Set exitX, exitY, entryX, entryY attributes on all connectors to force border connections
-- For horizontal flow connections, use: exitX="1" exitY="0.5" entryX="0" entryY="0.5"
-- For vertical flow connections, use: exitX="0.5" exitY="1" entryX="0.5" entryY="0"
-- Add sourcePerimeterSpacing="10" targetPerimeterSpacing="10" to create spacing
-- Use edge="1" parent="1" on all connections
 `;
     
     default: // GENERAL
