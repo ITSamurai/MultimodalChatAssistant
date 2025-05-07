@@ -201,8 +201,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           svgContent = await drawioToSvg(filePath);
           console.log('Successfully generated SVG from diagram file using the new renderer');
         } else {
-          console.warn('SVG generator function not available yet, using placeholder');
-          // Fall back to a simple SVG if the function is not available
+          console.warn('SVG generator function not available yet, creating fallback SVG');
+          // Create a nice informative SVG since the generator isn't loaded yet
           svgContent = `
             <svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
               <rect width="100%" height="100%" fill="#f9f9f9" />
@@ -210,10 +210,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 RiverMeadow ${diagramType} Diagram
               </text>
               <text x="550" y="120" font-family="Arial" font-size="16" text-anchor="middle" fill="#666">
-                Diagram renderer still initializing...
+                SVG renderer is preparing your diagram...
               </text>
               <text x="550" y="160" font-family="Arial" font-size="16" text-anchor="middle" fill="#666">
-                Please try again in a few seconds
+                Refresh the page to see your diagram
               </text>
               <text x="550" y="200" font-family="Arial" font-size="14" text-anchor="middle" fill="#999">
                 File: ${path.basename(filePath)}
