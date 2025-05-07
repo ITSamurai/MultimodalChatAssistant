@@ -236,6 +236,14 @@ ${context.join('\n\n')}
 IMPORTANT: Create a COMPLETELY UNIQUE diagram different from any previous ones. Use this unique seed (${randomSeed}) 
 and timestamp (${currentTime}) to ensure your response is novel and different.
 
+NEVER USE ANY PREVIOUSLY GENERATED DIAGRAM STRUCTURE. Every aspect of this diagram must be unique:
+- Use different node names than any previous diagrams
+- Create different connections between different components
+- Use different technical terminology and phrasing
+- Structure the diagram in a completely different way
+
+Remember this is for a specific request with ID: ${randomSeed}-${currentTime}-${Math.random().toString(36).substring(2, 10)} and must be unique.
+
 Based on this information, provide the JSON structure for creating a diagram about RiverMeadow's cloud migration services.`;
     
     // Call OpenAI API to extract diagram components
@@ -583,8 +591,12 @@ ${knowledgeContext.join('\n\n')}
 IMPORTANT: Create a COMPLETELY UNIQUE technical explanation different from any previous ones. 
 Use this unique seed (${randomSeed}) and timestamp (${currentTime}) to ensure your response is novel and different.
 
+NEVER USE ANY PREVIOUSLY GENERATED CONTENT. Generate a COMPLETELY NEW and DIFFERENT response each time.
+
 Provide a highly detailed, specific, and technical explanation about this topic that would help in creating a diagram.
-Focus on specific components, processes, and technical implementations.`;
+Focus on specific components, processes, and technical implementations.
+
+Remember this is for a specific request with ID: ${randomSeed}-${currentTime}-${Math.random().toString(36).substring(2, 10)} and must be unique.`;
     
     // Call OpenAI API to get an initial response
     const response = await openai.chat.completions.create({
@@ -593,7 +605,7 @@ Focus on specific components, processes, and technical implementations.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 1.2, // Further increased temperature for maximum variation
+      temperature: 1.4, // Maximum temperature value for greatest variation
       max_tokens: 1000
     });
     
@@ -630,7 +642,11 @@ export const generateDiagram = async (
     const uniqueId = `${timestamp}-${Math.random().toString(36).substring(2, 8)}`;
     const drawioFilename = `diagram_${uniqueId}.drawio`;
     
-    console.log('Generating diagram for prompt:', prompt);
+    // Add randomization to prompt to ensure unique diagram generation each time
+    const randomSeed = Math.random().toString(36).substring(2, 10);
+    const enhancedPrompt = `${prompt} (Unique request ID: ${timestamp}-${randomSeed})`;
+    
+    console.log('Generating diagram for prompt:', enhancedPrompt);
     
     // STEP 1: Get initial detailed response
     const initialResponse = await getInitialResponse(prompt, knowledgeContext);

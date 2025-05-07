@@ -290,13 +290,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Diagram not found' });
       }
       
-      // Set proper headers for download
+      // Set proper headers for download with strong cache control
       res.setHeader('Content-Type', 'application/octet-stream');
       res.setHeader('Content-Disposition', `attachment; filename="rivermeadow_diagram_${Date.now()}.drawio"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       
-      // Stream the file for download
-      const fileStream = fs.createReadStream(filePath);
-      fileStream.pipe(res);
+      // Use the same non-caching file read method for consistency
+      const fileDescriptor = fs.openSync(filePath, 'r');
+      const fileStats = fs.fstatSync(fileDescriptor);
+      const fileSize = fileStats.size;
+      
+      // Stream the file for download using a buffer to ensure fresh content
+      const buffer = Buffer.alloc(fileSize);
+      fs.readSync(fileDescriptor, buffer, 0, fileSize, 0);
+      fs.closeSync(fileDescriptor);
+      
+      res.end(buffer);
     } catch (error) {
       console.error('Error downloading diagram:', error);
       return res.status(500).json({ error: 'Failed to download diagram' });
