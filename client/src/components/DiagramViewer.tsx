@@ -91,14 +91,38 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
         }
         
         const svgText = await response.text();
-        if (!svgText.includes('<svg')) {
-          throw new Error('Invalid SVG content');
+        // Check if content has proper SVG elements
+        if (!svgText || svgText.trim() === '' || !svgText.includes('<svg')) {
+          console.error('Invalid SVG content received:', svgText ? svgText.substring(0, 100) + '...' : 'empty');
+          throw new Error('Invalid SVG content received from server');
         }
         
-        // Store the SVG content with a slight delay to ensure DOM is ready
+        // Clean up any existing SVG content to force a fresh render
+        const containerElement = containerRef.current;
+        if (containerElement) {
+          while (containerElement.firstChild) {
+            containerElement.removeChild(containerElement.firstChild);
+          }
+        }
+        
+        // Store the SVG content with a slight delay to ensure DOM is ready and fresh render
+        setSvgContent(''); // Clear first to force re-render
         setTimeout(() => {
           setSvgContent(svgText);
           setLoading(false);
+          
+          // After another small delay, check if the SVG content was properly rendered
+          setTimeout(() => {
+            const svgElements = containerRef.current?.querySelectorAll('svg');
+            if (!svgElements || svgElements.length === 0) {
+              console.error('SVG not rendered properly, trying again...');
+              // Try one more time
+              setSvgContent('');
+              setTimeout(() => setSvgContent(svgText), 100);
+            } else {
+              console.log('SVG rendered successfully with', svgElements.length, 'elements');
+            }
+          }, 300);
         }, 100);
         
         // Initialize zoom from localStorage or use default of 0.7
@@ -214,10 +238,29 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
     }
   };
   
+  // Function to extract diagram type from path (AWS, OS, etc.)
+  const extractDiagramType = (): string => {
+    if (!diagramPath) return 'Migration';
+    
+    const lowerPath = diagramPath.toLowerCase();
+    if (lowerPath.includes('aws')) return 'AWS Migration';
+    if (lowerPath.includes('os')) return 'OS Migration';
+    if (lowerPath.includes('azure')) return 'Azure Migration';
+    if (lowerPath.includes('cloud')) return 'Cloud Migration';
+    if (lowerPath.includes('network')) return 'Network';
+    return 'Migration';
+  };
+  
+  // Fallback image URL construction based on path
+  const getFallbackImageUrl = (): string => {
+    // This uses the rivermeadow_diagram_1746107014375.png image we have in attached_assets
+    return getFullUrl('/attached_assets/rivermeadow_diagram_1746107014375.png');
+  };
+  
   return (
     <div className="flex flex-col w-full bg-white rounded-lg shadow-sm my-4 overflow-hidden">
       <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-gray-50">
-        <h3 className="text-base font-medium text-gray-800 m-0">RiverMeadow Diagram</h3>
+        <h3 className="text-base font-medium text-gray-800 m-0">RiverMeadow {extractDiagramType()} Diagram</h3>
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
@@ -267,25 +310,37 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
         )}
         
         {error && (
-          <div className="p-4 text-red-600 text-center">
-            <p>Error loading diagram: {error}</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-red-600 text-center">
+            <p className="mb-3">Error loading diagram SVG: {error}</p>
+            <p className="text-sm text-gray-500 mb-4">Displaying fallback diagram image</p>
+            
+            {/* Fallback image that uses the RiverMeadow diagram from attached assets */}
+            <div className="relative w-full max-w-[90%] h-[300px] overflow-hidden border border-gray-200 rounded-lg">
+              <img 
+                src={getFallbackImageUrl()} 
+                alt={`${extractDiagramType()} diagram`}
+                className="object-contain w-full h-full"
+              />
+            </div>
           </div>
         )}
         
-        <div 
-          ref={containerRef}
-          className={`absolute top-0 left-0 w-full h-full select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          style={{
-            transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
-            transformOrigin: 'center',
-            transition: isDragging ? 'none' : 'transform 0.1s ease-out'
-          }}
-          dangerouslySetInnerHTML={{ __html: svgContent }}
-        />
+        {!error && (
+          <div 
+            ref={containerRef}
+            className={`absolute top-0 left-0 w-full h-full select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{
+              transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+              transformOrigin: 'center',
+              transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+            }}
+            dangerouslySetInnerHTML={{ __html: svgContent }}
+          />
+        )}
       </div>
       
       <style dangerouslySetInnerHTML={{ __html: `

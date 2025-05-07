@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net" modified="2025-05-07T06:57:20.419Z" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="diagram-1746601025419-qsyrhj" name="AWS Cloud Migration Architecture">
+    <mxGraphModel dx="1733" dy="1072" grid="1" gridSize="18" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1151" pageHeight="986" background="#ffffff" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Central Node -->
+        <mxCell id="2" value="&lt;b&gt;RiverMeadow Platform&lt;/b&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="389" y="357" width="152" height="152" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: EC2 Instance Manager -->
+        <mxCell id="3" value="EC2 Instance Manager" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#b0e3e6;strokeColor=#0e8088;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="458.5" y="171" width="137" height="66" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: IAM Security Controller -->
+        <mxCell id="4" value="IAM Security Controller" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="624" y="393.5" width="128" height="67" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: S3 Data Transfer Service -->
+        <mxCell id="5" value="S3 Data Transfer Service" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="507" y="628.5" width="148" height="63" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: AWS API Gateway -->
+        <mxCell id="6" value="AWS API Gateway" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="202" y="611.5" width="136" height="51" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: VPC Configuration Tool -->
+        <mxCell id="7" value="VPC Configuration Tool" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="183.5" y="349" width="141" height="52" as="geometry" />
+        </mxCell>
+        <!-- Connection from RiverMeadow Platform to AWS API Gateway -->
+        <mxCell id="8" value="Secure API Calls" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="2" target="6">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from AWS API Gateway to EC2 Instance Manager -->
+        <mxCell id="9" value="VM Provisioning" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="6" target="3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from RiverMeadow Platform to S3 Data Transfer Service -->
+        <mxCell id="10" value="Data Replication" style="edgeStyle=segmentEdgeStyle;endArrow=classic;startArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;strokeWidth=1.5;" edge="1" parent="1" source="2" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from EC2 Instance Manager to VPC Configuration Tool -->
+        <mxCell id="11" value="Network Setup" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="3" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from VPC Configuration Tool to IAM Security Controller -->
+        <mxCell id="12" value="Permission Assignment" style="edgeStyle=entityRelationEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;" edge="1" parent="1" source="7" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- AWS Services Category -->
+        <mxCell id="13" value="&lt;b&gt;AWS Services&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="666" y="642" width="195" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="EC2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="665" y="695" width="111" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="S3" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="793" y="689" width="111" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="VPC" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" vertex="1" parent="1">
+          <mxGeometry x="653" y="741" width="111" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="IAM" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="790" y="747" width="111" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="CloudFormation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="651" y="790" width="111" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="Route 53" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" vertex="1" parent="1">
+          <mxGeometry x="778" y="795" width="111" height="36" as="geometry" />
+        </mxCell>
+        <!-- Security Features Category -->
+        <mxCell id="20" value="&lt;b&gt;Security Features&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="666" y="865" width="193" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="KMS Encryption" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="671" y="920" width="103" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="Security Groups" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="794" y="915" width="103" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="IAM Roles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" vertex="1" parent="1">
+          <mxGeometry x="656" y="965" width="103" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="VPC Endpoints" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="779" y="969" width="103" height="37" as="geometry" />
+        </mxCell>
+        <!-- Optimization Tools Category -->
+        <mxCell id="25" value="&lt;b&gt;Optimization Tools&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="666" y="1039" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="Auto Scaling Groups" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="669" y="1086" width="122" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="27" value="Elastic Load Balancing" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="817" y="1094" width="122" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="28" value="Reserved Instances" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" vertex="1" parent="1">
+          <mxGeometry x="965" y="1090" width="122" height="41" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

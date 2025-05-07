@@ -439,9 +439,9 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
         references: response.references
       };
       
-      // Check if we actually got a diagram in the response
+      // Check if we actually got a diagram in the response (using includes to handle query params)
       const hasDiagram = assistantMessage.references?.some(
-        ref => ref.type === 'image' && ref.imagePath?.endsWith('.html')
+        ref => ref.type === 'image' && (ref.imagePath?.includes('.html') || ref.imagePath?.includes('.drawio'))
       );
       
       // If we're showing diagram progress but didn't get a diagram, turn it off
