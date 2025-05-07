@@ -1,0 +1,42 @@
+direction: right
+title: {
+  label: "OS-Based Migration Process"
+  near: top-center
+  shape: text
+  style.font-size: 24
+  style.font-weight: bold
+}
+
+source_os: {
+  label: "Source OS"
+  shape: cloud
+  style.fill: lightgray
+}
+target_os: {
+  label: "Target OS"
+  shape: cloud
+  style.fill: lightgreen
+}
+rivermeadow_saas: {
+  label: "RiverMeadow SaaS"
+  shape: rectangle
+  style.fill: "#D0FFC0"
+}
+
+os_discovery: {
+  label: "OS Discovery"
+  shape: rectangle
+  style.fill: lightcoral
+}
+os_analysis: {
+  label: "OS Analysis"
+  shape: rectangle
+  style.fill: lightpink
+}
+os_migration: {
+  label: "OS Migration"
+  shape: rectangle
+  style.fill: lightblue
+}
+
+source_os -> os_discovery -> os_analysis -> rivermeadow_saas -> os_migration -> target_os

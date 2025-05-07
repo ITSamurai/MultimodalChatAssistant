@@ -64,8 +64,16 @@ const d2Content = fs.readFileSync(inputFile, 'utf8').slice(0, 200) + '...';
 
 // Try to execute D2
 try {
-  // First try the PATH version
-  const cmd = `d2 ${options} "${inputFile}" "${outputFile}"`;
+  // Use the local D2 installation
+  const homeDir = process.env.HOME || process.env.USERPROFILE;
+  const localD2 = path.join(homeDir, '.local', 'bin', 'd2');
+  
+  if (!fs.existsSync(localD2)) {
+    throw new Error(`D2 not found at expected location: ${localD2}`);
+  }
+  
+  console.log(`Using D2 installation at: ${localD2}`);
+  const cmd = `"${localD2}" --theme=neutral --layout=dagre "${inputFile}" "${outputFile}"`;
   console.log(`Executing: ${cmd}`);
   
   execSync(cmd, { stdio: 'inherit' });
@@ -80,21 +88,16 @@ try {
   console.error(`D2 execution failed: ${error.message}`);
   
   try {
-    // Try using the newly installed version as a fallback
-    const homeDir = process.env.HOME || process.env.USERPROFILE;
-    const localD2 = path.join(homeDir, '.local', 'bin', 'd2');
+    // Try using the system PATH version as a fallback
+    console.log('Trying with system PATH D2 installation');
+    const sysCmd = `d2 --theme=neutral --layout=dagre "${inputFile}" "${outputFile}"`;
     
-    if (fs.existsSync(localD2)) {
-      console.log(`Trying with local D2 installation: ${localD2}`);
-      const localCmd = `"${localD2}" ${options} "${inputFile}" "${outputFile}"`;
-      
-      execSync(localCmd, { stdio: 'inherit' });
-      
-      // Check if output file was created
-      if (fs.existsSync(outputFile)) {
-        console.log(`Successfully generated diagram with local D2: ${outputFile}`);
-        process.exit(0);
-      }
+    execSync(sysCmd, { stdio: 'inherit' });
+    
+    // Check if output file was created
+    if (fs.existsSync(outputFile)) {
+      console.log(`Successfully generated diagram with system D2: ${outputFile}`);
+      process.exit(0);
     }
     
     // If we get here, both attempts failed

@@ -1,7 +1,7 @@
 /**
  * Diagram Schema Service
  * 
- * This service handles the conversion of structured JSON metadata into DrawIO XML format.
+ * This service handles the conversion of structured JSON metadata into D2 diagram format.
  * It implements the Diagram Schema Translator component of the architecture.
  */
 
@@ -234,55 +234,64 @@ function generateCategoriesXml(categories: DiagramCategory): string {
 }
 
 /**
- * Converts structured diagram metadata to DrawIO XML format
+ * Converts structured diagram metadata to D2 format
  */
-export function convertJsonToDrawioXml(diagramData: DiagramMetadata): string {
+export function convertJsonToD2(diagramData: DiagramMetadata): string {
   try {
     // Process nodes and connections to ensure proper IDs
     const processedNodes = processNodes(diagramData.nodes);
-    const nodesWithLayout = generateLayout(processedNodes);
-    const processedConnections = processConnections(diagramData.connections, nodesWithLayout);
     
-    // Generate timestamp and diagram ID
-    const timestamp = Date.now();
-    const diagramId = generateId('diagram-');
-    const version = '21.2.1'; // DrawIO version
+    // Start building the D2 script
+    let d2 = `# ${diagramData.title}\n\n`;
     
-    // Build the XML document
-    let xml = XML_HEADER.replace('{{TIMESTAMP}}', timestamp.toString()).replace('{{VERSION}}', version);
-    xml += XML_DIAGRAM_START.replace('{{DIAGRAM_ID}}', diagramId).replace('{{DIAGRAM_NAME}}', sanitizeXml(diagramData.title));
+    // Define direction and theme
+    d2 += `direction: right\n\n`;
     
-    // Add the title
-    xml += generateTitleXml(diagramData.title);
+    // Add description if provided
+    if (diagramData.description) {
+      d2 += `# Description: ${diagramData.description}\n\n`;
+    }
     
-    // Add all nodes
-    nodesWithLayout.forEach(node => {
-      xml += generateNodeXml(node);
+    // Define nodes
+    processedNodes.forEach(node => {
+      const sanitizedLabel = node.label.replace(/"/g, '\\"');
+      d2 += `${node.id}: "${sanitizedLabel}" {\n  shape: rectangle\n  style: {\n    fill: "#f5f5f5"\n    stroke: "#666666"\n    border-radius: 4\n  }\n}\n\n`;
     });
     
-    // Add all connections
-    processedConnections.forEach((conn, i) => {
-      xml += generateConnectionXml(conn, i);
+    // Define connections
+    const processedConnections = processConnections(diagramData.connections, processedNodes);
+    processedConnections.forEach(conn => {
+      let connectionStr = `${conn.from} -> ${conn.to}`;
+      
+      if (conn.label) {
+        const sanitizedLabel = conn.label.replace(/"/g, '\\"');
+        connectionStr += `: "${sanitizedLabel}"`;
+      }
+      
+      d2 += `${connectionStr}\n`;
     });
     
     // Add categories if provided
     if (diagramData.categories) {
-      xml += generateCategoriesXml(diagramData.categories);
+      d2 += '\n# Categories\n';
+      
+      Object.entries(diagramData.categories).forEach(([category, items]) => {
+        d2 += `\n# ${category}\n`;
+        items.forEach(item => {
+          d2 += `# - ${item}\n`;
+        });
+      });
     }
     
-    // Close the XML
-    xml += XML_DIAGRAM_END;
-    xml += XML_FOOTER;
-    
-    return xml;
+    return d2;
   } catch (error) {
-    console.error('Error converting JSON to DrawIO XML:', error);
-    throw new Error('Failed to convert diagram metadata to XML format');
+    console.error('Error converting JSON to D2:', error);
+    throw new Error('Failed to convert diagram metadata to D2 format');
   }
 }
 
 /**
- * Generates a fallback diagram in DrawIO XML format
+ * Generates a fallback diagram in D2 format
  */
 export function generateFallbackDiagram(title: string): string {
   // Create a simple diagram with a title and two nodes
@@ -292,31 +301,31 @@ export function generateFallbackDiagram(title: string): string {
     connections: [{ from: 'Source', to: 'Destination', label: 'Connection' }]
   };
   
-  return convertJsonToDrawioXml(diagramData);
+  return convertJsonToD2(diagramData);
 }
 
 /**
- * Save diagram XML to a file
+ * Save D2 diagram to a file
  */
-export async function saveDiagramXml(xml: string, filename: string): Promise<string> {
-  const uploadsDir = path.join(process.cwd(), 'uploads', 'generated');
+export async function saveDiagramD2(d2Script: string, filename: string): Promise<string> {
+  const uploadsDir = path.join(process.cwd(), 'uploads', 'd2');
   
   // Create directory if it doesn't exist
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
   
-  const filePath = path.join(uploadsDir, `${filename}.drawio`);
-  await fs.promises.writeFile(filePath, xml, 'utf8');
+  const filePath = path.join(uploadsDir, `${filename}.d2`);
+  await fs.promises.writeFile(filePath, d2Script, 'utf8');
   
   return filePath;
 }
 
 /**
- * Load diagram XML from a file
+ * Load D2 diagram from a file
  */
-export async function loadDiagramXml(filename: string): Promise<string | null> {
-  const filePath = path.join(process.cwd(), 'uploads', 'generated', `${filename}.drawio`);
+export async function loadDiagramD2(filename: string): Promise<string | null> {
+  const filePath = path.join(process.cwd(), 'uploads', 'd2', `${filename}.d2`);
   
   if (!fs.existsSync(filePath)) {
     return null;
