@@ -1,0 +1,150 @@
+<mxfile host="app.diagrams.net" modified="2025-05-07T06:05:49.822Z" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="diagram-1746597949822-16bqbz" name="OS-Based Migration Process for RiverMeadow">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Central Node -->
+        <mxCell id="2" value="&lt;b&gt;RiverMeadow Platform&lt;/b&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="448.5" y="364.5" width="149" height="149" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Data Migration Strategy Tool -->
+        <mxCell id="3" value="Data Migration Strategy Tool" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="209.5" y="161" width="127" height="54" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Target Environment Specification -->
+        <mxCell id="4" value="Target Environment Specification" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="305.5" y="174" width="135" height="68" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Network Configuration & DNS Update -->
+        <mxCell id="5" value="Network Configuration & DNS Update" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="399.5" y="152.5" width="147" height="59" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Source System Inventory -->
+        <mxCell id="6" value="Source System Inventory" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="212" y="553.5" width="122" height="55" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: RiverMeadow Image & Snapshot Management -->
+        <mxCell id="7" value="RiverMeadow Image & Snapshot Management" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#b0e3e6;strokeColor=#0e8088;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="310" y="550.5" width="126" height="69" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Dependency Mapping with RiverMeadow -->
+        <mxCell id="8" value="Dependency Mapping with RiverMeadow" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="404" y="543" width="138" height="56" as="geometry" />
+        </mxCell>
+        <!-- Connection from Source System Inventory to Dependency Mapping with RiverMeadow -->
+        <mxCell id="9" value="Catalog OS details and elements" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="6" target="8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Dependency Mapping with RiverMeadow to Target Environment Specification -->
+        <mxCell id="10" value="Map and verify dependencies" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="8" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Target Environment Specification to Data Migration Strategy Tool -->
+        <mxCell id="11" value="Establish target compatibility" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="4" target="3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Data Migration Strategy Tool to Network Configuration & DNS Update -->
+        <mxCell id="12" value="Plan data migration methods" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="3" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Network Configuration & DNS Update to RiverMeadow Image & Snapshot Management -->
+        <mxCell id="13" value="Configure network settings" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="5" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Source System Inventory to RiverMeadow Image & Snapshot Management -->
+        <mxCell id="14" value="Create initial system image" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- OS Details Category -->
+        <mxCell id="15" value="&lt;b&gt;OS Details&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="161" y="638" width="181" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="Windows Server 2012 R2" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="161" y="689" width="119" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="Ubuntu 18.04" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="301" y="692" width="119" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="Kernel Version 5.x" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="156" y="750" width="119" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="Installed Patches" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="290" y="751" width="119" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="20" value="System Drivers" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="138" y="812" width="119" height="46" as="geometry" />
+        </mxCell>
+        <!-- Migration Methods Category -->
+        <mxCell id="21" value="&lt;b&gt;Migration Methods&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="161" y="891" width="190" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="rsync for Linux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="159" y="938" width="103" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="Robocopy for Windows" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="280" y="940" width="103" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="Checksums" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="147" y="1006" width="103" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="Hash Validation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="271" y="1006" width="103" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="Bandwidth Consideration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="145" y="1062" width="103" height="45" as="geometry" />
+        </mxCell>
+        <!-- Network Setup Category -->
+        <mxCell id="27" value="&lt;b&gt;Network Setup&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="161" y="1141" width="186" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="28" value="IP Address Assignment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="158" y="1187" width="117" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="29" value="Subnet Configuration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="307" y="1186" width="117" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="30" value="Route Setup" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="456" y="1190" width="117" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="31" value="DNS Updates" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="147" y="1247" width="117" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="32" value="Latency Management" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="299" y="1249" width="117" height="43" as="geometry" />
+        </mxCell>
+        <!-- Application Check Category -->
+        <mxCell id="33" value="&lt;b&gt;Application Check&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="161" y="1327" width="183" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="34" value="Profiling Tools" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="166" y="1380" width="135" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="35" value="Runtime Behavior Analysis" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="318" y="1379" width="135" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="36" value="OS-Specific Dependencies" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="463" y="1382" width="135" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="37" value="Load Simulations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="149" y="1426" width="135" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="38" value="Performance Bottlenecks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="303" y="1436" width="135" height="39" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

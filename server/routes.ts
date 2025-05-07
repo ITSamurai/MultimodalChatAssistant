@@ -133,9 +133,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).send(placeholderSvg);
       }
       
-      // Read file content 
+      // Read file content - ensure we're getting the most current content
       console.log(`Reading diagram file: ${filePath}`);
-      const fileContent = fs.readFileSync(filePath, 'utf8');
+      
+      // Clear any file system caches by closing and reopening file
+      const fileDescriptor = fs.openSync(filePath, 'r');
+      const fileStats = fs.fstatSync(fileDescriptor);
+      const fileSize = fileStats.size;
+      const buffer = Buffer.alloc(fileSize);
+      fs.readSync(fileDescriptor, buffer, 0, fileSize, 0);
+      fs.closeSync(fileDescriptor);
+      
+      const fileContent = buffer.toString('utf8');
       
       // Create a simple SVG that shows a representative diagram
       // This is a more reliable approach than trying to convert the XML to SVG directly

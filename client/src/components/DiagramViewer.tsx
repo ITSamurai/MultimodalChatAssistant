@@ -45,12 +45,19 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
         // Get just the filename part, not the full path
         const filenameOnly = baseFilename.split('/').pop() || baseFilename;
         
-        // Attempt to load SVG with cache-busting
-        const svgUrl = getFullUrl(`/api/diagram-svg/${filenameOnly}.drawio?t=${Date.now()}`);
+        // More aggressive cache busting with timestamp and random value
+        const cacheBuster = `t=${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        
+        // Attempt to load SVG with strong cache-busting
+        const svgUrl = getFullUrl(`/api/diagram-svg/${filenameOnly}.drawio?${cacheBuster}`);
+        console.log('Loading diagram from:', svgUrl);
+        
         const response = await fetch(svgUrl, {
           cache: 'no-store',
           headers: {
-            'Cache-Control': 'no-cache'
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
           }
         });
         
@@ -144,8 +151,12 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
       // Get just the filename part, not the full path
       const filenameOnly = baseFilename.split('/').pop() || baseFilename;
       
-      // Create download URL
-      const downloadUrl = getFullUrl(`/api/download-full-diagram/${filenameOnly}`);
+      // More aggressive cache busting with timestamp and random value
+      const cacheBuster = `t=${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      
+      // Create download URL with cache busting
+      const downloadUrl = getFullUrl(`/api/download-full-diagram/${filenameOnly}?${cacheBuster}`);
+      console.log('Downloading diagram from:', downloadUrl);
       
       // Create temporary link and trigger download
       const link = document.createElement('a');

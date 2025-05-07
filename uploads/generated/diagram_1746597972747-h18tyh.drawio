@@ -1,0 +1,148 @@
+<mxfile host="app.diagrams.net" modified="2025-05-07T06:06:31.787Z" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="diagram-1746597991787-7y4289" name="Comprehensive AWS Migration with RiverMeadow">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Central Node -->
+        <mxCell id="2" value="&lt;b&gt;RiverMeadow Platform&lt;/b&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="369.5" y="380.5" width="129" height="129" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: AWS IAM & Security Integration -->
+        <mxCell id="3" value="AWS IAM & Security Integration" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="115.5" y="468.5" width="145" height="67" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: AWS Native Migration Tools -->
+        <mxCell id="4" value="AWS Native Migration Tools" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="132.5" y="289.5" width="145" height="57" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Scalable AWS Deployment Architecture -->
+        <mxCell id="5" value="Scalable AWS Deployment Architecture" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="358" y="185" width="160" height="70" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: AWS Migration Hub Central Console -->
+        <mxCell id="6" value="AWS Migration Hub Central Console" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="579" y="285" width="122" height="64" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: AWS Direct Connect Enhanced Network -->
+        <mxCell id="7" value="AWS Direct Connect Enhanced Network" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="651" y="480.5" width="134" height="65" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: AWS Monitoring and Cost Management -->
+        <mxCell id="8" value="AWS Monitoring and Cost Management" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="489" y="643" width="158" height="68" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: RiverMeadow API for Server Replication -->
+        <mxCell id="9" value="RiverMeadow API for Server Replication" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="242.5" y="640" width="135" height="70" as="geometry" />
+        </mxCell>
+        <!-- Connection from AWS Migration Hub Central Console to AWS Native Migration Tools -->
+        <mxCell id="10" value="Centralizes migration tracking" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="6" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from AWS Migration Hub Central Console to RiverMeadow API for Server Replication -->
+        <mxCell id="11" value="Coordinates live environment capture" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="6" target="9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Scalable AWS Deployment Architecture to AWS Direct Connect Enhanced Network -->
+        <mxCell id="12" value="Facilitates network connectivity" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="5" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from AWS Native Migration Tools to RiverMeadow API for Server Replication -->
+        <mxCell id="13" value="Supports server image replication" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="4" target="9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from RiverMeadow API for Server Replication to Scalable AWS Deployment Architecture -->
+        <mxCell id="14" value="Replicates servers to EC2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="9" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from AWS IAM & Security Integration to AWS Monitoring and Cost Management -->
+        <mxCell id="15" value="Implements security and compliance" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="3" target="8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from AWS Direct Connect Enhanced Network to Scalable AWS Deployment Architecture -->
+        <mxCell id="16" value="Improves bandwidth and reduces costs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="7" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- AWS Networking Category -->
+        <mxCell id="17" value="&lt;b&gt;AWS Networking&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="142" y="610" width="238" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="Virtual Private Clouds" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="140" y="660" width="139" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="Security Groups" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="303" y="660" width="139" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="20" value="NACLs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="456" y="665" width="139" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="AWS Direct Connect" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="133" y="720" width="139" height="40" as="geometry" />
+        </mxCell>
+        <!-- AWS Migration Tools Category -->
+        <mxCell id="22" value="&lt;b&gt;AWS Migration Tools&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="142" y="790" width="214" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="AWS DMS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="147" y="843" width="115" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="AWS SMS" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="274" y="843" width="115" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="AWS Snowball" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="135" y="898" width="115" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="Elastic Load Balancer" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="262" y="905" width="115" height="46" as="geometry" />
+        </mxCell>
+        <!-- Security Measures Category -->
+        <mxCell id="27" value="&lt;b&gt;Security Measures&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="142" y="982" width="195" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="28" value="IAM Roles" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="144" y="1032" width="111" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="29" value="Multifactor Authentication" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="278" y="1035" width="111" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="30" value="AWS WAF" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="425" y="1036" width="111" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="31" value="Compliance Standards" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="133" y="1080" width="111" height="37" as="geometry" />
+        </mxCell>
+        <!-- Monitoring & Optimization Category -->
+        <mxCell id="32" value="&lt;b&gt;Monitoring & Optimization&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="142" y="1156" width="212" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="33" value="AWS CloudTrail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="146" y="1210" width="121" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="34" value="AWS CloudWatch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="275" y="1208" width="121" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="35" value="Cost Explorer" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="131" y="1269" width="121" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="36" value="AWS Budgets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="267" y="1261" width="121" height="44" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
