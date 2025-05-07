@@ -227,6 +227,7 @@ export async function generateDiagram(prompt: string): Promise<DiagramGeneration
     };
   } catch (error) {
     console.error('Error generating diagram:', error);
-    throw new Error(`Failed to generate diagram: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to generate diagram: ${errorMessage}`);
   }
 }

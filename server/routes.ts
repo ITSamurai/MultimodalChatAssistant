@@ -11,9 +11,9 @@ import { initializePineconeIndex } from './services/pinecone.service';
 import OpenAI from 'openai';
 import { 
   ensureDirectoriesExist, 
-  drawioToSvg, 
-  drawioToPng
-} from './services/drawio.service.simple';
+  d2ToSvg, 
+  d2ToPng
+} from './services/d2.service';
 import { generateDiagram, isDiagramGenerationRequest } from './services/diagram-generation.service';
 import { registerDiagramRoutes } from './routes/diagram.routes';
 
@@ -183,9 +183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        // Generate SVG from diagram file
-        const svgContent = await drawioToSvg(filePath);
-        console.log('Successfully generated SVG from diagram file');
+        // Generate SVG from D2 script file
+        const svgContent = await d2ToSvg(filePath);
+        console.log('Successfully generated SVG from D2 script file');
         
         // Set appropriate headers
         res.setHeader('Content-Type', 'image/svg+xml');
@@ -227,16 +227,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/diagram-png/:fileName', async (req: Request, res: Response) => {
     try {
       const fileName = req.params.fileName;
-      let filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
+      let filePath = path.join(process.cwd(), 'uploads', 'png', fileName);
       
       // Check for alternate paths if the exact one isn't found
       if (!fs.existsSync(filePath)) {
-        // Try with different extensions
-        const baseFileName = fileName.replace(/\.(xml|drawio|html|png)$/, '');
+        // Try looking in d2 directory and SVG directories
+        const baseFileName = fileName.replace(/\.(d2|svg|png)$/, '');
         const possiblePaths = [
-          path.join(process.cwd(), 'uploads', 'generated', baseFileName + '.drawio'),
-          path.join(process.cwd(), 'uploads', 'generated', baseFileName + '.xml'),
-          path.join(process.cwd(), 'uploads', 'generated', baseFileName),
+          path.join(process.cwd(), 'uploads', 'd2', baseFileName + '.d2'),
+          path.join(process.cwd(), 'uploads', 'svg', baseFileName + '.svg'),
+          path.join(process.cwd(), 'uploads', 'd2', baseFileName),
           path.join(process.cwd(), 'attached_assets', 'rivermeadow_diagram_1746107014375.png')
         ];
         
@@ -253,8 +253,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Diagram not found' });
       }
       
-      // Try to directly convert to PNG (future implementation)
-      const pngBuffer = await drawioToPng(filePath);
+      // Try to directly convert to PNG using D2
+      const pngBuffer = await d2ToPng(filePath);
       
       // If we have a PNG buffer, return it
       if (pngBuffer) {
@@ -267,8 +267,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If direct PNG conversion failed, try to generate an SVG as fallback
       try {
-        // Generate SVG from the diagram file
-        const svgContent = await drawioToSvg(filePath);
+        // Generate SVG from the D2 script file
+        const svgContent = await d2ToSvg(filePath);
         
         // If successful, return with appropriate headers
         if (svgContent) {
@@ -317,12 +317,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove any query parameters from the filename
       const fileName = req.params.fileName.split('?')[0];
       
-      // Try multiple possible file extensions and paths
+      // Try multiple possible file extensions and paths for D2
       const possiblePaths = [
-        path.join(process.cwd(), 'uploads', 'generated', `${fileName}.drawio`),
-        path.join(process.cwd(), 'uploads', 'generated', `${fileName}.xml`),
-        path.join(process.cwd(), 'uploads', 'generated', fileName),
-        // Also try with the attachment
+        path.join(process.cwd(), 'uploads', 'd2', `${fileName}.d2`),
+        path.join(process.cwd(), 'uploads', 'svg', `${fileName}.svg`),
+        path.join(process.cwd(), 'uploads', 'png', `${fileName}.png`),
+        path.join(process.cwd(), 'uploads', 'd2', fileName),
+        // Also try with the attachment as fallback
         path.join(process.cwd(), 'attached_assets', 'rivermeadow_diagram_1746107014375.png')
       ];
       
@@ -351,7 +352,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         extension === '.png' ? 'png' :
         extension === '.jpg' || extension === '.jpeg' ? 'jpg' :
         extension === '.svg' ? 'svg' :
-        'drawio';
+        extension === '.d2' ? 'd2' :
+        'd2';
         
       // Set proper headers for download with strong cache control
       res.setHeader('Content-Type', contentType);

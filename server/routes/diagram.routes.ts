@@ -52,8 +52,8 @@ export function registerDiagramRoutes(app: Express) {
       
       switch (format) {
         case 'xml':
-          filePath = diagramResult.xmlPath;
-          contentType = 'application/xml';
+          filePath = diagramResult.d2Path; // D2 script file
+          contentType = 'text/plain';
           break;
         case 'png':
           filePath = diagramResult.pngPath;
@@ -97,21 +97,21 @@ export function registerDiagramRoutes(app: Express) {
   });
   
   /**
-   * Get a diagram XML file
+   * Get a diagram D2 script file
    */
   app.get('/api/diagram-xml/:fileName', async (req: Request, res: Response) => {
     try {
-      const filePath = path.join(process.cwd(), 'uploads', 'generated', req.params.fileName);
+      const filePath = path.join(process.cwd(), 'uploads', 'd2', req.params.fileName);
       
       if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: 'Diagram file not found' });
+        return res.status(404).json({ error: 'D2 diagram file not found' });
       }
       
-      res.setHeader('Content-Type', 'application/xml');
+      res.setHeader('Content-Type', 'text/plain');
       return res.sendFile(filePath);
     } catch (error) {
-      console.error('Error retrieving diagram XML:', error);
-      return res.status(500).json({ error: 'Failed to retrieve diagram XML' });
+      console.error('Error retrieving D2 diagram script:', error);
+      return res.status(500).json({ error: 'Failed to retrieve D2 diagram script' });
     }
   });
   
@@ -154,19 +154,40 @@ export function registerDiagramRoutes(app: Express) {
   });
   
   /**
-   * Download the full diagram (XML format)
+   * Download the full diagram (D2 format)
    */
   app.get('/api/download-full-diagram/:fileName', async (req: Request, res: Response) => {
     try {
-      const filePath = path.join(process.cwd(), 'uploads', 'generated', req.params.fileName);
+      // Check if this is a D2 file and adjust the path
+      let filePath = path.join(process.cwd(), 'uploads', 'd2', req.params.fileName);
+      
+      // If the file doesn't exist, try with .d2 extension
+      if (!fs.existsSync(filePath) && !filePath.endsWith('.d2')) {
+        filePath = path.join(process.cwd(), 'uploads', 'd2', req.params.fileName + '.d2');
+      }
+      
+      // If still not found, try to find any D2 file with a similar name
+      if (!fs.existsSync(filePath)) {
+        const baseName = req.params.fileName.replace(/\.[^/.]+$/, ""); // remove extension if any
+        const d2Dir = path.join(process.cwd(), 'uploads', 'd2');
+        
+        if (fs.existsSync(d2Dir)) {
+          const files = fs.readdirSync(d2Dir);
+          const matchingFile = files.find(file => file.includes(baseName));
+          
+          if (matchingFile) {
+            filePath = path.join(d2Dir, matchingFile);
+          }
+        }
+      }
       
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ error: 'Diagram file not found' });
       }
       
       // Set headers for download
-      res.setHeader('Content-Type', 'application/xml');
-      res.setHeader('Content-Disposition', `attachment; filename="${req.params.fileName}"`);
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`);
       return res.sendFile(filePath);
     } catch (error) {
       console.error('Error downloading diagram:', error);
