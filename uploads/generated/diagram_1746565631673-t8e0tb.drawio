@@ -1,0 +1,87 @@
+<mxfile host="app.diagrams.net" modified="2025-05-06T21:07:27.262Z" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="diagram-1746565647262-bici4w" name="RiverMeadow Cloud Migration Services Diagram">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Central Node -->
+        <mxCell id="2" value="&lt;b&gt;Source Environment&lt;/b&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="379" width="136" height="136" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: RiverMeadow Platform -->
+        <mxCell id="3" value="RiverMeadow Platform" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="687" y="502" width="122" height="64" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Destination Environment -->
+        <mxCell id="4" value="Destination Environment" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="239" y="472.5" width="122" height="65" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: RiverMeadow Lifecycle Management -->
+        <mxCell id="5" value="RiverMeadow Lifecycle Management" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="500" y="247" width="136" height="54" as="geometry" />
+        </mxCell>
+        <!-- Connection from Source Environment to RiverMeadow Platform -->
+        <mxCell id="6" value="Capture & Transfer" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from RiverMeadow Platform to Destination Environment -->
+        <mxCell id="7" value="Transfer & Conversion" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Destination Environment to RiverMeadow Lifecycle Management -->
+        <mxCell id="8" value="Validation & Optimization" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Source Environment Category -->
+        <mxCell id="9" value="&lt;b&gt;Source Environment&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="174" y="642" width="197" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="On-premises" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="169" y="692" width="137" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="Other Clouds" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="330" y="690" width="137" height="40" as="geometry" />
+        </mxCell>
+        <!-- RiverMeadow Platform Category -->
+        <mxCell id="12" value="&lt;b&gt;RiverMeadow Platform&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="174" y="767" width="229" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="Migration Platform" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="177" y="816" width="129" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="Pre-Migration Analytics" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="321" y="821" width="129" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="Cloud API Integrations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="469" y="820" width="129" height="39" as="geometry" />
+        </mxCell>
+        <!-- Destination Environment Category -->
+        <mxCell id="16" value="&lt;b&gt;Destination Environment&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="174" y="891" width="234" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="Target Clouds" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="172" y="938" width="116" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="Config & Management Tools" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="314" y="944" width="116" height="43" as="geometry" />
+        </mxCell>
+        <!-- RiverMeadow Lifecycle Category -->
+        <mxCell id="19" value="&lt;b&gt;RiverMeadow Lifecycle&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="174" y="1019" width="231" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="20" value="Validation & Testing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="169" y="1071" width="109" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="Optimization Tools" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="300" y="1070" width="109" height="36" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -45,40 +45,158 @@ const extractDiagramComponentsFromContext = async (
   connections: Array<{from: string, to: string, label?: string}>;
   categories: Record<string, string[]>;
 }> => {
-  // Default values for RiverMeadow diagram if context is insufficient
-  const defaultComponents = {
-    title: "RiverMeadow Cloud Migration Platform",
-    nodes: ["RiverMeadow Platform", "Source Environment", "Target Environment", "Migration Process"],
-    connections: [
-      {from: "Source Environment", to: "RiverMeadow Platform"},
-      {from: "RiverMeadow Platform", to: "Target Environment"},
-      {from: "Migration Process", to: "RiverMeadow Platform"}
-    ],
-    categories: {
-      "Migration Types": ["P2V", "V2C", "C2C", "Hardware Refresh"],
-      "Cloud Platforms": ["AWS", "Azure", "Google Cloud", "VMware"]
-    }
-  };
+  // Create variable default components based on the user's prompt
+  // First, analyze the prompt to see what kind of diagram it is
+  const lowerPrompt = prompt.toLowerCase();
+  let defaultComponents;
+  
+  // Choose appropriate defaults based on the prompt type
+  if (lowerPrompt.includes('os') || lowerPrompt.includes('operating system')) {
+    // OS-focused migration diagram
+    defaultComponents = {
+      title: "Operating System Migration Platform Architecture",
+      nodes: [
+        "RiverMeadow Platform", 
+        "OS Discovery Module", 
+        "OS Transformation Engine", 
+        "Hypervisor Connector",
+        "OS Template Repository",
+        "Runtime Configuration Manager"
+      ],
+      connections: [
+        {from: "OS Discovery Module", to: "RiverMeadow Platform", label: "System Fingerprinting"},
+        {from: "RiverMeadow Platform", to: "OS Transformation Engine", label: "Migration Orchestration"},
+        {from: "OS Template Repository", to: "OS Transformation Engine", label: "Template Provisioning"},
+        {from: "OS Transformation Engine", to: "Hypervisor Connector", label: "VM Deployment"},
+        {from: "Hypervisor Connector", to: "Runtime Configuration Manager", label: "Post-Migration Tuning"}
+      ],
+      categories: {
+        "Supported OS Types": ["Windows Server", "RHEL", "Ubuntu", "CentOS", "SUSE Linux"],
+        "Migration Capabilities": ["OS Version Upgrade", "P2V Conversion", "Cross-Hypervisor Movement", "OS Configuration Transfer"],
+        "Technical Components": ["Boot Volume Handler", "Registry Manager", "Driver Injection", "Network Configurator"]
+      }
+    };
+  } else if (lowerPrompt.includes('aws') || lowerPrompt.includes('amazon')) {
+    // AWS-focused migration diagram
+    defaultComponents = {
+      title: "AWS Cloud Migration Architecture",
+      nodes: [
+        "RiverMeadow Platform", 
+        "AWS API Gateway", 
+        "EC2 Instance Manager", 
+        "S3 Data Transfer Service",
+        "VPC Configuration Tool",
+        "IAM Security Controller"
+      ],
+      connections: [
+        {from: "RiverMeadow Platform", to: "AWS API Gateway", label: "Secure API Calls"},
+        {from: "AWS API Gateway", to: "EC2 Instance Manager", label: "VM Provisioning"},
+        {from: "RiverMeadow Platform", to: "S3 Data Transfer Service", label: "Data Replication"},
+        {from: "EC2 Instance Manager", to: "VPC Configuration Tool", label: "Network Setup"},
+        {from: "VPC Configuration Tool", to: "IAM Security Controller", label: "Permission Assignment"}
+      ],
+      categories: {
+        "AWS Services": ["EC2", "S3", "VPC", "IAM", "CloudFormation", "Route 53"],
+        "Security Features": ["KMS Encryption", "Security Groups", "IAM Roles", "VPC Endpoints"],
+        "Optimization Tools": ["Auto Scaling Groups", "Elastic Load Balancing", "Reserved Instances"]
+      }
+    };
+  } else if (lowerPrompt.includes('azure') || lowerPrompt.includes('microsoft')) {
+    // Azure-focused migration diagram
+    defaultComponents = {
+      title: "Azure Cloud Migration Framework",
+      nodes: [
+        "RiverMeadow Platform", 
+        "Azure Resource Manager", 
+        "Virtual Machine Scale Sets", 
+        "Azure Blob Storage",
+        "Application Gateway",
+        "Key Vault Service"
+      ],
+      connections: [
+        {from: "RiverMeadow Platform", to: "Azure Resource Manager", label: "Resource Orchestration"},
+        {from: "Azure Resource Manager", to: "Virtual Machine Scale Sets", label: "VM Deployment"},
+        {from: "RiverMeadow Platform", to: "Azure Blob Storage", label: "Storage Replication"},
+        {from: "Virtual Machine Scale Sets", to: "Application Gateway", label: "Traffic Management"},
+        {from: "Application Gateway", to: "Key Vault Service", label: "Certificate Management"}
+      ],
+      categories: {
+        "Azure Services": ["Virtual Machines", "Blob Storage", "Virtual Networks", "Load Balancers", "ExpressRoute"],
+        "Migration Tools": ["Azure Migrate", "Site Recovery", "Database Migration Service"],
+        "Security Features": ["Key Vault", "Network Security Groups", "Azure AD Integration"]
+      }
+    };
+  } else if (lowerPrompt.includes('process') || lowerPrompt.includes('workflow')) {
+    // Process-focused migration diagram
+    defaultComponents = {
+      title: "Cloud Migration Process Framework",
+      nodes: [
+        "RiverMeadow Platform", 
+        "Discovery Module", 
+        "Assessment Engine", 
+        "Migration Planner",
+        "Execution Orchestrator",
+        "Validation System"
+      ],
+      connections: [
+        {from: "Discovery Module", to: "Assessment Engine", label: "Environment Analysis"},
+        {from: "Assessment Engine", to: "Migration Planner", label: "Recommendations"},
+        {from: "Migration Planner", to: "RiverMeadow Platform", label: "Plan Implementation"},
+        {from: "RiverMeadow Platform", to: "Execution Orchestrator", label: "Task Automation"},
+        {from: "Execution Orchestrator", to: "Validation System", label: "Quality Control"}
+      ],
+      categories: {
+        "Migration Phases": ["Discovery", "Assessment", "Planning", "Implementation", "Validation", "Optimization"],
+        "Stakeholders": ["IT Operations", "Cloud Architects", "Application Owners", "Security Teams", "Business Units"],
+        "Key Metrics": ["Migration Speed", "Application Performance", "Cost Reduction", "Downtime Minimization"]
+      }
+    };
+  } else {
+    // Generic diagram as a last resort
+    defaultComponents = {
+      title: "RiverMeadow Cloud Migration Platform Architecture",
+      nodes: [
+        "RiverMeadow Platform", 
+        "Source Environment Connector", 
+        "Migration Orchestration Engine", 
+        "Target Cloud Adapter",
+        "Data Replication Manager",
+        "Configuration Controller"
+      ],
+      connections: [
+        {from: "Source Environment Connector", to: "RiverMeadow Platform", label: "Source Data Capture"},
+        {from: "RiverMeadow Platform", to: "Migration Orchestration Engine", label: "Workflow Management"},
+        {from: "Migration Orchestration Engine", to: "Data Replication Manager", label: "Data Transfer"},
+        {from: "Data Replication Manager", to: "Target Cloud Adapter", label: "Deployment Prep"},
+        {from: "Target Cloud Adapter", to: "Configuration Controller", label: "Infrastructure Setup"}
+      ],
+      categories: {
+        "Key Capabilities": ["Automated Discovery", "Cloud Agnostic Movement", "Workload Optimization", "Incremental Sync"],
+        "Target Platforms": ["AWS", "Azure", "Google Cloud", "VMware", "OpenStack", "IBM Cloud"],
+        "Service Features": ["API Integration", "Template Management", "Credential Handling", "Audit Logging"]
+      }
+    };
+  }
   
   try {
-    // If context is very small, just use default components
+    // If context is very small, just use the dynamically selected default components
     const combinedContext = context.join(' ');
     if (combinedContext.length < 100) {
       console.log('Context too small, using default components');
-      return defaultComponents;
+      return defaultComponents; // This is defined at the start of the function
     }
     
     console.log('Generating diagram components using OpenAI');
     
     // Create a system prompt for extracting diagram components
-    const systemPrompt = `You are a diagram expert tasked with extracting key components from text to create a diagram about RiverMeadow's cloud migration services. 
+    const systemPrompt = `You are a creative cloud architecture expert tasked with designing a unique diagram about RiverMeadow's cloud migration services tailored specifically to the user's request. 
     Format your response as a JSON object with the following structure exactly:
     {
       "title": "The main title for the diagram",
       "nodes": ["Node1", "Node2", "Node3", ...],
       "connections": [
-        {"from": "Node1", "to": "Node2", "label": "optional connection label"},
-        {"from": "Node2", "to": "Node3"}
+        {"from": "Node1", "to": "Node2", "label": "detailed connection label"},
+        {"from": "Node2", "to": "Node3", "label": "detailed connection label"}
       ],
       "categories": {
         "Category1": ["Item1", "Item2", "Item3"],
@@ -86,14 +204,20 @@ const extractDiagramComponentsFromContext = async (
       }
     }
     
-    Important guidelines:
-    1. Always include "RiverMeadow Platform" as one of the main nodes
-    2. Focus on creating a technical system diagram showing components, relationships, and categories
-    3. Use reasonable abbreviations for complex terms
-    4. Extract ONLY real components mentioned in the provided context
-    5. For the diagram title, make it specific to what the user is asking for
-    6. Include 3-6 main nodes, 2-6 connections, and 2-4 categories with 3-6 items each
-    7. DO NOT invent components that aren't mentioned in the context`;
+    IMPORTANT - MUST FOLLOW THESE GUIDELINES:
+    1. CREATE A COMPLETELY UNIQUE DIAGRAM FOR THIS SPECIFIC REQUEST. Your diagram must be different from any previous diagrams.
+    2. Use SPECIFIC, TECHNICAL TERMINOLOGY in node names, connection labels, and categories that precisely match the user's request.
+    3. For OS migration requests, focus on OS-specific components, processes and technologies.
+    4. For cloud migration requests, focus on cloud-specific architecture components.
+    5. For process requests, focus on detailed step-by-step workflow components.
+    6. If the user mentions anything specific (AWS, Azure, Linux, Windows, etc.), prominently feature those elements.
+    7. Always include "RiverMeadow Platform" as one of the nodes, but add specific components for this exact request.
+    8. Include 4-7 main nodes with SPECIFIC, DETAILED, TECHNICAL names (not generic ones).
+    9. Create 4-8 connections with DETAILED, TECHNICAL labels explaining exactly what happens in that connection.
+    10. Include 2-4 categories with 4-6 items each that are SPECIFIC to this request.
+    11. Make connection labels detailed and descriptive (15-25 characters).
+    12. Vary your terminology greatly between diagrams - use synonyms for common terms.
+    13. DO NOT use generic terms like "Source", "Target", "Environment" alone - be specific about what kind.`;
     
     // Create a user prompt combining the user's question and context
     const userPrompt = `
@@ -415,11 +539,23 @@ const getInitialResponse = async (
     console.log('Getting initial response for prompt:', prompt);
     
     // Create a system prompt for initial information gathering
-    const systemPrompt = `You are a cloud migration expert working at RiverMeadow. 
-    Provide a detailed explanation of the topic requested. 
-    Include specific details about components, processes, and relationships that would be useful for creating a technical diagram.
-    Use technical terminology and be specific about how different parts connect.
-    Focus on RiverMeadow-specific information when relevant.`;
+    const systemPrompt = `You are a senior cloud migration architect at RiverMeadow with expertise in OS migrations, cloud infrastructure, and technical diagrams.
+    
+    Provide a HIGHLY DETAILED, TECHNICAL explanation of the specific migration topic requested by the user.
+    Your response should:
+    
+    1. Be highly specific to the exact type of migration or diagram the user requested
+    2. Include 8-12 specific technical components, processes, or technologies involved
+    3. Use precise technical terminology relevant to the specific request
+    4. Describe complex relationships and data flows between components
+    5. Include numerical specifications when relevant (times, sizes, capacities)
+    6. Mention specific OS details if it's an OS migration request
+    7. Mention specific cloud provider details if mentioned in the request
+    8. Elaborate on technical implementation details (protocols, services, APIs)
+    9. Reference specific RiverMeadow tools, technologies and methodologies
+    10. VARY YOUR CONTENT SIGNIFICANTLY between different requests - never repeat the same explanations
+    
+    This technical information will be used to generate a visual diagram, so include a wide variety of elements that would make an interesting and informative visualization.`;
     
     // Create a user prompt combining the user's question and context
     const userPrompt = `
@@ -506,23 +642,116 @@ export const generateDiagram = async (
     } catch (diagramError) {
       console.error('Error extracting diagram components:', diagramError);
       
-      // Fall back to default components
-      const defaultComponents = {
-        title: "RiverMeadow Cloud Migration Platform",
-        nodes: ["RiverMeadow Platform", "Source Environment", "Target Environment", "Migration Process"],
-        connections: [
-          {from: "Source Environment", to: "RiverMeadow Platform"},
-          {from: "RiverMeadow Platform", to: "Target Environment"},
-          {from: "Migration Process", to: "RiverMeadow Platform"}
-        ],
-        categories: {
-          "Migration Types": ["P2V", "V2C", "C2C", "Hardware Refresh"],
-          "Cloud Platforms": ["AWS", "Azure", "Google Cloud", "VMware"]
-        }
-      };
+      // Fall back to dynamically chosen default components based on the prompt
+      // Create these components dynamically using the same logic as in extractDiagramComponentsFromContext
+      const lowerPrompt = prompt.toLowerCase();
+      let fallbackComponents;
       
-      // Generate Draw.io XML with default components
-      const drawioXml = createDrawioXML(defaultComponents);
+      // Choose appropriate defaults based on the prompt type - same as in extractDiagramComponentsFromContext 
+      if (lowerPrompt.includes('os') || lowerPrompt.includes('operating system')) {
+        // OS-focused migration diagram
+        fallbackComponents = {
+          title: "Operating System Migration Platform Architecture",
+          nodes: [
+            "RiverMeadow Platform", 
+            "OS Discovery Module", 
+            "OS Transformation Engine", 
+            "Hypervisor Connector",
+            "OS Template Repository",
+            "Runtime Configuration Manager"
+          ],
+          connections: [
+            {from: "OS Discovery Module", to: "RiverMeadow Platform", label: "System Fingerprinting"},
+            {from: "RiverMeadow Platform", to: "OS Transformation Engine", label: "Migration Orchestration"},
+            {from: "OS Template Repository", to: "OS Transformation Engine", label: "Template Provisioning"},
+            {from: "OS Transformation Engine", to: "Hypervisor Connector", label: "VM Deployment"},
+            {from: "Hypervisor Connector", to: "Runtime Configuration Manager", label: "Post-Migration Tuning"}
+          ],
+          categories: {
+            "Supported OS Types": ["Windows Server", "RHEL", "Ubuntu", "CentOS", "SUSE Linux"],
+            "Migration Capabilities": ["OS Version Upgrade", "P2V Conversion", "Cross-Hypervisor Movement", "OS Configuration Transfer"],
+            "Technical Components": ["Boot Volume Handler", "Registry Manager", "Driver Injection", "Network Configurator"]
+          }
+        };
+      } else if (lowerPrompt.includes('aws') || lowerPrompt.includes('amazon')) {
+        // AWS-focused migration diagram
+        fallbackComponents = {
+          title: "AWS Cloud Migration Architecture",
+          nodes: [
+            "RiverMeadow Platform", 
+            "AWS API Gateway", 
+            "EC2 Instance Manager", 
+            "S3 Data Transfer Service",
+            "VPC Configuration Tool",
+            "IAM Security Controller"
+          ],
+          connections: [
+            {from: "RiverMeadow Platform", to: "AWS API Gateway", label: "Secure API Calls"},
+            {from: "AWS API Gateway", to: "EC2 Instance Manager", label: "VM Provisioning"},
+            {from: "RiverMeadow Platform", to: "S3 Data Transfer Service", label: "Data Replication"},
+            {from: "EC2 Instance Manager", to: "VPC Configuration Tool", label: "Network Setup"},
+            {from: "VPC Configuration Tool", to: "IAM Security Controller", label: "Permission Assignment"}
+          ],
+          categories: {
+            "AWS Services": ["EC2", "S3", "VPC", "IAM", "CloudFormation", "Route 53"],
+            "Security Features": ["KMS Encryption", "Security Groups", "IAM Roles", "VPC Endpoints"],
+            "Optimization Tools": ["Auto Scaling Groups", "Elastic Load Balancing", "Reserved Instances"]
+          }
+        };
+      } else if (lowerPrompt.includes('process') || lowerPrompt.includes('workflow')) {
+        // Process-focused migration diagram
+        fallbackComponents = {
+          title: "Cloud Migration Process Framework",
+          nodes: [
+            "RiverMeadow Platform", 
+            "Discovery Module", 
+            "Assessment Engine", 
+            "Migration Planner",
+            "Execution Orchestrator",
+            "Validation System"
+          ],
+          connections: [
+            {from: "Discovery Module", to: "Assessment Engine", label: "Environment Analysis"},
+            {from: "Assessment Engine", to: "Migration Planner", label: "Recommendations"},
+            {from: "Migration Planner", to: "RiverMeadow Platform", label: "Plan Implementation"},
+            {from: "RiverMeadow Platform", to: "Execution Orchestrator", label: "Task Automation"},
+            {from: "Execution Orchestrator", to: "Validation System", label: "Quality Control"}
+          ],
+          categories: {
+            "Migration Phases": ["Discovery", "Assessment", "Planning", "Implementation", "Validation", "Optimization"],
+            "Stakeholders": ["IT Operations", "Cloud Architects", "Application Owners", "Security Teams", "Business Units"],
+            "Key Metrics": ["Migration Speed", "Application Performance", "Cost Reduction", "Downtime Minimization"]
+          }
+        };
+      } else {
+        // Generic diagram as a last resort, but with more detailed components
+        fallbackComponents = {
+          title: "RiverMeadow Cloud Migration Platform Architecture",
+          nodes: [
+            "RiverMeadow Platform", 
+            "Source Environment Connector", 
+            "Migration Orchestration Engine", 
+            "Target Cloud Adapter",
+            "Data Replication Manager",
+            "Configuration Controller"
+          ],
+          connections: [
+            {from: "Source Environment Connector", to: "RiverMeadow Platform", label: "Source Data Capture"},
+            {from: "RiverMeadow Platform", to: "Migration Orchestration Engine", label: "Workflow Management"},
+            {from: "Migration Orchestration Engine", to: "Data Replication Manager", label: "Data Transfer"},
+            {from: "Data Replication Manager", to: "Target Cloud Adapter", label: "Deployment Prep"},
+            {from: "Target Cloud Adapter", to: "Configuration Controller", label: "Infrastructure Setup"}
+          ],
+          categories: {
+            "Key Capabilities": ["Automated Discovery", "Cloud Agnostic Movement", "Workload Optimization", "Incremental Sync"],
+            "Target Platforms": ["AWS", "Azure", "Google Cloud", "VMware", "OpenStack", "IBM Cloud"],
+            "Service Features": ["API Integration", "Template Management", "Credential Handling", "Audit Logging"]
+          }
+        };
+      }
+      
+      // Generate Draw.io XML with fallback components
+      const drawioXml = createDrawioXML(fallbackComponents);
       
       // Save the Draw.io file
       const drawioPath = path.join(GENERATED_IMAGES_DIR, drawioFilename);
