@@ -305,18 +305,40 @@ const createDrawioXML = (components: {
   // Generate unique ID for the diagram
   const diagramId = `diagram-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
   
-  // Randomize diagram layout parameters
-  const layoutType = Math.random() > 0.5 ? 'circular' : 'hierarchical';
-  const centerX = 400 + Math.floor(Math.random() * 200);
-  const centerY = 300 + Math.floor(Math.random() * 150);
-  const radiusX = 200 + Math.floor(Math.random() * 100);
-  const radiusY = 150 + Math.floor(Math.random() * 100);
-  const offsetAngle = Math.random() * Math.PI; // Random starting angle
+  // SUPER AGGRESSIVE randomization of diagram layout parameters
+  // Force a completely unique look on each generation!
+  const layoutTypes = ['circular', 'hierarchical', 'radial', 'organic', 'tree', 'flowchart'];
+  const layoutType = layoutTypes[Math.floor(Math.random() * layoutTypes.length)];
+  console.log(`RANDOM LAYOUT SELECTED: ${layoutType} - forcing uniqueness!`);
   
-  // Create XML content with header
-  let xmlContent = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="RiverMeadow Assistant" version="21.2.9">
+  // Radically different positioning parameters
+  const centerX = 300 + Math.floor(Math.random() * 400); // Huge range: 300-700
+  const centerY = 200 + Math.floor(Math.random() * 300); // Huge range: 200-500
+  const radiusX = 150 + Math.floor(Math.random() * 200); // Huge range: 150-350
+  const radiusY = 100 + Math.floor(Math.random() * 200); // Huge range: 100-300
+  const offsetAngle = Math.random() * 2 * Math.PI; // Full circle randomization
+  
+  // Randomize diagram scale and dimensions
+  const scale = 0.8 + Math.random() * 0.4; // Scale between 0.8-1.2
+  const pageWidth = Math.floor((1000 + Math.floor(Math.random() * 400)) * scale);
+  const pageHeight = Math.floor((800 + Math.floor(Math.random() * 300)) * scale);
+  
+  // Create XML content with header - completely randomized parameters
+  // Generate random parameters for the diagram display
+  const randomDx = 1200 + Math.floor(Math.random() * 600);
+  const randomDy = 700 + Math.floor(Math.random() * 400);
+  const randomGrid = Math.random() > 0.5 ? "1" : "0";
+  const randomGridSize = 5 + Math.floor(Math.random() * 15); // 5-20
+  const randomBackground = Math.random() > 0.7 ? "#f9f9f9" : "#ffffff";
+  const randomShadow = Math.random() > 0.7 ? "1" : "0";
+  
+  // Random ID and modification date with slight offset to avoid caching
+  const modifiedDate = new Date();
+  modifiedDate.setSeconds(modifiedDate.getSeconds() + Math.floor(Math.random() * 30));
+  
+  let xmlContent = `<mxfile host="app.diagrams.net" modified="${modifiedDate.toISOString()}" agent="RiverMeadow Assistant" version="21.2.9">
   <diagram id="${diagramId}" name="${title}">
-    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="${randomDx}" dy="${randomDy}" grid="${randomGrid}" gridSize="${randomGridSize}" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="${pageWidth}" pageHeight="${pageHeight}" background="${randomBackground}" math="0" shadow="${randomShadow}">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />`;
@@ -343,14 +365,35 @@ const createDrawioXML = (components: {
     "shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#b0e3e6;strokeColor=#0e8088;fontSize=13;"
   ];
   
-  // Randomly select edge styles
+  // Expanded edge styles with much more variety
   const edgeStyles = [
+    // Basic edge styles
     "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;",
     "edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;",
     "edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;",
     "edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;",
-    "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;",
-    "edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;dashed=1;"
+    
+    // Curved variants
+    "edgeStyle=orthogonalEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;",
+    "edgeStyle=entityRelationEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;",
+    
+    // Dashed variants
+    "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;dashed=1;dashPattern=1 4;",
+    "edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=1 2;strokeWidth=1.5;",
+    
+    // Specialized arrows
+    "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=diamondThin;endFill=1;",
+    "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;endArrow=block;endFill=1;",
+    "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;endArrow=openAsync;endFill=0;",
+    "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;endArrow=oval;endFill=0;",
+    
+    // Double arrow variants
+    "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;endArrow=classic;endFill=1;startArrow=classic;startFill=1;",
+    "edgeStyle=segmentEdgeStyle;endArrow=classic;startArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;strokeWidth=1.5;",
+    
+    // Special styles for emphasis
+    "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;endArrow=block;endFill=1;",
+    "edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;strokeWidth=2;dashed=1;dashPattern=1 2;"
   ];
   
   // Shuffle node order for more variety but keep RiverMeadow first
@@ -396,23 +439,53 @@ const createDrawioXML = (components: {
     
     let x, y;
     
+    // Randomize node positions based on selected layout type
     if (layoutType === 'circular') {
       // Position nodes around the central node in a slightly irregular circle
-      const angle = offsetAngle + (i - 1) * (2 * Math.PI / (orderedNodes.length - 1)) + (Math.random() * 0.2 - 0.1);
-      const radius = 0.9 + Math.random() * 0.2; // Scale between 0.9 and 1.1
+      const angle = offsetAngle + (i - 1) * (2 * Math.PI / (orderedNodes.length - 1)) + (Math.random() * 0.5 - 0.25);
+      const radius = 0.7 + Math.random() * 0.6; // More variable scale between 0.7 and 1.3
       x = centerX + radiusX * radius * Math.cos(angle);
       y = centerY + radiusY * radius * Math.sin(angle);
+    } else if (layoutType === 'radial') {
+      // Radial tree layout with multiple rings
+      const level = 1 + Math.floor((i - 1) / 4); // Nodes per level (ring)
+      const nodesInLevel = Math.min(4, orderedNodes.length - 1 - (level - 1) * 4);
+      const posInLevel = (i - 1) % 4;
+      const anglePerNode = (2 * Math.PI) / nodesInLevel;
+      const angle = offsetAngle + posInLevel * anglePerNode + (Math.random() * 0.3 - 0.15);
+      const radius = level * (radiusX / 2) * (0.8 + Math.random() * 0.4);
+      x = centerX + radius * Math.cos(angle);
+      y = centerY + radius * Math.sin(angle);
+    } else if (layoutType === 'tree' || layoutType === 'flowchart') {
+      // Tree or flowchart layout - vertical orientation
+      const levels = Math.ceil(Math.sqrt(orderedNodes.length - 1));
+      const nodesPerLevel = Math.ceil((orderedNodes.length - 1) / levels);
+      const level = Math.floor((i - 1) / nodesPerLevel);
+      const posInLevel = (i - 1) % nodesPerLevel;
+      
+      // Calculate position with more randomization
+      const levelWidth = pageWidth * 0.8;
+      const nodeSpacing = levelWidth / (nodesPerLevel + 1);
+      
+      x = centerX - levelWidth/2 + (posInLevel + 1) * nodeSpacing + (Math.random() * 60 - 30);
+      y = centerY - radiusY/2 + level * 150 + (Math.random() * 50 - 25);
+    } else if (layoutType === 'organic') {
+      // Organic layout - random placement around center
+      const angle = Math.random() * 2 * Math.PI;
+      const distance = 50 + Math.random() * radiusX * 1.2;
+      x = centerX + distance * Math.cos(angle);
+      y = centerY + distance * Math.sin(angle);
     } else {
-      // Hierarchical layout
+      // Hierarchical layout (default)
       if (i <= Math.ceil((orderedNodes.length - 1) / 2)) {
-        // Top half - place above center
-        x = centerX - 250 + (i-1) * 300 / Math.ceil((orderedNodes.length - 1) / 2);
-        y = centerY - radiusY - Math.random() * 40;
+        // Top half - place above center with more variety
+        x = centerX - 300 + (i-1) * 350 / Math.ceil((orderedNodes.length - 1) / 2) + (Math.random() * 100 - 50);
+        y = centerY - radiusY - Math.random() * 100;
       } else {
-        // Bottom half - place below center
+        // Bottom half - place below center with more variety
         const offset = i - 1 - Math.ceil((orderedNodes.length - 1) / 2);
-        x = centerX - 250 + offset * 300 / Math.floor((orderedNodes.length - 1) / 2);
-        y = centerY + radiusY/2 + Math.random() * 40;
+        x = centerX - 300 + offset * 350 / Math.floor((orderedNodes.length - 1) / 2) + (Math.random() * 100 - 50);
+        y = centerY + radiusY/2 + Math.random() * 100;
       }
     }
     
@@ -829,12 +902,7 @@ export const generateDiagram = async (
       const drawioPath = path.join(GENERATED_IMAGES_DIR, drawioFilename);
       await writeFile(drawioPath, drawioXml);
       
-      console.log(`FALLBACK TEMPLATE USED: Using fallback template for "${prompt}" with template type: ${
-        lowerPrompt.includes('os') ? 'OS Migration' :
-        lowerPrompt.includes('aws') ? 'AWS Migration' :
-        lowerPrompt.includes('process') ? 'Process Framework' :
-        'Generic Migration'
-      }`);
+      console.log(`FALLBACK TEMPLATE USED: Using fallback template for "${prompt}" with forced template type: ${forcedTemplateType}`);
       console.log(`Diagram generated with fallback components: ${drawioPath}`);
       
       return {
