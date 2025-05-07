@@ -55,9 +55,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (userData) => {
-      // Save auth token to localStorage if it exists in the response
+      // Save auth token using the enhanced token management 
       if (userData && userData.token) {
-        localStorage.setItem('auth_token', userData.token);
+        // Import the setAuthData function from queryClient.ts
+        const setAuthData = (token: string, userId: number) => {
+          // Calculate expiry (7 days from now)
+          const expiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+          
+          localStorage.setItem('auth_token', token);
+          localStorage.setItem('auth_token_expiry', expiry.toString());
+          localStorage.setItem('auth_user_id', userId.toString());
+        };
+        
+        setAuthData(userData.token, userData.id);
       }
       
       // Update the user data directly in the cache
@@ -87,9 +97,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (userData) => {
-      // Save auth token to localStorage if it exists in the response
+      // Save auth token using the enhanced token management 
       if (userData && userData.token) {
-        localStorage.setItem('auth_token', userData.token);
+        // Import the setAuthData function from queryClient.ts
+        const setAuthData = (token: string, userId: number) => {
+          // Calculate expiry (7 days from now)
+          const expiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+          
+          localStorage.setItem('auth_token', token);
+          localStorage.setItem('auth_token_expiry', expiry.toString());
+          localStorage.setItem('auth_user_id', userId.toString());
+        };
+        
+        setAuthData(userData.token, userData.id);
       }
       
       // Update the user data directly in the cache
@@ -118,8 +138,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     onSuccess: () => {
-      // Clear auth token from localStorage
-      localStorage.removeItem('auth_token');
+      // Clear all auth data from localStorage using the helper function
+      const clearAuthData = () => {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_token_expiry');
+        localStorage.removeItem('auth_user_id');
+      };
+      
+      clearAuthData();
       
       // Clear user data from cache
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });

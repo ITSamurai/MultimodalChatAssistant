@@ -12,46 +12,84 @@ import { User as SelectUser } from "@shared/schema";
 interface TokenData {
   userId: number;
   expiresAt: number;
+  lastAccessed?: number; // Track when token was last used
+  deviceInfo?: string; // Store device/browser info
+  ipAddress?: string; // Store IP for additional security
 }
 
 // Store tokens in memory but with persistence capabilities
-const authTokens = new Map<string, TokenData>(); // token -> { userId, expiresAt }
+const authTokens = new Map<string, TokenData>(); // token -> { userId, expiresAt, ... }
 
-// Token expiration time (7 days in milliseconds)
-const TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000;
+// Token expiration time (14 days in milliseconds) - extended for better UX
+const TOKEN_EXPIRY = 14 * 24 * 60 * 60 * 1000;
 
 // Generate a new auth token for a user
-function generateAuthToken(userId: number): string {
+function generateAuthToken(userId: number, req?: Request): string {
   const token = randomBytes(32).toString('hex');
   const expiresAt = Date.now() + TOKEN_EXPIRY;
+  const now = Date.now();
   
-  authTokens.set(token, { userId, expiresAt });
+  // Get device info from request if available
+  const userAgent = req?.headers?.['user-agent'] || 'Unknown';
+  const ipAddress = req?.ip || req?.headers?.['x-forwarded-for'] || 'Unknown';
+  
+  // Store token with additional metadata
+  authTokens.set(token, { 
+    userId, 
+    expiresAt,
+    lastAccessed: now,
+    deviceInfo: userAgent,
+    ipAddress: typeof ipAddress === 'string' ? ipAddress : 'Unknown'
+  });
   
   // Save tokens to storage for persistence
   saveTokensToStorage();
+  
+  console.log(`Generated new token for user ${userId}, expires in ${TOKEN_EXPIRY / (24 * 60 * 60 * 1000)} days`);
   
   return token;
 }
 
 // Verify an auth token
-export async function verifyAuthToken(token: string): Promise<SelectUser | null> {
+export async function verifyAuthToken(token: string, req?: Request): Promise<SelectUser | null> {
   const tokenData = authTokens.get(token);
-  if (!tokenData) return null;
+  if (!tokenData) {
+    console.log('Token not found in authTokens map');
+    return null;
+  }
   
   // Check if token is expired
   if (tokenData.expiresAt < Date.now()) {
+    console.log(`Token expired at ${new Date(tokenData.expiresAt).toISOString()}`);
     // Token expired, remove it
     authTokens.delete(token);
     saveTokensToStorage();
     return null;
   }
   
-  // Refresh token expiration on use
-  tokenData.expiresAt = Date.now() + TOKEN_EXPIRY;
+  // Update metadata
+  const now = Date.now();
+  
+  // Refresh token expiration on use and update metadata
+  tokenData.expiresAt = now + TOKEN_EXPIRY;
+  tokenData.lastAccessed = now;
+  
+  // Update IP and device info if request is available
+  if (req) {
+    const userAgent = req.headers?.['user-agent'];
+    const ipAddress = req.ip || req.headers?.['x-forwarded-for'];
+    
+    if (userAgent) tokenData.deviceInfo = userAgent;
+    if (ipAddress) tokenData.ipAddress = typeof ipAddress === 'string' ? ipAddress : 'Unknown';
+  }
+  
+  // Save updated token data
   authTokens.set(token, tokenData);
   saveTokensToStorage();
   
-  return await storage.getUser(tokenData.userId) || null;
+  // Get user data
+  const user = await storage.getUser(tokenData.userId);
+  return user || null;
 }
 
 // Helper to persist tokens

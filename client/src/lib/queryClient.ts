@@ -8,9 +8,95 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Get the auth token from local storage
+// Token management with automatic renewal
+const TOKEN_KEY = 'auth_token';
+const TOKEN_EXPIRY_KEY = 'auth_token_expiry';
+const USER_ID_KEY = 'auth_user_id';
+
+// Get the auth token from local storage with auto-refresh check
 function getAuthToken(): string | null {
-  return localStorage.getItem('auth_token');
+  const token = localStorage.getItem(TOKEN_KEY);
+  const expiryStr = localStorage.getItem(TOKEN_EXPIRY_KEY);
+  
+  if (!token) return null;
+  
+  // If we have an expiry date, check if token is about to expire
+  if (expiryStr) {
+    const expiry = parseInt(expiryStr, 10);
+    const now = Date.now();
+    
+    // If token is about to expire (less than 1 hour remaining), trigger refresh
+    if (expiry - now < 60 * 60 * 1000) {
+      // Automatic token refresh
+      refreshToken().catch(err => {
+        console.error('Error refreshing token:', err);
+      });
+    }
+  }
+  
+  return token;
+}
+
+// Function to refresh token
+async function refreshToken(): Promise<void> {
+  try {
+    // We need a valid token to refresh, if none exists, we can't refresh
+    const currentToken = localStorage.getItem(TOKEN_KEY);
+    const userId = localStorage.getItem(USER_ID_KEY);
+    
+    if (!currentToken || !userId) {
+      // Clear invalid state
+      clearAuthData();
+      return;
+    }
+    
+    // Request a new token by sending the current token
+    // Create fresh headers without using the token (to avoid recursive calls)
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${currentToken}`
+    };
+    
+    // Make sure we're using the correct domain
+    const fullUrl = getFullUrl('/api/user');
+    
+    // Just verify the current token works by getting the user info
+    // If it works, we keep using it
+    const res = await fetch(fullUrl, {
+      method: 'GET',
+      headers,
+      credentials: 'include',
+    });
+    
+    if (res.status === 401) {
+      // If token is invalid, clear auth data
+      clearAuthData();
+      return;
+    }
+    
+    // If the token is valid, we're good to go
+    return;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    // Don't clear auth data on network errors, as they may be temporary
+    return;
+  }
+}
+
+// Helper to store auth data consistently
+function setAuthData(token: string, userId: number): void {
+  // Calculate expiry (7 days from now)
+  const expiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+  
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(TOKEN_EXPIRY_KEY, expiry.toString());
+  localStorage.setItem(USER_ID_KEY, userId.toString());
+}
+
+// Helper to clear auth data
+function clearAuthData(): void {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  localStorage.removeItem(USER_ID_KEY);
 }
 
 export async function apiRequest(

@@ -61,7 +61,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Set up authentication routes
-  setupAuth(app);
+  // Set up authentication routes - must be awaited since it's now async
+  await setupAuth(app);
   
   // API endpoint to serve Draw.IO XML directly - no authentication required
   app.get('/api/diagram-xml/:fileName', async (req: Request, res: Response) => {
