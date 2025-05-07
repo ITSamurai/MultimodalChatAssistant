@@ -36,18 +36,39 @@ const options = args.slice(2).join(' ');
 
 // Create a fallback SVG if D2 fails
 function createFallbackSVG(outputFile, errorMessage) {
-  const svgContent = `
-<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#fff0f0" />
-  <text x="50%" y="40%" font-family="Arial" font-size="24" text-anchor="middle" fill="#cc0000">
+  // Try to read the input D2 file
+  let d2Content = '';
+  try {
+    d2Content = fs.readFileSync(inputFile, 'utf8').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  } catch (readError) {
+    console.error(`Failed to read input file: ${readError.message}`);
+    d2Content = 'Could not read D2 content';
+  }
+  
+  const svgContent = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect width="100%" height="100%" fill="#f8f9fa" />
+  <rect x="50" y="50" width="700" height="500" fill="white" stroke="#e9ecef" stroke-width="2" rx="10" ry="10" />
+  
+  <text x="400" y="100" font-family="Arial" font-size="24" text-anchor="middle" fill="#cc0000">
     D2 Diagram Generation Error
   </text>
-  <text x="50%" y="50%" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">
+  
+  <text x="400" y="150" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">
     ${errorMessage || 'An error occurred while generating the diagram'}
   </text>
-  <text x="50%" y="60%" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">
+  
+  <text x="400" y="190" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">
     Input: ${path.basename(inputFile)}
   </text>
+  
+  <rect x="100" y="220" width="600" height="300" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="5" ry="5" />
+  
+  <foreignObject x="120" y="240" width="560" height="260">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 12px; white-space: pre; color: #333; overflow: auto; height: 100%;">
+${d2Content}
+    </div>
+  </foreignObject>
 </svg>
   `;
   

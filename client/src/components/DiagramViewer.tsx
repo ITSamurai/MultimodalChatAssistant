@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Download, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, RefreshCw, AlertTriangle } from 'lucide-react';
 
 interface DiagramViewerProps {
   diagramPath: string;
@@ -15,6 +15,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
   const [error, setError] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [imageUrl, setImageUrl] = useState(diagramPath);
+  const [svgContent, setSvgContent] = useState<string | null>(null);
 
   // Load the diagram
   useEffect(() => {
@@ -24,18 +25,56 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
     // If the path doesn't start with http or /, add the api prefix
     let finalUrl = diagramPath;
     if (!diagramPath.startsWith('http') && !diagramPath.startsWith('/api/')) {
-      finalUrl = `/api${diagramPath}`;
+      if (diagramPath.startsWith('/')) {
+        finalUrl = `/api${diagramPath}`;
+      } else {
+        finalUrl = `/api/${diagramPath}`;
+      }
     }
+    
+    // Debug info about the url construction
+    console.log({
+      original: diagramPath,
+      final: finalUrl,
+      startsWithSlash: diagramPath.startsWith('/'),
+      startsWithApiSlash: diagramPath.startsWith('/api/')
+    });
     
     console.log('Loading diagram from:', finalUrl);
     setImageUrl(finalUrl);
     
-    // Simulate loading the diagram
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    // Determine if this is an SVG file
+    const isSvg = finalUrl.includes('.svg');
     
-    return () => clearTimeout(timer);
+    if (isSvg) {
+      // Fetch the SVG content directly
+      fetch(finalUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch SVG: ${response.status} ${response.statusText}`);
+          }
+          return response.text();
+        })
+        .then(svgText => {
+          console.log('SVG content length:', svgText.length);
+          setSvgContent(svgText);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching SVG:', err);
+          setError(`Error loading SVG: ${err.message}`);
+          setIsLoading(false);
+        });
+    } else {
+      // For non-SVG images, just use the regular image tag
+      setSvgContent(null);
+      // Short timeout to simulate loading
+      setTimeout(() => setIsLoading(false), 500);
+    }
+    
+    return () => {
+      // Cleanup
+    };
   }, [diagramPath]);
   
   // Zoom in by 10%
@@ -109,22 +148,47 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
         ) : (
           <div className="overflow-auto inline-block min-w-fit">
             <div className="text-xs text-gray-500 mb-2">Debug: Loading from {imageUrl}</div>
-            <img 
-              src={imageUrl} 
-              alt={altText}
-              style={{ 
-                transform: `scale(${zoomLevel / 100})`,
-                transformOrigin: 'center center',
-                transition: 'transform 0.2s ease-in-out',
-                border: '1px solid #eee',
-                minWidth: '300px',
-                minHeight: '200px'
-              }}
-              onError={(e) => {
-                console.error('Image loading error:', e);
-                setError(`Failed to load diagram from ${imageUrl}`);
-              }}
-            />
+            
+            {svgContent ? (
+              <div
+                style={{ 
+                  transform: `scale(${zoomLevel / 100})`,
+                  transformOrigin: 'center center',
+                  transition: 'transform 0.2s ease-in-out',
+                  border: '1px solid #eee',
+                  minWidth: '300px',
+                  minHeight: '200px',
+                  padding: '10px',
+                  backgroundColor: 'white'
+                }}
+                dangerouslySetInnerHTML={{ __html: svgContent }}
+              />
+            ) : (
+              <img 
+                src={imageUrl} 
+                alt={altText}
+                style={{ 
+                  transform: `scale(${zoomLevel / 100})`,
+                  transformOrigin: 'center center',
+                  transition: 'transform 0.2s ease-in-out',
+                  border: '1px solid #eee',
+                  minWidth: '300px',
+                  minHeight: '200px'
+                }}
+                onError={(e) => {
+                  console.error('Image loading error:', e);
+                  setError(`Failed to load diagram from ${imageUrl}`);
+                }}
+              />
+            )}
+            
+            {/* Error badge if SVG is loaded but seems empty */}
+            {svgContent && svgContent.length < 100 && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-center text-sm">
+                <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
+                <span>The SVG content seems incomplete. Try regenerating the diagram.</span>
+              </div>
+            )}
           </div>
         )}
       </div>
