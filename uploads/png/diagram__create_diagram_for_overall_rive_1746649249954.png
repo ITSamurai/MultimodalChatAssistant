@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect width="100%" height="100%" fill="#f8f9fa" />
+  <rect x="50" y="50" width="700" height="500" fill="white" stroke="#e9ecef" stroke-width="2" rx="10" ry="10" />
+  
+  <text x="400" y="100" font-family="Arial" font-size="24" text-anchor="middle" fill="#cc0000">
+    D2 Diagram Generation Error
+  </text>
+  
+  <text x="400" y="150" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">
+    D2 Failed: Command failed: d2 "/home/runner/workspace/uploads/d2/diagram__create_diagram_for_overall_rive_1746649249954.d2" "/home/runner/workspace/uploads/png/diagram__create_diagram_for_overall_rive_1746649249954.png"
+  </text>
+  
+  <text x="400" y="190" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">
+    Input: diagram__create_diagram_for_overall_rive_1746649249954.d2
+  </text>
+  
+  <rect x="100" y="220" width="600" height="300" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="5" ry="5" />
+  
+  <foreignObject x="120" y="240" width="560" height="260">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 12px; white-space: pre; color: #333; overflow: auto; height: 100%;">
+direction: down
+
+ceo: &quot;CEO&quot;
+vp_engineering: &quot;VP Engineering&quot;
+vp_product: &quot;VP Product&quot;
+vp_sales: &quot;VP Sales&quot;
+vp_marketing: &quot;VP Marketing&quot;
+vp_operations: &quot;VP Operations&quot;
+engineering_team: &quot;Engineering Team&quot;
+product_team: &quot;Product Team&quot;
+sales_team: &quot;Sales Team&quot;
+marketing_team: &quot;Marketing Team&quot;
+operations_team: &quot;Operations Team&quot;
+
+ceo -&gt; vp_engineering
+ceo -&gt; vp_product
+ceo -&gt; vp_sales
+ceo -&gt; vp_marketing
+ceo -&gt; vp_operations
+vp_engineering -&gt; engineering_team
+vp_product -&gt; product_team
+vp_sales -&gt; sales_team
+vp_marketing -&gt; marketing_team
+vp_operations -&gt; operations_team
+    </div>
+  </foreignObject>
+</svg>
+  

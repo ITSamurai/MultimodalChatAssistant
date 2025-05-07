@@ -113,6 +113,29 @@ export function isDiagramGenerationRequest(message: string): boolean {
     }
   }
   
+  // Special case for requests about diagram generation based on information
+  if (lowerMessage.includes('generate') && lowerMessage.includes('diagram') && lowerMessage.includes('based on')) {
+    console.log(`Detected diagram request with "generate diagram based on" pattern`);
+    return true;
+  }
+  
+  // Special case for application structure
+  if (lowerMessage.includes('application') && lowerMessage.includes('structure')) {
+    console.log(`Detected application structure diagram request`);
+    return true;
+  }
+  
+  // Special case for RiverMeadow specific diagram requests
+  if (lowerMessage.includes('rivermeadow') && 
+      (lowerMessage.includes('structure') || 
+       lowerMessage.includes('architecture') || 
+       lowerMessage.includes('application') || 
+       lowerMessage.includes('system') || 
+       lowerMessage.includes('software'))) {
+    console.log(`Detected RiverMeadow application/system structure diagram request`);
+    return true;
+  }
+  
   return false;
 }
 
@@ -127,15 +150,62 @@ export async function generateD2Script(prompt: string): Promise<{
     console.log('Generating D2 script from prompt:', prompt);
     
     // Create a system prompt that instructs GPT to generate a D2 script
-    // Determine if this is an organization structure diagram or a technical diagram
-    const isOrganizationDiagram = prompt.toLowerCase().includes('structure') || 
-                                  prompt.toLowerCase().includes('organization') || 
+    // Determine what type of diagram is being requested
+    const isOrganizationDiagram = prompt.toLowerCase().includes('organization') || 
                                   prompt.toLowerCase().includes('hierarchy') || 
-                                  prompt.toLowerCase().includes('company');
+                                  prompt.toLowerCase().includes('company structure') || 
+                                  prompt.toLowerCase().includes('team structure');
+    
+    const isApplicationStructure = prompt.toLowerCase().includes('application structure') || 
+                                   prompt.toLowerCase().includes('software structure') || 
+                                   prompt.toLowerCase().includes('system structure') || 
+                                   prompt.toLowerCase().includes('architecture diagram') || 
+                                   prompt.toLowerCase().includes('based on that information');
     
     let systemPrompt;
     
-    if (isOrganizationDiagram) {
+    if (isApplicationStructure) {
+      // System prompt for application/software structure diagrams
+      systemPrompt = "You are an expert at creating software architecture diagrams using the D2 language. " +
+      "The user is requesting a diagram of RiverMeadow's application structure, software components, or system architecture. " +
+      "Generate a complete, valid D2 diagram script that represents a software architecture.\n\n" +
+      "Important rules:\n" +
+      "1. Use D2 language syntax, not mermaid or any other format.\n" +
+      "2. For application architecture diagrams, use 'direction: down' as the first line.\n" +
+      "3. Keep node definitions simple with just the label.\n" +
+      "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
+      "5. Use -> for connections between components to show data flow or dependencies.\n" +
+      "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
+      "7. Include key application components like UI, API Layer, Database, Services, etc.\n\n" +
+      "Example D2 application structure diagram:\n" +
+      "```\n" +
+      "direction: down\n\n" +
+      "user_interface: \"User Interface\"\n" +
+      "api_layer: \"API Layer\"\n" +
+      "business_logic: \"Business Logic\"\n" +
+      "data_services: \"Data Services\"\n" +
+      "database: \"Database\"\n" +
+      "auth_service: \"Authentication\"\n" +
+      "monitoring: \"Monitoring\"\n\n" +
+      "user_interface -> api_layer\n" +
+      "api_layer -> business_logic\n" +
+      "api_layer -> auth_service\n" +
+      "business_logic -> data_services\n" +
+      "data_services -> database\n" +
+      "monitoring -> user_interface\n" +
+      "monitoring -> api_layer\n" +
+      "monitoring -> business_logic\n" +
+      "```\n\n" +
+      "For RiverMeadow's cloud migration platform, focus on components like:\n" +
+      "- User Interface (web dashboard)\n" +
+      "- API Layer\n" +
+      "- Migration Engine\n" +
+      "- Cloud Provider Connectors\n" +
+      "- Data Management services\n" +
+      "- Security components\n" +
+      "- Monitoring systems\n\n" +
+      "Return only valid D2 code without any additional comments or explanations.";
+    } else if (isOrganizationDiagram) {
       // System prompt for organizational/structure diagrams
       systemPrompt = "You are an expert at creating organizational and structural diagrams using the D2 language. " +
       "The user is requesting a diagram related to RiverMeadow's organization, structure or hierarchy. " +
@@ -194,7 +264,13 @@ export async function generateD2Script(prompt: string): Promise<{
       "Return only valid D2 code without any additional comments or explanations.";
     }
     
-    console.log(`Using ${isOrganizationDiagram ? 'organizational' : 'technical'} diagram system prompt`);
+    if (isApplicationStructure) {
+      console.log('Using application structure diagram system prompt');
+    } else if (isOrganizationDiagram) {
+      console.log('Using organizational diagram system prompt');
+    } else {
+      console.log('Using technical diagram system prompt');
+    }
     
     // Send the prompt to OpenAI to generate the D2 script
     const completion = await openai.chat.completions.create({
