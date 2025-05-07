@@ -74,44 +74,19 @@ export async function generateD2Script(prompt: string): Promise<{
     "Important rules:\n" +
     "1. Use D2 language syntax, not mermaid or any other format.\n" +
     "2. Always include 'direction: right' as the first line to set layout direction.\n" +
-    "3. Make sure to specify node shapes and styles for visual clarity.\n" +
-    "4. Use appropriate colors for different components (e.g., clouds for environments, rectangles for services).\n" +
+    "3. Keep node definitions simple with just the label.\n" +
+    "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
     "5. Always create connections between components using the -> operator.\n" +
-    "6. Include a descriptive title for the diagram that clearly indicates what it's showing.\n" +
+    "6. Do NOT include a title block as our D2 version doesn't support it.\n" +
     "7. Keep the diagram focused and not too complex (max 10-15 elements).\n\n" +
     "Example D2 diagram:\n" +
     "```\n" +
-    "direction: right\n" +
-    "title: {\n" +
-    "  label: \"RiverMeadow Cloud Migration Process\"\n" +
-    "  near: top-center\n" +
-    "  shape: text\n" +
-    "  style.font-size: 24\n" +
-    "  style.font-weight: bold\n" +
-    "}\n\n" +
-    "source: {\n" +
-    "  label: \"Source Environment\"\n" +
-    "  shape: cloud\n" +
-    "  style.fill: lightyellow\n" +
-    "}\n" +
-    "target: {\n" +
-    "  label: \"Target Cloud\"\n" +
-    "  shape: cloud\n" +
-    "  style.fill: lightblue\n" +
-    "}\n" +
-    "rivermeadow: {\n" +
-    "  label: \"RiverMeadow SaaS\"\n" +
-    "  shape: rectangle\n" +
-    "  style.fill: \"#D0FFC0\"\n" +
-    "}\n\n" +
-    "discovery: {\n" +
-    "  label: \"Discovery\"\n" +
-    "  shape: rectangle\n" +
-    "}\n" +
-    "migration: {\n" +
-    "  label: \"Migration\"\n" +
-    "  shape: rectangle\n" +
-    "}\n\n" +
+    "direction: right\n\n" +
+    "source: \"Source Environment\"\n" +
+    "target: \"Target Cloud\"\n" +
+    "rivermeadow: \"RiverMeadow SaaS\"\n" +
+    "discovery: \"Discovery\"\n" +
+    "migration: \"Migration\"\n\n" +
     "source -> discovery -> rivermeadow -> migration -> target\n" +
     "```\n\n" +
     "Return only valid D2 code without any additional comments or explanations.";
@@ -139,11 +114,17 @@ export async function generateD2Script(prompt: string): Promise<{
     // Extract the D2 script from the response (removing any markdown code blocks if present)
     let script = rawResponse.replace(/```d2\n|\```\n|```d2|```/g, '').trim();
     
-    // Extract the title from the diagram if possible
+    // Extract a title from the prompt or first line comments
     let title = "Generated Diagram";
-    const titleMatch = script.match(/title:\s*{\s*label:\s*"([^"]+)"/);
-    if (titleMatch && titleMatch[1]) {
-      title = titleMatch[1];
+    
+    // Look for a comment that might contain a title
+    const commentMatch = script.match(/^#\s*(.+)$/m);
+    if (commentMatch && commentMatch[1]) {
+      title = commentMatch[1].trim();
+    } else {
+      // Use part of the prompt as the title
+      const promptWords = prompt.split(/\s+/).slice(0, 5).join(' ');
+      title = `Diagram: ${promptWords}...`;
     }
     
     return { script, title };
