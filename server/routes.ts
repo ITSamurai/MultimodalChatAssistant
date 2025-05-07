@@ -33,11 +33,21 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // Import diagram-related functions dynamically
 let generateDiagram: Function;
 let isImageGenerationRequest: Function;
+let drawioToSvg: Function;
+
+// Import for diagram generation functions
 const importDiagramFunctions = import('./services/image-generation.service').then(module => {
   generateDiagram = module.generateDiagram;
   isImageGenerationRequest = module.isImageGenerationRequest;
 }).catch(err => {
-  console.error('Error importing diagram functions:', err);
+  console.error('Error importing image-generation.service:', err);
+});
+
+// Import for SVG generation
+const importSvgGenerator = import('./services/svg-generator').then(module => {
+  drawioToSvg = module.drawioToSvg;
+}).catch(err => {
+  console.error('Error importing svg-generator:', err);
 });
 
 // Set up multer for file uploads

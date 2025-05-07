@@ -4,16 +4,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import OpenAI from "openai";
-import * as mxgraph from 'mxgraph';
+// Note: We'll use a simpler approach without mxgraph direct dependency
 
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
-
-// Initialize mxGraph for diagram rendering
-const mx = mxgraph({
-  mxImageBasePath: '/images',
-  mxBasePath: '/mxgraph'
-});
 
 // Define the directories for storing images
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
