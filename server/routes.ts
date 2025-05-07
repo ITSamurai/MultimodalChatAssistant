@@ -16,9 +16,11 @@ interface ChatResponse {
   content: string;
   references?: Array<{
     type: string;
-    imagePath: string;
+    imagePath: string;  // Now includes cache-busting parameters
+    realPath?: string;  // The original path without cache-busting
     caption: string;
     content: string;
+    timestamp?: string; // When the reference was generated
   }>;
 }
 
@@ -596,14 +598,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Generate diagram and get the path
           const diagramResult = await generateDiagram(latestUserMessage, []);
-          console.log(`Successfully generated image: ${diagramResult.imagePath}`);
           
-          // Add reference to the diagram
+          // Add a timestamp-based query parameter to the image path to prevent caching
+          // This will force the frontend to always load the latest version of the diagram
+          const uniqueTimestamp = Date.now();
+          const randomId = Math.random().toString(36).substring(2, 10);
+          const cacheBustingPath = `${diagramResult.imagePath}?ver=${uniqueTimestamp}-${randomId}`;
+          
+          console.log(`Successfully generated image: ${diagramResult.imagePath}`);
+          console.log(`Cache-busting path for frontend: ${cacheBustingPath}`);
+          
+          // Add reference to the diagram with both the actual path and a cache-busting path
           diagramReference = {
             type: 'image',
-            imagePath: diagramResult.imagePath,
-            caption: 'Generated diagram based on knowledge base information',
-            content: latestUserMessage
+            imagePath: cacheBustingPath, // Use the version with cache-busting
+            realPath: diagramResult.imagePath, // Store the real path too
+            caption: `Generated diagram for: ${latestUserMessage.substring(0, 100)}...`,
+            content: latestUserMessage,
+            timestamp: uniqueTimestamp.toString()
           };
         } catch (diagramError) {
           console.error('Error generating diagram:', diagramError);

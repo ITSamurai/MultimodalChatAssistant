@@ -43,8 +43,11 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
       setSvgContent(''); // Clear existing content
       
       try {
-        // Extract base filename (without extension)
-        const baseFilename = diagramPath.replace(/\.(html|xml|drawio)$/, '');
+        // Extract base filename (without extension) and strip any existing query params
+        // First remove any query params that might be in the path
+        const pathWithoutParams = diagramPath.split('?')[0];
+        const baseFilename = pathWithoutParams.replace(/\.(html|xml|drawio)$/, '');
+        
         // Get just the filename part, not the full path
         const filenameOnly = baseFilename.split('/').pop() || baseFilename;
         
