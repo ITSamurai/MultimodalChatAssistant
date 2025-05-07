@@ -1,0 +1,118 @@
+<mxfile host="app.diagrams.net" modified="2025-05-07T16:01:48.482Z" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="diagram-1746633706482-68sna1" name="Virtual Machine Migration Architecture">
+    <mxGraphModel dx="1643" dy="842" grid="0" gridSize="15" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1261" pageHeight="1044" background="#ffffff" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Central Node -->
+        <mxCell id="2" value="&lt;b&gt;RiverMeadow Platform&lt;/b&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="318" y="374" width="158" height="158" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Hypervisor Integration Layer -->
+        <mxCell id="3" value="Hypervisor Integration Layer" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="171.5" y="332" width="123" height="62" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: VM Configuration Analyzer -->
+        <mxCell id="4" value="VM Configuration Analyzer" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="513.5" y="340" width="143" height="64" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Network Mapping Engine -->
+        <mxCell id="5" value="Network Mapping Engine" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#b0e3e6;strokeColor=#0e8088;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="157" y="519" width="144" height="58" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: VM Inventory Scanner -->
+        <mxCell id="6" value="VM Inventory Scanner" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="504.5" y="511" width="123" height="68" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Disk Image Processor -->
+        <mxCell id="7" value="Disk Image Processor" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="149.5" y="637.5" width="135" height="67" as="geometry" />
+        </mxCell>
+        <!-- Connection from VM Inventory Scanner to RiverMeadow Platform -->
+        <mxCell id="8" value="VM Discovery" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="6" target="2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from RiverMeadow Platform to VM Configuration Analyzer -->
+        <mxCell id="9" value="Requirement Analysis" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="2" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from VM Configuration Analyzer to Network Mapping Engine -->
+        <mxCell id="10" value="Network Translation" style="edgeStyle=segmentEdgeStyle;endArrow=classic;startArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;strokeWidth=1.5;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from RiverMeadow Platform to Disk Image Processor -->
+        <mxCell id="11" value="Storage Migration" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="2" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Disk Image Processor to Hypervisor Integration Layer -->
+        <mxCell id="12" value="Target Deployment" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;dashed=1;dashPattern=1 4;" edge="1" parent="1" source="7" target="3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- VM Detection Category -->
+        <mxCell id="13" value="&lt;b&gt;VM Detection&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="157" y="601" width="219" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="Inventory Discovery" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="152" y="649" width="140" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="Resource Utilization" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="318" y="655" width="140" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="Dependency Mapping" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="479" y="656" width="140" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="Application Profiling" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="149" y="703" width="140" height="37" as="geometry" />
+        </mxCell>
+        <!-- Migration Types Category -->
+        <mxCell id="18" value="&lt;b&gt;Migration Types&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="157" y="775" width="181" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="Cold Migration" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="155" y="826" width="109" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="20" value="Live Migration" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="285" y="825" width="109" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="Block-level Replication" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="150" y="878" width="109" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="Snapshot-based Movement" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="268" y="874" width="109" height="39" as="geometry" />
+        </mxCell>
+        <!-- Target Platforms Category -->
+        <mxCell id="23" value="&lt;b&gt;Target Platforms&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="157" y="953" width="230" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="VMware" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="158" y="1008" width="114" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="Hyper-V" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="298" y="1005" width="114" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="KVM" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="435" y="1007" width="114" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="27" value="AWS EC2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="146" y="1055" width="114" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="28" value="Azure VMs" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1056" width="114" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="29" value="GCP Instances" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="418" y="1053" width="114" height="39" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

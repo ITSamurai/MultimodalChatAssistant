@@ -4,14 +4,22 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import OpenAI from "openai";
+import * as mxgraph from 'mxgraph';
 
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+
+// Initialize mxGraph for diagram rendering
+const mx = mxgraph({
+  mxImageBasePath: '/images',
+  mxBasePath: '/mxgraph'
+});
 
 // Define the directories for storing images
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 const GENERATED_IMAGES_DIR = path.join(UPLOADS_DIR, 'generated');
 const PNG_DIR = path.join(UPLOADS_DIR, 'png');
+const SVG_DIR = path.join(UPLOADS_DIR, 'svg');
 
 /**
  * Ensure all necessary directories exist
@@ -26,6 +34,9 @@ export const ensureDirectoriesExist = async (): Promise<void> => {
     }
     if (!fs.existsSync(PNG_DIR)) {
       await mkdir(PNG_DIR);
+    }
+    if (!fs.existsSync(SVG_DIR)) {
+      await mkdir(SVG_DIR);
     }
   } catch (error) {
     console.error('Error creating directories:', error);
