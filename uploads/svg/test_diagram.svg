@@ -1,71 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" d2Version="v0.6.5" preserveAspectRatio="xMinYMin meet" viewBox="0 0 1006 286"><svg id="d2-svg" class="d2-2029144178" width="1006" height="286" viewBox="-101 -101 1006 286"><rect x="-101.000000" y="-101.000000" width="1006.000000" height="286.000000" rx="0.000000" class=" fill-N7" stroke-width="0" /><style type="text/css"><![CDATA[
+.d2-2029144178 .text-bold {
+	font-family: "d2-2029144178-font-bold";
+}
+@font-face {
+	font-family: d2-2029144178-font-bold;
+	src: url("data:application/font-woff;base64,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");
+}]]></style><style type="text/css"><![CDATA[.shape {
+  shape-rendering: geometricPrecision;
+  stroke-linejoin: round;
+}
+.connection {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.blend {
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
 
-<svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
-  <!-- RiverMeadow Migration Diagram (ID: os-migration-test-123) -->
-  <style>
-    text { font-family: Arial, sans-serif; }
-    .title { font-size: 24px; font-weight: bold; }
-    .subtitle { font-size: 14px; fill: #666; }
-    .component { fill: #dae8fc; stroke: #6c8ebf; stroke-width: 2; }
-    .connection { fill: #d5e8d4; stroke: #82b366; stroke-width: 1; }
-    .info { font-size: 16px; fill: #333; }
-    .warning { font-size: 14px; fill: #cc0000; }
-  </style>
-  
-  <!-- Background -->
-  <rect width="100%" height="100%" fill="#ffffff" />
-  
-  <!-- Title -->
-  <text x="550" y="50" class="title" text-anchor="middle">RiverMeadow OS Migration</text>
-  
-  <!-- Diagram representation -->
-  <rect x="100" y="100" width="900" height="600" rx="10" ry="10" fill="#f9f9f9" stroke="#dddddd" stroke-width="1" />
-  
-  <!-- Component information -->
-  <text x="550" y="180" class="info" text-anchor="middle">Diagram Components</text>
-  <text x="550" y="220" class="info" text-anchor="middle">Nodes: 24 | Connections: 4</text>
-  
-  <!-- Visual representation -->
-  
-    <circle cx="550" cy="425" r="60" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" />
-    <text x="550" y="425" text-anchor="middle" font-size="14">RiverMeadow</text>
-    <text x="550" y="445" text-anchor="middle" font-size="14">Platform</text>
-  
-        <rect x="650" y="400" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
-        <text x="700" y="430" text-anchor="middle" font-size="12">Component 1</text>
-      
-        <line x1="550" y1="425" x2="700" y2="425" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
-      
-        <rect x="575" y="529.9038105676658" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
-        <text x="625" y="559.9038105676658" text-anchor="middle" font-size="12">Component 2</text>
-      
-        <line x1="550" y1="425" x2="625" y2="554.9038105676658" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
-      
-        <rect x="425" y="529.9038105676658" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
-        <text x="475" y="559.9038105676658" text-anchor="middle" font-size="12">Component 3</text>
-      
-        <line x1="550" y1="425" x2="475" y2="554.9038105676658" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
-      
-        <rect x="350" y="400" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
-        <text x="400" y="430" text-anchor="middle" font-size="12">Component 4</text>
-      
-        <line x1="550" y1="425" x2="400" y2="425" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
-      
-        <rect x="424.99999999999994" y="270.0961894323342" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
-        <text x="474.99999999999994" y="300.0961894323342" text-anchor="middle" font-size="12">Component 5</text>
-      
-        <line x1="550" y1="425" x2="474.99999999999994" y2="295.0961894323342" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
-      
-        <rect x="574.9999999999999" y="270.09618943233414" width="100" height="50" rx="10" ry="10" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
-        <text x="624.9999999999999" y="300.09618943233414" text-anchor="middle" font-size="12">Component 6</text>
-      
-        <line x1="550" y1="425" x2="624.9999999999999" y2="295.09618943233414" stroke="#666666" stroke-width="1.5" stroke-dasharray="5,2" />
-      
-  
-  <!-- Warning -->
-  <text x="550" y="720" class="warning" text-anchor="middle">⚠️ This is a preview. For full diagram interactivity,</text>
-  <text x="550" y="750" class="warning" text-anchor="middle">download the .drawio file and open in draw.io</text>
-  
-  <!-- Footer with timestamp -->
-  <text x="550" y="810" text-anchor="middle" font-size="12" fill="#999999">Generated: 2025-05-07T16:12:39.436Z</text>
-</svg>
-  
+		.d2-2029144178 .fill-N1{fill:#0A0F25;}
+		.d2-2029144178 .fill-N2{fill:#676C7E;}
+		.d2-2029144178 .fill-N3{fill:#9499AB;}
+		.d2-2029144178 .fill-N4{fill:#CFD2DD;}
+		.d2-2029144178 .fill-N5{fill:#DEE1EB;}
+		.d2-2029144178 .fill-N6{fill:#EEF1F8;}
+		.d2-2029144178 .fill-N7{fill:#FFFFFF;}
+		.d2-2029144178 .fill-B1{fill:#0D32B2;}
+		.d2-2029144178 .fill-B2{fill:#0D32B2;}
+		.d2-2029144178 .fill-B3{fill:#E3E9FD;}
+		.d2-2029144178 .fill-B4{fill:#E3E9FD;}
+		.d2-2029144178 .fill-B5{fill:#EDF0FD;}
+		.d2-2029144178 .fill-B6{fill:#F7F8FE;}
+		.d2-2029144178 .fill-AA2{fill:#4A6FF3;}
+		.d2-2029144178 .fill-AA4{fill:#EDF0FD;}
+		.d2-2029144178 .fill-AA5{fill:#F7F8FE;}
+		.d2-2029144178 .fill-AB4{fill:#EDF0FD;}
+		.d2-2029144178 .fill-AB5{fill:#F7F8FE;}
+		.d2-2029144178 .stroke-N1{stroke:#0A0F25;}
+		.d2-2029144178 .stroke-N2{stroke:#676C7E;}
+		.d2-2029144178 .stroke-N3{stroke:#9499AB;}
+		.d2-2029144178 .stroke-N4{stroke:#CFD2DD;}
+		.d2-2029144178 .stroke-N5{stroke:#DEE1EB;}
+		.d2-2029144178 .stroke-N6{stroke:#EEF1F8;}
+		.d2-2029144178 .stroke-N7{stroke:#FFFFFF;}
+		.d2-2029144178 .stroke-B1{stroke:#0D32B2;}
+		.d2-2029144178 .stroke-B2{stroke:#0D32B2;}
+		.d2-2029144178 .stroke-B3{stroke:#E3E9FD;}
+		.d2-2029144178 .stroke-B4{stroke:#E3E9FD;}
+		.d2-2029144178 .stroke-B5{stroke:#EDF0FD;}
+		.d2-2029144178 .stroke-B6{stroke:#F7F8FE;}
+		.d2-2029144178 .stroke-AA2{stroke:#4A6FF3;}
+		.d2-2029144178 .stroke-AA4{stroke:#EDF0FD;}
+		.d2-2029144178 .stroke-AA5{stroke:#F7F8FE;}
+		.d2-2029144178 .stroke-AB4{stroke:#EDF0FD;}
+		.d2-2029144178 .stroke-AB5{stroke:#F7F8FE;}
+		.d2-2029144178 .background-color-N1{background-color:#0A0F25;}
+		.d2-2029144178 .background-color-N2{background-color:#676C7E;}
+		.d2-2029144178 .background-color-N3{background-color:#9499AB;}
+		.d2-2029144178 .background-color-N4{background-color:#CFD2DD;}
+		.d2-2029144178 .background-color-N5{background-color:#DEE1EB;}
+		.d2-2029144178 .background-color-N6{background-color:#EEF1F8;}
+		.d2-2029144178 .background-color-N7{background-color:#FFFFFF;}
+		.d2-2029144178 .background-color-B1{background-color:#0D32B2;}
+		.d2-2029144178 .background-color-B2{background-color:#0D32B2;}
+		.d2-2029144178 .background-color-B3{background-color:#E3E9FD;}
+		.d2-2029144178 .background-color-B4{background-color:#E3E9FD;}
+		.d2-2029144178 .background-color-B5{background-color:#EDF0FD;}
+		.d2-2029144178 .background-color-B6{background-color:#F7F8FE;}
+		.d2-2029144178 .background-color-AA2{background-color:#4A6FF3;}
+		.d2-2029144178 .background-color-AA4{background-color:#EDF0FD;}
+		.d2-2029144178 .background-color-AA5{background-color:#F7F8FE;}
+		.d2-2029144178 .background-color-AB4{background-color:#EDF0FD;}
+		.d2-2029144178 .background-color-AB5{background-color:#F7F8FE;}
+		.d2-2029144178 .color-N1{color:#0A0F25;}
+		.d2-2029144178 .color-N2{color:#676C7E;}
+		.d2-2029144178 .color-N3{color:#9499AB;}
+		.d2-2029144178 .color-N4{color:#CFD2DD;}
+		.d2-2029144178 .color-N5{color:#DEE1EB;}
+		.d2-2029144178 .color-N6{color:#EEF1F8;}
+		.d2-2029144178 .color-N7{color:#FFFFFF;}
+		.d2-2029144178 .color-B1{color:#0D32B2;}
+		.d2-2029144178 .color-B2{color:#0D32B2;}
+		.d2-2029144178 .color-B3{color:#E3E9FD;}
+		.d2-2029144178 .color-B4{color:#E3E9FD;}
+		.d2-2029144178 .color-B5{color:#EDF0FD;}
+		.d2-2029144178 .color-B6{color:#F7F8FE;}
+		.d2-2029144178 .color-AA2{color:#4A6FF3;}
+		.d2-2029144178 .color-AA4{color:#EDF0FD;}
+		.d2-2029144178 .color-AA5{color:#F7F8FE;}
+		.d2-2029144178 .color-AB4{color:#EDF0FD;}
+		.d2-2029144178 .color-AB5{color:#F7F8FE;}.appendix text.text{fill:#0A0F25}.md{--color-fg-default:#0A0F25;--color-fg-muted:#676C7E;--color-fg-subtle:#9499AB;--color-canvas-default:#FFFFFF;--color-canvas-subtle:#EEF1F8;--color-border-default:#0D32B2;--color-border-muted:#0D32B2;--color-neutral-muted:#EEF1F8;--color-accent-fg:#0D32B2;--color-accent-emphasis:#0D32B2;--color-attention-subtle:#676C7E;--color-danger-fg:red;}.sketch-overlay-B1{fill:url(#streaks-darker);mix-blend-mode:lighten}.sketch-overlay-B2{fill:url(#streaks-darker);mix-blend-mode:lighten}.sketch-overlay-B3{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-B4{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-B5{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-B6{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-AA2{fill:url(#streaks-dark);mix-blend-mode:overlay}.sketch-overlay-AA4{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-AA5{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-AB4{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-AB5{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-N1{fill:url(#streaks-darker);mix-blend-mode:lighten}.sketch-overlay-N2{fill:url(#streaks-dark);mix-blend-mode:overlay}.sketch-overlay-N3{fill:url(#streaks-normal);mix-blend-mode:color-burn}.sketch-overlay-N4{fill:url(#streaks-normal);mix-blend-mode:color-burn}.sketch-overlay-N5{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-N6{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-N7{fill:url(#streaks-bright);mix-blend-mode:darken}.light-code{display: block}.dark-code{display: none}]]></style><g id="source"><g class="shape" ><path d="M 38 29 C 38 30 36 31 35 31 C 15 32 -0 43 -0 57 C 0 72 17 84 39 84 H 189 C 213 84 232 71 232 56 C 232 41 214 29 192 28 C 190 28 189 27 189 26 C 184 11 161 -0 134 -0 C 116 0 100 5 90 12 C 89 13 87 13 86 13 C 82 12 78 12 73 12 C 55 12 40 19 38 29 Z" fill="lightyellow" class=" stroke-B1" style="stroke-width:2;" /></g><text x="115.004000" y="63.516000" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Source Environment</text></g><g id="target"><g class="shape" ><path d="M 612 29 C 612 30 610 31 609 31 C 589 32 574 43 574 57 C 574 72 591 84 613 84 H 761 C 784 84 804 71 804 56 C 804 41 786 29 764 28 C 762 28 761 27 761 26 C 756 11 733 -0 706 -0 C 688 0 673 5 663 12 C 662 13 660 13 659 13 C 655 12 651 12 646 12 C 628 12 614 19 612 29 Z" fill="lightblue" class=" stroke-B1" style="stroke-width:2;" /></g><text x="688.185000" y="63.516000" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Target Environment</text></g><g id="rivermeadow"><g class="shape" ><rect x="332.000000" y="9.000000" width="142.000000" height="66.000000" fill="#D0FFC0" class=" stroke-B1" style="stroke-width:2;" /></g><text x="403.000000" y="47.500000" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">RiverMeadow</text></g><g id="(source -&gt; rivermeadow)[0]"><marker id="mk-3488378134" markerWidth="10.000000" markerHeight="12.000000" refX="7.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="0.000000,0.000000 10.000000,6.000000 0.000000,12.000000" class="connection fill-B1" stroke-width="2" /> </marker><path d="M 228.000000 42.000000 C 270.799988 42.000000 292.000000 42.000000 328.000000 42.000000" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-3488378134)" mask="url(#d2-2029144178)" /></g><g id="(rivermeadow -&gt; target)[0]"><path d="M 476.000000 42.000000 C 514.000000 42.000000 535.400024 42.000000 577.000000 42.000000" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-3488378134)" mask="url(#d2-2029144178)" /></g><mask id="d2-2029144178" maskUnits="userSpaceOnUse" x="-101" y="-101" width="1006" height="286">
+<rect x="-101" y="-101" width="1006" height="286" fill="white"></rect>
+<rect x="42.504000" y="47.516000" width="145" height="21" fill="rgba(0,0,0,0.75)"></rect>
+<rect x="616.685000" y="47.516000" width="143" height="21" fill="rgba(0,0,0,0.75)"></rect>
+<rect x="354.500000" y="31.500000" width="97" height="21" fill="rgba(0,0,0,0.75)"></rect>
+</mask></svg></svg>

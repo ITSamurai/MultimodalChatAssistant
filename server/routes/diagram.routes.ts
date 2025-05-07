@@ -3,45 +3,24 @@
  * 
  * This file contains the API routes for diagram generation and retrieval.
  */
-
 import { Express, Request, Response } from 'express';
-import * as path from 'path';
-import * as fs from 'fs';
-import { z } from 'zod';
-import { requireTokenAuth } from '../auth';
+import fs from 'fs';
+import path from 'path';
 import { generateDiagram, isDiagramGenerationRequest } from '../services/diagram-generation.service';
-import { ensureDirectoriesExist, generateCacheBustedFilename } from '../services/d2.service';
-
-// Validate the generate diagram request body
-const generateDiagramSchema = z.object({
-  prompt: z.string().min(1, "Prompt must not be empty"),
-  reference_type: z.enum(['direct', 'chat']).optional().default('direct'),
-  format: z.enum(['xml', 'svg', 'png']).optional().default('svg'),
-});
+import { generateCacheBustedFilename } from '../services/d2.service';
+import { requireTokenAuth } from '../auth';
 
 export function registerDiagramRoutes(app: Express) {
-  // Ensure directories exist
-  ensureDirectoriesExist();
-  
   /**
    * Generate a diagram from a prompt
    */
   app.post('/api/generate-diagram', requireTokenAuth, async (req: Request, res: Response) => {
     try {
-      // Validate request body
-      const result = generateDiagramSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ error: 'Invalid request', details: result.error.format() });
+      const { prompt, format = 'svg', reference_type = 'reference' } = req.body;
+      
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ error: 'Prompt is required' });
       }
-      
-      const { prompt, reference_type, format } = result.data;
-      
-      // Check if this is a diagram generation request
-      if (!isDiagramGenerationRequest(prompt)) {
-        return res.status(400).json({ error: 'Not a diagram generation request' });
-      }
-      
-      console.log('Generating diagram for prompt:', prompt);
       
       // Generate the diagram
       const diagramResult = await generateDiagram(prompt);
@@ -74,7 +53,7 @@ export function registerDiagramRoutes(app: Express) {
       } else {
         // Return a reference to be used in the chat
         const fileName = path.basename(filePath);
-        const cacheBustedName = generateCacheBustedFilename(path.basename(filePath, path.extname(filePath)), path.extname(filePath).substring(1));
+        const cacheBustingName = generateCacheBustedFilename(path.basename(filePath, path.extname(filePath)), path.extname(filePath).substring(1));
         
         return res.json({
           success: true,
@@ -82,7 +61,7 @@ export function registerDiagramRoutes(app: Express) {
           references: [
             {
               type: 'image',
-              imagePath: `/${format === 'xml' ? 'diagram-xml' : format === 'png' ? 'diagram-png' : 'diagram-svg'}/${fileName}?v=${cacheBustedName}`,
+              imagePath: `/${format === 'xml' ? 'diagram-xml' : format === 'png' ? 'diagram-png' : 'diagram-svg'}/${fileName}?v=${cacheBustingName}`,
               realPath: filePath,
               caption: diagramResult.diagramTitle,
               content: diagramResult.diagramTitle
