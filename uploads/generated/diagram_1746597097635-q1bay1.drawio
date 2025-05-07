@@ -1,0 +1,161 @@
+<mxfile host="app.diagrams.net" modified="2025-05-07T05:51:52.781Z" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="diagram-1746597112781-etriqk" name="RiverMeadow's Cloud Migration Stages Diagram">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Central Node -->
+        <mxCell id="2" value="&lt;b&gt;RiverMeadow Platform&lt;/b&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="335" y="273" width="148" height="148" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Automated Migration Platform -->
+        <mxCell id="3" value="Automated Migration Platform" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="82" y="144.5" width="154" height="55" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Cloud Adoption Roadmap -->
+        <mxCell id="4" value="Cloud Adoption Roadmap" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="158.5" y="158.5" width="151" height="59" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Post-Migration Review Process -->
+        <mxCell id="5" value="Post-Migration Review Process" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="236.5" y="137.5" width="145" height="61" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Discovery Module Utilization -->
+        <mxCell id="6" value="Discovery Module Utilization" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="319" y="148.5" width="130" height="63" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Resource Optimization Techniques -->
+        <mxCell id="7" value="Resource Optimization Techniques" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="79.5" y="424.5" width="159" height="59" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Architectural Redesign -->
+        <mxCell id="8" value="Architectural Redesign" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="170.5" y="426" width="127" height="58" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Security Posture Enhancement -->
+        <mxCell id="9" value="Security Posture Enhancement" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="244.5" y="414.5" width="129" height="55" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Incremental Data Synchronization -->
+        <mxCell id="10" value="Incremental Data Synchronization" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="309.5" y="419" width="149" height="54" as="geometry" />
+        </mxCell>
+        <!-- Connection from Discovery Module Utilization to Cloud Adoption Roadmap -->
+        <mxCell id="11" value="Generate Migration Plan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="6" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Cloud Adoption Roadmap to Architectural Redesign -->
+        <mxCell id="12" value="Define High-Level Strategies" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="4" target="8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Architectural Redesign to Automated Migration Platform -->
+        <mxCell id="13" value="Apply Cloud Optimization" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="8" target="3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="1" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Automated Migration Platform to Incremental Data Synchronization -->
+        <mxCell id="14" value="Execute Data Transfer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="3" target="10">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Incremental Data Synchronization to Resource Optimization Techniques -->
+        <mxCell id="15" value="Ensure Minimized Downtime" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="10" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Resource Optimization Techniques to Security Posture Enhancement -->
+        <mxCell id="16" value="Implement Auto-Scaling" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="7" target="9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Security Posture Enhancement to Post-Migration Review Process -->
+        <mxCell id="17" value="Establish Compliance" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="9" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Post-Migration Review Process to Discovery Module Utilization -->
+        <mxCell id="18" value="Feedback Loop for Iteration" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Assessment Tools Category -->
+        <mxCell id="19" value="&lt;b&gt;Assessment Tools&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="164" y="614" width="181" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="20" value="Server Inventory" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="167" y="669" width="119" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="Application Load" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="306" y="661" width="119" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="Dependency Analysis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="155" y="727" width="119" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="Cost Estimation" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="299" y="728" width="119" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="Prioritization Methods" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="148" y="783" width="119" height="46" as="geometry" />
+        </mxCell>
+        <!-- Design Elements Category -->
+        <mxCell id="25" value="&lt;b&gt;Design Elements&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="164" y="867" width="214" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="Network Configuration" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="167" y="918" width="132" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="27" value="VPN Setup" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="321" y="915" width="132" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="28" value="Security Group Policies" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="156" y="978" width="132" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="29" value="Data Flow Documentation" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="314" y="972" width="132" height="41" as="geometry" />
+        </mxCell>
+        <!-- Execution Techniques Category -->
+        <mxCell id="30" value="&lt;b&gt;Execution Techniques&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="164" y="1049" width="195" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="31" value="Lift-and-Shift Execution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="167" y="1095" width="131" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="32" value="Delta Capture Techniques" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="314" y="1100" width="131" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="33" value="Secure Data Channels" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="462" y="1094" width="131" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="34" value="Service-Level Testing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="149" y="1155" width="131" height="40" as="geometry" />
+        </mxCell>
+        <!-- Performance Optimization Category -->
+        <mxCell id="35" value="&lt;b&gt;Performance Optimization&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="164" y="1229" width="199" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="36" value="Load Balancing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="169" y="1277" width="100" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="37" value="Auto-Scaling" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="290" y="1278" width="100" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="38" value="Monitoring Solutions" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="421" y="1279" width="100" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="39" value="Service-Level Measurement" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="150" y="1343" width="100" height="48" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

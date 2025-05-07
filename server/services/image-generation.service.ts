@@ -179,12 +179,15 @@ const extractDiagramComponentsFromContext = async (
   }
   
   try {
-    // If context is very small, just use the dynamically selected default components
+    // Only fall back to defaults if both prompt and context are extremely small
     const combinedContext = context.join(' ');
-    if (combinedContext.length < 100) {
-      console.log('Context too small, using default components');
+    if (combinedContext.length < 20 && prompt.length < 10) {
+      console.log('FALLBACK: Both prompt and context too small - using template components');
       return defaultComponents; // This is defined at the start of the function
     }
+    
+    // Otherwise, attempt OpenAI even with small context
+    console.log('Context relatively small but proceeding with OpenAI diagram generation');
     
     console.log('Generating diagram components using OpenAI');
     
@@ -220,11 +223,18 @@ const extractDiagramComponentsFromContext = async (
     13. DO NOT use generic terms like "Source", "Target", "Environment" alone - be specific about what kind.`;
     
     // Create a user prompt combining the user's question and context
+    // Add a random seed to force uniqueness between similar requests
+    const randomSeed = Math.floor(Math.random() * 1000000);
+    const currentTime = new Date().toISOString();
+    
     const userPrompt = `
 User's diagram request: "${prompt}"
     
 Context information:
 ${context.join('\n\n')}
+
+IMPORTANT: Create a COMPLETELY UNIQUE diagram different from any previous ones. Use this unique seed (${randomSeed}) 
+and timestamp (${currentTime}) to ensure your response is novel and different.
 
 Based on this information, provide the JSON structure for creating a diagram about RiverMeadow's cloud migration services.`;
     
@@ -236,7 +246,7 @@ Based on this information, provide the JSON structure for creating a diagram abo
         { role: 'user', content: userPrompt }
       ],
       response_format: { type: 'json_object' },
-      temperature: 1.0 // Increased temperature for more variation
+      temperature: 1.2 // Further increased temperature for maximum variation
     });
     
     // Parse the JSON response
@@ -246,7 +256,8 @@ Based on this information, provide the JSON structure for creating a diagram abo
     
     // Validate the structure
     if (!result.title || !Array.isArray(result.nodes) || !Array.isArray(result.connections) || !result.categories) {
-      console.warn('Invalid structure in OpenAI response, using default components');
+      console.warn('FALLBACK TEMPLATE USED: Invalid structure in OpenAI response for prompt: "' + prompt + '"');
+      console.warn('OpenAI returned an invalid structure. Using fallback template.');
       return defaultComponents;
     }
     
@@ -264,7 +275,8 @@ Based on this information, provide the JSON structure for creating a diagram abo
     };
   } catch (error) {
     console.error('Error extracting diagram components from context:', error);
-    console.log('Falling back to default components');
+    console.warn('FALLBACK TEMPLATE USED: Error occurred during OpenAI request for prompt: "' + prompt + '"');
+    console.log('Falling back to default components due to API or parsing error');
     return defaultComponents;
   }
 };
@@ -558,13 +570,21 @@ const getInitialResponse = async (
     This technical information will be used to generate a visual diagram, so include a wide variety of elements that would make an interesting and informative visualization.`;
     
     // Create a user prompt combining the user's question and context
+    // Add a random seed to force uniqueness between similar requests
+    const randomSeed = Math.floor(Math.random() * 1000000);
+    const currentTime = new Date().toISOString();
+    
     const userPrompt = `
 User's diagram request: "${prompt}"
     
 Context information:
 ${knowledgeContext.join('\n\n')}
 
-Provide a detailed technical explanation about this topic that would help in creating a diagram.`;
+IMPORTANT: Create a COMPLETELY UNIQUE technical explanation different from any previous ones. 
+Use this unique seed (${randomSeed}) and timestamp (${currentTime}) to ensure your response is novel and different.
+
+Provide a highly detailed, specific, and technical explanation about this topic that would help in creating a diagram.
+Focus on specific components, processes, and technical implementations.`;
     
     // Call OpenAI API to get an initial response
     const response = await openai.chat.completions.create({
@@ -573,7 +593,7 @@ Provide a detailed technical explanation about this topic that would help in cre
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 1.0, // Increased temperature for more variation
+      temperature: 1.2, // Further increased temperature for maximum variation
       max_tokens: 1000
     });
     
@@ -757,7 +777,13 @@ export const generateDiagram = async (
       const drawioPath = path.join(GENERATED_IMAGES_DIR, drawioFilename);
       await writeFile(drawioPath, drawioXml);
       
-      console.log(`Diagram generated with defaults: ${drawioPath}`);
+      console.log(`FALLBACK TEMPLATE USED: Using fallback template for "${prompt}" with template type: ${
+        lowerPrompt.includes('os') ? 'OS Migration' :
+        lowerPrompt.includes('aws') ? 'AWS Migration' :
+        lowerPrompt.includes('process') ? 'Process Framework' :
+        'Generic Migration'
+      }`);
+      console.log(`Diagram generated with fallback components: ${drawioPath}`);
       
       return {
         imagePath: `/uploads/generated/${drawioFilename}`,

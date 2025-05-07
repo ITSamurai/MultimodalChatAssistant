@@ -1,0 +1,157 @@
+<mxfile host="app.diagrams.net" modified="2025-05-07T05:52:58.208Z" agent="RiverMeadow Assistant" version="21.2.9">
+  <diagram id="diagram-1746597178208-ceqr95" name="AWS Cloud Migration via RiverMeadow">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Central Node -->
+        <mxCell id="2" value="&lt;b&gt;RiverMeadow Platform&lt;/b&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="412.5" y="289.5" width="129" height="129" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: AWS Security Integration -->
+        <mxCell id="3" value="AWS Security Integration" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="286" y="496" width="140" height="60" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Compute and Storage Configuration -->
+        <mxCell id="4" value="Compute and Storage Configuration" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="207" y="328.5" width="128" height="61" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Application Replication and Testing -->
+        <mxCell id="5" value="Application Replication and Testing" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="276" y="144" width="154" height="70" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: RiverMeadow Platform Coordination -->
+        <mxCell id="6" value="RiverMeadow Platform Coordination" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="446" y="124.5" width="138" height="65" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: On-premises Infrastructure Evaluation -->
+        <mxCell id="7" value="On-premises Infrastructure Evaluation" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#b0e3e6;strokeColor=#0e8088;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="573" y="226.5" width="134" height="55" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: Database and Data Migration Process -->
+        <mxCell id="8" value="Database and Data Migration Process" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="566.5" y="422.5" width="151" height="61" as="geometry" />
+        </mxCell>
+        <!-- Primary Node: AWS Virtual Private Cloud Setup -->
+        <mxCell id="9" value="AWS Virtual Private Cloud Setup" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="451" y="539" width="130" height="54" as="geometry" />
+        </mxCell>
+        <!-- Connection from On-premises Infrastructure Evaluation to AWS Virtual Private Cloud Setup -->
+        <mxCell id="10" value="Assess and Map Assets" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="7" target="9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from AWS Virtual Private Cloud Setup to AWS Security Integration -->
+        <mxCell id="11" value="Configure Security Protocols" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="9" target="3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from AWS Security Integration to Database and Data Migration Process -->
+        <mxCell id="12" value="Secure Data Transfer Setup" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="3" target="8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Database and Data Migration Process to Compute and Storage Configuration -->
+        <mxCell id="13" value="Migrate Databases and Storage" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" edge="1" parent="1" source="8" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Compute and Storage Configuration to Application Replication and Testing -->
+        <mxCell id="14" value="Setup EC2 Instances and Storage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from Application Replication and Testing to RiverMeadow Platform Coordination -->
+        <mxCell id="15" value="Manage Cutover and Testing" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Connection from RiverMeadow Platform Coordination to On-premises Infrastructure Evaluation -->
+        <mxCell id="16" value="Continuous Process Feedback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- Migration Tools Category -->
+        <mxCell id="17" value="&lt;b&gt;Migration Tools&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="701" y="647" width="216" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="AWS Migration Evaluator" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="701" y="693" width="137" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="AWS Application Discovery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="867" y="692" width="137" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="20" value="RiverMeadow SaaS" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="690" y="752" width="137" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="AWS DMS" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="854" y="747" width="137" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="AWS Snowball" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="682" y="802" width="137" height="38" as="geometry" />
+        </mxCell>
+        <!-- Security Measures Category -->
+        <mxCell id="23" value="&lt;b&gt;Security Measures&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="701" y="876" width="184" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="AWS IAM" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="702" y="928" width="135" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="AWS Security Hub" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="861" y="930" width="135" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="Security Groups" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="689" y="979" width="135" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="27" value="Network ACLs" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="856" y="976" width="135" height="39" as="geometry" />
+        </mxCell>
+        <!-- Data Services Category -->
+        <mxCell id="28" value="&lt;b&gt;Data Services&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="701" y="1054" width="210" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="29" value="Amazon RDS" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="699" y="1099" width="134" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="30" value="Amazon S3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="867" y="1105" width="134" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="31" value="Amazon EBS" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="1027" y="1099" width="134" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="32" value="S3 Transfer Acceleration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="696" y="1152" width="134" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="33" value="AWS Elastic Load Balancing" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="855" y="1154" width="134" height="36" as="geometry" />
+        </mxCell>
+        <!-- Monitoring and Management Category -->
+        <mxCell id="34" value="&lt;b&gt;Monitoring and Management&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="701" y="1226" width="196" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="35" value="AWS CloudWatch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="699" y="1278" width="104" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="36" value="AWS CloudTrail" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="837" y="1281" width="104" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="37" value="AWS Config" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="693" y="1332" width="104" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="38" value="AWS Lambda" style="rounded=2;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="822" y="1334" width="104" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="39" value="AWS CloudFormation" style="rounded=3;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="679" y="1391" width="104" height="44" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
