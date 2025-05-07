@@ -1,0 +1,41 @@
+# RiverMeadow Cloud Migration Process
+
+direction: right
+
+title: {
+  label: "RiverMeadow Cloud Migration Process"
+  near: top-center
+  shape: text
+  style.font-size: 24
+  style.font-weight: bold
+}
+
+source: {
+  label: "Source Environment"
+  shape: cloud
+  style.fill: lightyellow
+}
+
+target: {
+  label: "Target Cloud"
+  shape: cloud
+  style.fill: lightblue
+}
+
+rivermeadow: {
+  label: "RiverMeadow SaaS"
+  shape: rectangle
+  style.fill: "#D0FFC0"
+}
+
+discovery: {
+  label: "Discovery"
+  shape: rectangle
+}
+
+migration: {
+  label: "Migration"
+  shape: rectangle
+}
+
+source -> discovery -> rivermeadow -> migration -> target

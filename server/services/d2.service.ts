@@ -52,15 +52,18 @@ export async function d2ToSvg(
   options: { theme?: string; layout?: string; } = {}
 ): Promise<string> {
   try {
-    const theme = options.theme || 'neutral'; // Default theme
-    const layout = options.layout || 'dagre'; // Default layout engine
+    // D2 doesn't use theme and layout options in the same way as our previous code assumed
     
     const svgFileName = path.basename(d2FilePath, '.d2') + '.svg';
     const svgFilePath = path.join(SVG_DIRECTORY, svgFileName);
     
     // Use our wrapper script instead of calling d2 directly
     const wrapperPath = path.join(process.cwd(), 'server', 'services', 'd2-wrapper.js');
-    const command = `node "${wrapperPath}" "${d2FilePath}" "${svgFilePath}" --theme=${theme} --layout=${layout}`;
+    // Make sure the script has execute permissions
+    await execAsync(`chmod +x "${wrapperPath}"`).catch(e => console.error(`Failed to chmod wrapper: ${e}`));
+    
+    console.log(`Running D2 wrapper: "${wrapperPath}" "${d2FilePath}" "${svgFilePath}"`);
+    const command = `node "${wrapperPath}" "${d2FilePath}" "${svgFilePath}"`;
     await execAsync(command, { timeout: 30000 }); // 30 second timeout
     
     if (!fs.existsSync(svgFilePath)) {
@@ -85,8 +88,7 @@ export async function d2ToPng(
   options: { theme?: string; layout?: string; } = {}
 ): Promise<Buffer | null> {
   try {
-    const theme = options.theme || 'neutral'; // Default theme
-    const layout = options.layout || 'dagre'; // Default layout engine
+    // D2 doesn't use theme and layout options in the same way as our previous code assumed
     
     const pngFileName = path.basename(d2FilePath, '.d2') + '.png';
     const pngFilePath = path.join(PNG_DIRECTORY, pngFileName);
@@ -111,7 +113,10 @@ export async function d2ToPng(
     // Try to trigger PNG generation in the background (don't wait for it)
     try {
       const wrapperPath = path.join(process.cwd(), 'server', 'services', 'd2-wrapper.js');
-      const command = `node "${wrapperPath}" "${d2FilePath}" "${pngFilePath}" --theme=${theme} --layout=${layout} --dark-theme=0 > /tmp/d2-png-generation.log 2>&1 &`;
+      await execAsync(`chmod +x "${wrapperPath}"`).catch(e => console.error(`Failed to chmod wrapper for PNG: ${e}`));
+      
+      console.log(`Running D2 wrapper for PNG: "${wrapperPath}" "${d2FilePath}" "${pngFilePath}"`);
+      const command = `node "${wrapperPath}" "${d2FilePath}" "${pngFilePath}" > /tmp/d2-png-generation.log 2>&1 &`;
       execAsync(command).catch(e => console.error('Background PNG generation error:', e));
       console.log('Triggered background PNG generation');
     } catch (e) {

@@ -73,7 +73,7 @@ try {
   }
   
   console.log(`Using D2 installation at: ${localD2}`);
-  const cmd = `"${localD2}" --theme=neutral --layout=dagre "${inputFile}" "${outputFile}"`;
+  const cmd = `"${localD2}" "${inputFile}" "${outputFile}"`;
   console.log(`Executing: ${cmd}`);
   
   execSync(cmd, { stdio: 'inherit' });
@@ -90,7 +90,7 @@ try {
   try {
     // Try using the system PATH version as a fallback
     console.log('Trying with system PATH D2 installation');
-    const sysCmd = `d2 --theme=neutral --layout=dagre "${inputFile}" "${outputFile}"`;
+    const sysCmd = `d2 "${inputFile}" "${outputFile}"`;
     
     execSync(sysCmd, { stdio: 'inherit' });
     
