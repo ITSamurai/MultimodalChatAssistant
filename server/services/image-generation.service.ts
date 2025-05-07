@@ -279,9 +279,9 @@ Remember this is for a specific request with ID: ${randomSeed}-${currentTime}-${
 Based on this information, provide ONLY the JSON structure for creating a diagram about RiverMeadow's cloud migration services, with no additional explanation.`;
     
     // Call OpenAI API with reduced max tokens and optimized parameters
-    // Note: We'll use a Promise.race with a timeout to avoid hanging
+    // Use a Promise.race with longer timeout to avoid hanging while still giving enough time
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('OpenAI request timed out after 30 seconds')), 30000);
+      setTimeout(() => reject(new Error('OpenAI request timed out after 45 seconds')), 45000);
     });
     
     const openaiPromise = openai.chat.completions.create({
@@ -309,7 +309,50 @@ Based on this information, provide ONLY the JSON structure for creating a diagra
       if (!result.title || !Array.isArray(result.nodes) || !Array.isArray(result.connections) || !result.categories) {
         console.warn('FALLBACK TEMPLATE USED: Invalid structure in OpenAI response for prompt: "' + prompt + '"');
         console.warn('OpenAI returned an invalid structure. Using fallback template.');
-        return defaultComponents;
+        
+        // Create a more unique fallback by modifying the default components
+        // Even if we're using a template, we'll ensure it's always different
+        const uniqueTimestamp = Date.now();
+        const uniqueId = Math.random().toString(36).substring(2, 10);
+        
+        // Clone the default components to avoid modifying the original
+        const modifiedComponents = JSON.parse(JSON.stringify(defaultComponents));
+        
+        // Append unique identifiers to the title to ensure it's always different
+        modifiedComponents.title = `${modifiedComponents.title} (${uniqueId})`;
+        
+        // Shuffle the nodes (except RiverMeadow Platform)
+        const platformNode = modifiedComponents.nodes[0];
+        const otherNodes = modifiedComponents.nodes.slice(1);
+        
+        // Fisher-Yates shuffle algorithm
+        for (let i = otherNodes.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [otherNodes[i], otherNodes[j]] = [otherNodes[j], otherNodes[i]];
+        }
+        
+        // Rebuild the nodes array with RiverMeadow Platform first
+        modifiedComponents.nodes = [platformNode, ...otherNodes];
+        
+        // Shuffle the connections
+        for (let i = modifiedComponents.connections.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [modifiedComponents.connections[i], modifiedComponents.connections[j]] = 
+            [modifiedComponents.connections[j], modifiedComponents.connections[i]];
+        }
+        
+        // Shuffle the categories
+        const categoryKeys = Object.keys(modifiedComponents.categories);
+        for (const key of categoryKeys) {
+          const items = modifiedComponents.categories[key];
+          for (let i = items.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [items[i], items[j]] = [items[j], items[i]];
+          }
+        }
+        
+        // Ensure we return the modified components instead of the original defaults
+        return modifiedComponents;
       }
       
       // Make sure RiverMeadow Platform is included
@@ -327,13 +370,99 @@ Based on this information, provide ONLY the JSON structure for creating a diagra
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
       console.warn('FALLBACK TEMPLATE USED: Invalid JSON in OpenAI response for prompt: "' + prompt + '"');
-      return defaultComponents;
+      
+      // Create a more unique fallback by modifying the default components
+      // Even if we're using a template, we'll ensure it's always different
+      const uniqueTimestamp = Date.now();
+      const uniqueId = Math.random().toString(36).substring(2, 10);
+      
+      // Clone the default components to avoid modifying the original
+      const modifiedComponents = JSON.parse(JSON.stringify(defaultComponents));
+      
+      // Append unique identifiers to the title to ensure it's always different
+      modifiedComponents.title = `${modifiedComponents.title} (${uniqueId})`;
+      
+      // Shuffle the nodes (except RiverMeadow Platform)
+      const platformNode = modifiedComponents.nodes[0];
+      const otherNodes = modifiedComponents.nodes.slice(1);
+      
+      // Fisher-Yates shuffle algorithm
+      for (let i = otherNodes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [otherNodes[i], otherNodes[j]] = [otherNodes[j], otherNodes[i]];
+      }
+      
+      // Rebuild the nodes array with RiverMeadow Platform first
+      modifiedComponents.nodes = [platformNode, ...otherNodes];
+      
+      // Shuffle the connections
+      for (let i = modifiedComponents.connections.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [modifiedComponents.connections[i], modifiedComponents.connections[j]] = 
+          [modifiedComponents.connections[j], modifiedComponents.connections[i]];
+      }
+      
+      // Shuffle the categories
+      const categoryKeys = Object.keys(modifiedComponents.categories);
+      for (const key of categoryKeys) {
+        const items = modifiedComponents.categories[key];
+        for (let i = items.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [items[i], items[j]] = [items[j], items[i]];
+        }
+      }
+      
+      // Ensure we return the modified components instead of the original defaults
+      return modifiedComponents;
     }
   } catch (error) {
     console.error('Error extracting diagram components from context:', error);
     console.warn('FALLBACK TEMPLATE USED: Error occurred during OpenAI request for prompt: "' + prompt + '"');
     console.log('Falling back to default components due to API or parsing error');
-    return defaultComponents;
+    
+    // Create a more unique fallback by modifying the default components
+    // Even if we're using a template, we'll ensure it's always different
+    const uniqueTimestamp = Date.now();
+    const uniqueId = Math.random().toString(36).substring(2, 10);
+    
+    // Clone the default components to avoid modifying the original
+    const modifiedComponents = JSON.parse(JSON.stringify(defaultComponents));
+    
+    // Append unique identifiers to the title to ensure it's always different
+    modifiedComponents.title = `${modifiedComponents.title} (${uniqueId})`;
+    
+    // Shuffle the nodes (except RiverMeadow Platform)
+    const platformNode = modifiedComponents.nodes[0];
+    const otherNodes = modifiedComponents.nodes.slice(1);
+    
+    // Fisher-Yates shuffle algorithm
+    for (let i = otherNodes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [otherNodes[i], otherNodes[j]] = [otherNodes[j], otherNodes[i]];
+    }
+    
+    // Rebuild the nodes array with RiverMeadow Platform first
+    modifiedComponents.nodes = [platformNode, ...otherNodes];
+    
+    // Shuffle the connections
+    for (let i = modifiedComponents.connections.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [modifiedComponents.connections[i], modifiedComponents.connections[j]] = 
+        [modifiedComponents.connections[j], modifiedComponents.connections[i]];
+    }
+    
+    // Shuffle the categories
+    const categoryKeys = Object.keys(modifiedComponents.categories);
+    for (const key of categoryKeys) {
+      const items = modifiedComponents.categories[key];
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+    }
+    
+    // Ensure we return the modified components instead of the original defaults
+    return modifiedComponents;
   }
 };
 
