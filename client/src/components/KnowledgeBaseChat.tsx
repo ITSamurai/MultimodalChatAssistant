@@ -56,7 +56,9 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
       
       // Make API request to get AI response
       const response = await apiRequest('POST', '/api/chat', { 
-        prompt,
+        messages: [
+          { role: 'user', content: prompt }
+        ],
         chatId
       });
       
