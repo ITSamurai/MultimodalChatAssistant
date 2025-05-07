@@ -425,24 +425,7 @@ Explain that this diagram was generated based on their request, and they can dow
     }
   });
   
-  // Diagram generation endpoint
-  app.post('/api/generate-diagram', requireTokenAuth, async (req: Request, res: Response) => {
-    try {
-      const { prompt } = req.body;
-      
-      if (!prompt) {
-        return res.status(400).json({ error: 'Prompt is required' });
-      }
-      
-      // Generate diagram using the imported function
-      const result = await generateDiagram(prompt);
-      
-      return res.status(200).json(result);
-    } catch (error) {
-      console.error('Error generating diagram:', error);
-      res.status(500).json({ error: 'Failed to generate diagram' });
-    }
-  });
+  // This diagram generation endpoint has been moved to diagram.routes.ts
   
   // Create the HTTP server
   const httpServer = createServer(app);
