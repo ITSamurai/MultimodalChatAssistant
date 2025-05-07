@@ -1,17 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import OpenAI from 'openai';
 import { storage } from '../storage';
-// Placeholder for dynamic import
-let generateDiagram: any;
-let isImageGenerationRequest: any;
-
-// We'll dynamically import these functions later
-const imageGenerationModule = import('./image-generation.service').then(module => {
-  generateDiagram = module.generateDiagram;
-  isImageGenerationRequest = module.isImageGenerationRequest;
-}).catch(err => {
-  console.error('Error importing image-generation.service:', err);
-});
+import { generateDiagram, isDiagramGenerationRequest } from './diagram-generation.service';
 
 // Initialize Pinecone client
 const pinecone = new Pinecone({
@@ -318,9 +308,9 @@ export async function createChatWithKnowledgeBase(messages: Array<{
     const latestUserMessage = userMessages[userMessages.length - 1].content;
     console.log('Latest user message:', latestUserMessage);
     
-    // Check if the user is requesting an image generation
-    const shouldGenerateImage = isImageGenerationRequest(latestUserMessage);
-    console.log(`Image generation requested? ${shouldGenerateImage ? 'YES' : 'NO'} for prompt: "${latestUserMessage}"`);
+    // Check if the user is requesting a diagram generation
+    const shouldGenerateImage = isDiagramGenerationRequest(latestUserMessage);
+    console.log(`Diagram generation requested? ${shouldGenerateImage ? 'YES' : 'NO'} for prompt: "${latestUserMessage}"`);
     
     // Get configuration for vector search
     let topK = 50; // Default value
@@ -359,10 +349,9 @@ export async function createChatWithKnowledgeBase(messages: Array<{
       try {
         console.log("Image generation requested, attempting to create diagram...");
         imageGenerationAttempted = true;
-        // Convert context to array format
-        const contextArray = similarVectors.map(v => v.text);
-        generatedImage = await generateDiagram(latestUserMessage, contextArray);
-        console.log(`Successfully generated image: ${generatedImage.imagePath}`);
+        // Use the new diagram generation service
+        generatedImage = await generateDiagram(latestUserMessage);
+        console.log(`Successfully generated image: ${generatedImage.svgPath}`);
       } catch (error) {
         console.error("Error generating image:", error);
         // Continue without image if generation fails
@@ -464,9 +453,9 @@ ${latestUserMessage}`;
           // Add image reference for the frontend to display
           references: [{
             type: "image",
-            imagePath: generatedImage.imagePath,
-            caption: "Generated diagram based on knowledge base information",
-            content: generatedImage.altText,
+            imagePath: generatedImage.svgPath,
+            caption: `RiverMeadow ${generatedImage.diagramType} Diagram`,
+            content: "Migration diagram showing source, target, and process steps.",
           }]
         };
       }
