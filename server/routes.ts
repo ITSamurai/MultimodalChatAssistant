@@ -32,25 +32,26 @@ let pineconeIndex: any = null;
 // Initialize OpenAI for text completions
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Import diagram-related functions dynamically
-let generateDiagram: Function;
-let isImageGenerationRequest: Function;
-let drawioToSvg: Function;
-
-// Import for diagram generation functions
-const importDiagramFunctions = import('./services/image-generation.service').then(module => {
-  generateDiagram = module.generateDiagram;
-  isImageGenerationRequest = module.isImageGenerationRequest;
-}).catch(err => {
-  console.error('Error importing image-generation.service:', err);
+// Ensure all necessary directories exist at startup
+ensureDirectoriesExist().catch(err => {
+  console.error('Error creating upload directories:', err);
 });
 
-// Import for SVG generation
-const importSvgGenerator = import('./services/svg-generator').then(module => {
-  drawioToSvg = module.drawioToSvg;
-}).catch(err => {
-  console.error('Error importing svg-generator:', err);
-});
+// Utility function to get embeddings from OpenAI
+async function getEmbedding(text: string): Promise<number[]> {
+  try {
+    const response = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: text,
+      dimensions: 1536 // Match Pinecone index dimensions
+    });
+    
+    return response.data[0].embedding;
+  } catch (error) {
+    console.error('Error generating embedding:', error);
+    throw new Error('Failed to generate embedding');
+  }
+}
 
 // Set up multer for file uploads
 const storage_config = multer.diskStorage({
@@ -170,94 +171,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).send(placeholderSvg);
       }
       
-      // Read file content - ensure we're getting the most current content
-      console.log(`Reading diagram file: ${filePath}`);
-      
-      // Clear any file system caches by closing and reopening file
-      const fileDescriptor = fs.openSync(filePath, 'r');
-      const fileStats = fs.fstatSync(fileDescriptor);
-      const fileSize = fileStats.size;
-      const buffer = Buffer.alloc(fileSize);
-      fs.readSync(fileDescriptor, buffer, 0, fileSize, 0);
-      fs.closeSync(fileDescriptor);
-      
-      const fileContent = buffer.toString('utf8');
-
-      // Determine diagram type from filename
-      const diagramType = 
-        fileName.toLowerCase().includes('aws') ? 'AWS Migration' :
-        fileName.toLowerCase().includes('os') ? 'OS Migration' :
-        fileName.toLowerCase().includes('azure') ? 'Azure Migration' :
-        'Migration';
-      
-      // Check if file is a valid XML file (it should be for drawio)
-      const isValidXml = fileContent.includes('<mxfile') || fileContent.includes('<mxGraphModel');
-      
-      // Use the new SVG generator to create an improved SVG from the Draw.io XML
-      let svgContent;
-      
       try {
-        // Check if the drawioToSvg function is available (it should be imported by now)
-        if (typeof drawioToSvg === 'function') {
-          // Generate the SVG using our improved generator
-          svgContent = await drawioToSvg(filePath);
-          console.log('Successfully generated SVG from diagram file using the new renderer');
-        } else {
-          console.warn('SVG generator function not available yet, creating fallback SVG');
-          // Create a nice informative SVG since the generator isn't loaded yet
-          svgContent = `
-            <svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
-              <rect width="100%" height="100%" fill="#f9f9f9" />
-              <text x="550" y="80" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold">
-                RiverMeadow ${diagramType} Diagram
-              </text>
-              <text x="550" y="120" font-family="Arial" font-size="16" text-anchor="middle" fill="#666">
-                SVG renderer is preparing your diagram...
-              </text>
-              <text x="550" y="160" font-family="Arial" font-size="16" text-anchor="middle" fill="#666">
-                Refresh the page to see your diagram
-              </text>
-              <text x="550" y="200" font-family="Arial" font-size="14" text-anchor="middle" fill="#999">
-                File: ${path.basename(filePath)}
-              </text>
-              <text x="550" y="820" font-family="Arial" font-size="10" text-anchor="middle" fill="#999">
-                Generated: ${new Date().toISOString()}
-              </text>
-            </svg>
-          `;
-        }
+        // Generate SVG from diagram file
+        const svgContent = await drawioToSvg(filePath);
+        console.log('Successfully generated SVG from diagram file');
+        
+        // Set appropriate headers
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        
+        return res.status(200).send(svgContent);
       } catch (svgError) {
-        console.error('Error generating SVG with the new renderer:', svgError);
-        // Fall back to a simple error SVG
-        svgContent = `
-          <svg width="1100" height="850" xmlns="http://www.w3.org/2000/svg">
+        console.error('Error generating SVG:', svgError);
+        
+        // Create a simple error SVG
+        const errorSvg = `
+          <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
             <rect width="100%" height="100%" fill="#fff0f0" />
-            <text x="550" y="80" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold">
+            <text x="50%" y="40%" font-family="Arial" font-size="24" text-anchor="middle" fill="#cc0000">
               SVG Generation Error
             </text>
-            <text x="550" y="120" font-family="Arial" font-size="16" text-anchor="middle" fill="#cc0000">
+            <text x="50%" y="50%" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">
               An error occurred while generating the SVG
             </text>
-            <text x="550" y="160" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">
-              You can download the diagram as a .drawio file instead
-            </text>
-            <text x="550" y="200" font-family="Arial" font-size="14" text-anchor="middle" fill="#999">
+            <text x="50%" y="60%" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">
               File: ${path.basename(filePath)}
-            </text>
-            <text x="550" y="820" font-family="Arial" font-size="10" text-anchor="middle" fill="#999">
-              Generated: ${new Date().toISOString()}
             </text>
           </svg>
         `;
+        
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return res.status(200).send(errorSvg);
       }
-      
-      res.setHeader('Content-Type', 'image/svg+xml');
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      return res.status(200).send(svgContent);
     } catch (error) {
-      console.error('Error generating SVG:', error);
+      console.error('Error in SVG endpoint:', error);
       return res.status(500).json({ error: 'Failed to generate SVG' });
     }
   });
@@ -292,29 +242,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Diagram not found' });
       }
       
-      // For now, generate an SVG and inform the user that direct PNG is pending
-      // First, try to generate an SVG using our generator
-      let svgContent = '';
+      // Try to directly convert to PNG (future implementation)
+      const pngBuffer = await drawioToPng(filePath);
       
-      try {
-        if (typeof drawioToSvg === 'function') {
-          // Use the SVG generator to create SVG content
-          svgContent = await drawioToSvg(filePath);
-          console.log('Generated SVG for PNG request');
-        }
-      } catch (svgError) {
-        console.error('Error generating SVG for PNG:', svgError);
-      }
-      
-      // If we successfully generated SVG, return it with appropriate headers
-      if (svgContent) {
-        res.setHeader('Content-Type', 'image/svg+xml');
+      // If we have a PNG buffer, return it
+      if (pngBuffer) {
+        res.setHeader('Content-Type', 'image/png');
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
-        // Note to client that this is an SVG fallback
-        res.setHeader('X-PNG-Fallback', 'Using SVG as PNG generation is not yet implemented');
-        return res.status(200).send(svgContent);
+        return res.status(200).send(pngBuffer);
+      }
+      
+      // If direct PNG conversion failed, try to generate an SVG as fallback
+      try {
+        // Generate SVG from the diagram file
+        const svgContent = await drawioToSvg(filePath);
+        
+        // If successful, return with appropriate headers
+        if (svgContent) {
+          res.setHeader('Content-Type', 'image/svg+xml');
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+          // Note to client that this is an SVG fallback
+          res.setHeader('X-PNG-Fallback', 'Using SVG as PNG generation is not yet implemented');
+          return res.status(200).send(svgContent);
+        }
+      } catch (svgError) {
+        console.error('Error generating SVG fallback for PNG:', svgError);
       }
       
       // If SVG generation failed and this is a PNG already, serve it directly
@@ -653,37 +609,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Latest user message:', latestUserMessage);
       
-      // Check if the message is requesting an image generation
-      // Use the improved detection function from image-generation.service.ts
-      const isImageRequest = isImageGenerationRequest(latestUserMessage);
-      console.log('Image generation requested?', isImageRequest ? 'YES' : 'NO', 'for prompt:', JSON.stringify(latestUserMessage));
+      // Check if the message is requesting a diagram generation
+      const isDiagramRequest = isDiagramGenerationRequest(latestUserMessage);
+      console.log('Diagram generation requested?', isDiagramRequest ? 'YES' : 'NO', 'for prompt:', JSON.stringify(latestUserMessage));
       
       // If this is a diagram request, generate a diagram
       let diagramReference = null;
       
-      if (isImageRequest && typeof generateDiagram === 'function') {
+      if (isDiagramRequest) {
         try {
           // Query Pinecone for relevant knowledge base entries
-          console.log(`Creating comprehensive RiverMeadow diagram based on context and prompt`);
+          console.log(`Creating comprehensive RiverMeadow diagram based on prompt`);
           
           // Generate diagram and get the path
-          const diagramResult = await generateDiagram(latestUserMessage, []);
+          const diagramResult = await generateDiagram(latestUserMessage);
           
           // Add a timestamp-based query parameter to the image path to prevent caching
           // This will force the frontend to always load the latest version of the diagram
           const uniqueTimestamp = Date.now();
           const randomId = Math.random().toString(36).substring(2, 10);
-          const cacheBustingPath = `${diagramResult.imagePath}?ver=${uniqueTimestamp}-${randomId}`;
+          const cacheBustingPath = `${diagramResult.svgPath}?ver=${uniqueTimestamp}-${randomId}`;
           
-          console.log(`Successfully generated image: ${diagramResult.imagePath}`);
+          console.log(`Successfully generated diagram: ${diagramResult.fileName}`);
           console.log(`Cache-busting path for frontend: ${cacheBustingPath}`);
           
           // Add reference to the diagram with both the actual path and a cache-busting path
           diagramReference = {
             type: 'image',
             imagePath: cacheBustingPath, // Use the version with cache-busting
-            realPath: diagramResult.imagePath, // Store the real path too
-            caption: `Generated diagram for: ${latestUserMessage.substring(0, 100)}...`,
+            realPath: diagramResult.svgPath, // Store the real path too
+            caption: `RiverMeadow ${diagramResult.diagramType} Diagram`,
             content: latestUserMessage,
             timestamp: uniqueTimestamp.toString()
           };
@@ -747,14 +702,14 @@ Explain that this diagram was generated based on their request, and they can dow
   // Diagram generation endpoint
   app.post('/api/generate-diagram', requireTokenAuth, async (req: Request, res: Response) => {
     try {
-      const { prompt, context } = req.body;
+      const { prompt } = req.body;
       
       if (!prompt) {
         return res.status(400).json({ error: 'Prompt is required' });
       }
       
       // Generate diagram using the imported function
-      const result = await generateDiagram(prompt, context || []);
+      const result = await generateDiagram(prompt);
       
       return res.status(200).json(result);
     } catch (error) {
