@@ -34,7 +34,8 @@ export const ensureDirectoriesExist = async (): Promise<void> => {
 };
 
 /**
- * Process the GPT response to extract key components for the diagram
+ * Process diagram request and directly extract key components
+ * Updated to be more efficient by skipping the initial response step
  */
 const extractDiagramComponentsFromContext = async (
   prompt: string,
@@ -151,6 +152,31 @@ const extractDiagramComponentsFromContext = async (
         "Key Metrics": ["Migration Speed", "Application Performance", "Cost Reduction", "Downtime Minimization"]
       }
     };
+  } else if (lowerPrompt.includes('vm') || lowerPrompt.includes('virtual machine')) {
+    // VM-focused migration diagram
+    defaultComponents = {
+      title: "Virtual Machine Migration Architecture",
+      nodes: [
+        "RiverMeadow Platform", 
+        "VM Inventory Scanner", 
+        "Disk Image Processor", 
+        "VM Configuration Analyzer",
+        "Network Mapping Engine",
+        "Hypervisor Integration Layer"
+      ],
+      connections: [
+        {from: "VM Inventory Scanner", to: "RiverMeadow Platform", label: "VM Discovery"},
+        {from: "RiverMeadow Platform", to: "VM Configuration Analyzer", label: "Requirement Analysis"},
+        {from: "VM Configuration Analyzer", to: "Network Mapping Engine", label: "Network Translation"},
+        {from: "RiverMeadow Platform", to: "Disk Image Processor", label: "Storage Migration"},
+        {from: "Disk Image Processor", to: "Hypervisor Integration Layer", label: "Target Deployment"}
+      ],
+      categories: {
+        "VM Detection": ["Inventory Discovery", "Resource Utilization", "Dependency Mapping", "Application Profiling"],
+        "Migration Types": ["Cold Migration", "Live Migration", "Block-level Replication", "Snapshot-based Movement"],
+        "Target Platforms": ["VMware", "Hyper-V", "KVM", "AWS EC2", "Azure VMs", "GCP Instances"]
+      }
+    };
   } else {
     // Generic diagram as a last resort
     defaultComponents = {
@@ -179,19 +205,35 @@ const extractDiagramComponentsFromContext = async (
   }
   
   try {
-    // Only fall back to defaults if both prompt and context are extremely small
+    // If context is too small, use default components
     const combinedContext = context.join(' ');
     if (combinedContext.length < 20 && prompt.length < 10) {
       console.log('FALLBACK: Both prompt and context too small - using template components');
-      return defaultComponents; // This is defined at the start of the function
+      return defaultComponents;
     }
     
-    // Otherwise, attempt OpenAI even with small context
-    console.log('Context relatively small but proceeding with OpenAI diagram generation');
+    // Check if there's connectivity/timeout issues by using a brief test call
+    try {
+      // Quick verification call with minimal tokens to test API connectivity
+      const connectivityTest = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: 'Verify API connection. Respond with "ok".' }],
+        max_tokens: 10
+      });
+      
+      if (!connectivityTest.choices[0].message.content?.includes('ok')) {
+        console.warn('OpenAI connectivity test failed - response unexpected');
+        return defaultComponents;
+      }
+    } catch (connectError) {
+      console.error('OpenAI connectivity test failed:', connectError);
+      return defaultComponents;
+    }
     
+    console.log('Context relatively small but proceeding with OpenAI diagram generation');
     console.log('Generating diagram components using OpenAI');
     
-    // Create a system prompt for extracting diagram components
+    // Create a system prompt for extracting diagram components with explanation
     const systemPrompt = `You are a creative cloud architecture expert tasked with designing a unique diagram about RiverMeadow's cloud migration services tailored specifically to the user's request. 
     Format your response as a JSON object with the following structure exactly:
     {
@@ -213,14 +255,15 @@ const extractDiagramComponentsFromContext = async (
     3. For OS migration requests, focus on OS-specific components, processes and technologies.
     4. For cloud migration requests, focus on cloud-specific architecture components.
     5. For process requests, focus on detailed step-by-step workflow components.
-    6. If the user mentions anything specific (AWS, Azure, Linux, Windows, etc.), prominently feature those elements.
-    7. Always include "RiverMeadow Platform" as one of the nodes, but add specific components for this exact request.
-    8. Include 4-7 main nodes with SPECIFIC, DETAILED, TECHNICAL names (not generic ones).
-    9. Create 4-8 connections with DETAILED, TECHNICAL labels explaining exactly what happens in that connection.
-    10. Include 2-4 categories with 4-6 items each that are SPECIFIC to this request.
-    11. Make connection labels detailed and descriptive (15-25 characters).
-    12. Vary your terminology greatly between diagrams - use synonyms for common terms.
-    13. DO NOT use generic terms like "Source", "Target", "Environment" alone - be specific about what kind.`;
+    6. For VM migration requests, focus on virtual machine transformation, disk handling, and hypervisor components.
+    7. If the user mentions anything specific (AWS, Azure, Linux, Windows, etc.), prominently feature those elements.
+    8. Always include "RiverMeadow Platform" as one of the nodes, but add specific components for this exact request.
+    9. Include 4-7 main nodes with SPECIFIC, DETAILED, TECHNICAL names (not generic ones).
+    10. Create 4-8 connections with DETAILED, TECHNICAL labels explaining exactly what happens in that connection.
+    11. Include 2-4 categories with 4-6 items each that are SPECIFIC to this request.
+    12. Make connection labels detailed and descriptive (10-20 characters).
+    13. Vary your terminology greatly between diagrams - use synonyms for common terms.
+    14. DO NOT use generic terms like "Source" or "Target" alone - be specific about what kind of source/target.`;
     
     // Create a user prompt combining the user's question and context
     // Add a random seed to force uniqueness between similar requests
@@ -230,11 +273,10 @@ const extractDiagramComponentsFromContext = async (
     const userPrompt = `
 User's diagram request: "${prompt}"
     
-Context information:
-${context.join('\n\n')}
+Context information: ${context.length > 0 ? context.join('\n\n') : 'No additional context provided. Focus on the user request.'}
 
-IMPORTANT: Create a COMPLETELY UNIQUE diagram different from any previous ones. Use this unique seed (${randomSeed}) 
-and timestamp (${currentTime}) to ensure your response is novel and different.
+IMPORTANT: Create a COMPLETELY UNIQUE diagram different from any previous ones using unique seed ${randomSeed} 
+and timestamp ${currentTime} to ensure your response is novel.
 
 NEVER USE ANY PREVIOUSLY GENERATED DIAGRAM STRUCTURE. Every aspect of this diagram must be unique:
 - Use different node names than any previous diagrams
@@ -244,9 +286,9 @@ NEVER USE ANY PREVIOUSLY GENERATED DIAGRAM STRUCTURE. Every aspect of this diagr
 
 Remember this is for a specific request with ID: ${randomSeed}-${currentTime}-${Math.random().toString(36).substring(2, 10)} and must be unique.
 
-Based on this information, provide the JSON structure for creating a diagram about RiverMeadow's cloud migration services.`;
+Based on this information, provide ONLY the JSON structure for creating a diagram about RiverMeadow's cloud migration services, with no additional explanation.`;
     
-    // Call OpenAI API to extract diagram components
+    // Call OpenAI API with reduced max tokens and optimized parameters
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -254,35 +296,42 @@ Based on this information, provide the JSON structure for creating a diagram abo
         { role: 'user', content: userPrompt }
       ],
       response_format: { type: 'json_object' },
-      temperature: 1.4, // Maximum temperature value for greatest variation
-      presence_penalty: 0.9, // High presence penalty to discourage repetition
-      frequency_penalty: 0.9 // High frequency penalty to encourage unique words
+      max_tokens: 1000, // Reduced from default
+      temperature: 1.2, // Slightly reduced but still high for creativity
+      presence_penalty: 0.7, // Reduced slightly but still encourages new content
+      frequency_penalty: 0.7, // Same as above
+      timeout: 30 // Add a 30 second timeout to avoid hanging requests
     });
     
     // Parse the JSON response
     const content = response.choices[0].message.content || '{}';
-    const result = JSON.parse(content);
-    console.log('Generated diagram components from OpenAI:', JSON.stringify(result, null, 2));
-    
-    // Validate the structure
-    if (!result.title || !Array.isArray(result.nodes) || !Array.isArray(result.connections) || !result.categories) {
-      console.warn('FALLBACK TEMPLATE USED: Invalid structure in OpenAI response for prompt: "' + prompt + '"');
-      console.warn('OpenAI returned an invalid structure. Using fallback template.');
+    try {
+      const result = JSON.parse(content);
+      
+      // Validate the structure
+      if (!result.title || !Array.isArray(result.nodes) || !Array.isArray(result.connections) || !result.categories) {
+        console.warn('FALLBACK TEMPLATE USED: Invalid structure in OpenAI response for prompt: "' + prompt + '"');
+        console.warn('OpenAI returned an invalid structure. Using fallback template.');
+        return defaultComponents;
+      }
+      
+      // Make sure RiverMeadow Platform is included
+      if (!result.nodes.includes('RiverMeadow Platform')) {
+        result.nodes.unshift('RiverMeadow Platform');
+      }
+      
+      // Return the extracted components
+      return {
+        title: result.title,
+        nodes: result.nodes,
+        connections: result.connections,
+        categories: result.categories
+      };
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response:', parseError);
+      console.warn('FALLBACK TEMPLATE USED: Invalid JSON in OpenAI response for prompt: "' + prompt + '"');
       return defaultComponents;
     }
-    
-    // Make sure RiverMeadow Platform is included
-    if (!result.nodes.includes('RiverMeadow Platform')) {
-      result.nodes.unshift('RiverMeadow Platform');
-    }
-    
-    // Return the extracted components
-    return {
-      title: result.title,
-      nodes: result.nodes,
-      connections: result.connections,
-      categories: result.categories
-    };
   } catch (error) {
     console.error('Error extracting diagram components from context:', error);
     console.warn('FALLBACK TEMPLATE USED: Error occurred during OpenAI request for prompt: "' + prompt + '"');
@@ -626,80 +675,8 @@ const createDrawioXML = (components: {
 /**
  * First step - get detailed information about the topic from OpenAI
  */
-const getInitialResponse = async (
-  prompt: string, 
-  knowledgeContext: string[] = []
-): Promise<string> => {
-  try {
-    console.log('Getting initial response for prompt:', prompt);
-    
-    // Create a system prompt for initial information gathering
-    const systemPrompt = `You are a senior cloud migration architect at RiverMeadow with expertise in OS migrations, cloud infrastructure, and technical diagrams.
-    
-    Provide a HIGHLY DETAILED, TECHNICAL explanation of the specific migration topic requested by the user.
-    Your response should:
-    
-    1. Be highly specific to the exact type of migration or diagram the user requested
-    2. Include 8-12 specific technical components, processes, or technologies involved
-    3. Use precise technical terminology relevant to the specific request
-    4. Describe complex relationships and data flows between components
-    5. Include numerical specifications when relevant (times, sizes, capacities)
-    6. Mention specific OS details if it's an OS migration request
-    7. Mention specific cloud provider details if mentioned in the request
-    8. Elaborate on technical implementation details (protocols, services, APIs)
-    9. Reference specific RiverMeadow tools, technologies and methodologies
-    10. VARY YOUR CONTENT SIGNIFICANTLY between different requests - never repeat the same explanations
-    
-    This technical information will be used to generate a visual diagram, so include a wide variety of elements that would make an interesting and informative visualization.`;
-    
-    // Create a user prompt combining the user's question and context
-    // Add a random seed to force uniqueness between similar requests
-    const randomSeed = Math.floor(Math.random() * 1000000);
-    const currentTime = new Date().toISOString();
-    
-    const userPrompt = `
-User's diagram request: "${prompt}"
-    
-Context information:
-${knowledgeContext.join('\n\n')}
-
-IMPORTANT: Create a COMPLETELY UNIQUE technical explanation different from any previous ones. 
-Use this unique seed (${randomSeed}) and timestamp (${currentTime}) to ensure your response is novel and different.
-
-NEVER USE ANY PREVIOUSLY GENERATED CONTENT. Generate a COMPLETELY NEW and DIFFERENT response each time.
-
-Provide a highly detailed, specific, and technical explanation about this topic that would help in creating a diagram.
-Focus on specific components, processes, and technical implementations.
-
-Remember this is for a specific request with ID: ${randomSeed}-${currentTime}-${Math.random().toString(36).substring(2, 10)} and must be unique.`;
-    
-    // Call OpenAI API to get an initial response
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 1.4, // Maximum temperature value for greatest variation
-      max_tokens: 1000,
-      presence_penalty: 0.9, // High presence penalty to discourage repetition
-      frequency_penalty: 0.9 // High frequency penalty to encourage unique words
-    });
-    
-    // Extract the response content
-    const content = response.choices[0].message.content || '';
-    console.log('Generated initial response:', content.substring(0, 200) + '...');
-    
-    // Add a delay to ensure the OpenAI system has time to reset its context
-    // This helps with avoiding repetitive responses
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return content;
-  } catch (error) {
-    console.error('Error getting initial response:', error);
-    return `RiverMeadow provides cloud migration services with a core platform that connects source environments to target environments, supporting various migration types including P2V, V2C, and C2C across different cloud platforms like AWS, Azure, and Google Cloud.`;
-  }
-};
+// Function removed to optimize diagram generation process
+// Now combined into the extractDiagramComponentsFromContext function directly
 
 /**
  * Main function to generate a diagram based on a prompt and knowledge context
@@ -729,17 +706,11 @@ export const generateDiagram = async (
     
     console.log('Generating diagram for prompt:', enhancedPrompt);
     
-    // STEP 1: Get initial detailed response
-    const initialResponse = await getInitialResponse(prompt, knowledgeContext);
-    console.log('Received initial detailed response, now extracting diagram components');
-    
-    // STEP 2: Use the initial response to extract diagram components
+    // SINGLE STEP: Extract diagram components directly from the prompt and context
+    // Skip the intermediate step of generating an initial response
     try {
-      // Create an enhanced context combining original context and initial response
-      const enhancedContext = [...knowledgeContext, initialResponse];
-      
-      // Extract meaningful components from the enhanced context and prompt
-      const diagramComponents = await extractDiagramComponentsFromContext(prompt, enhancedContext);
+      // Extract meaningful components directly from the context and prompt
+      const diagramComponents = await extractDiagramComponentsFromContext(prompt, knowledgeContext);
       
       // STEP 3: Generate Draw.io XML
       const drawioXml = createDrawioXML(diagramComponents);
