@@ -521,8 +521,9 @@ export function KnowledgeBaseChat({ chatId }: KnowledgeBaseChatProps) {
                               {/* Show the diagram directly as an image */}
                               <p className="text-sm text-muted-foreground mb-2">{ref.caption || 'Generated Diagram'}</p>
                               
-                              {/* Force component re-creation with unique key for each diagram path */}
-                              <div key={`diagram-${ref.imagePath}-${Date.now()}`}>
+                              {/* Force component re-creation with unique key based on timestamp and random seed */}
+                              {/* This ensures each diagram is treated as a brand new component, avoiding caching issues */}
+                              <div key={`diagram-${ref.imagePath}-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`}>
                                 <DiagramViewer 
                                   diagramPath={ref.imagePath!} 
                                   altText={ref.caption || 'RiverMeadow Migration Diagram'} 

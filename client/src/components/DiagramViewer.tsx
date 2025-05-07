@@ -14,12 +14,14 @@ interface DiagramViewerProps {
  * - Mouse dragging (preserves zoom level)
  * - Zoom controls
  * - Download as PNG functionality
+ * - Aggressive caching prevention mechanisms
  */
 export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewerProps) {
-  const [zoom, setZoom] = useState(1);
-  const [loading, setLoading] = useState(true);
+  // Basic states for the viewer
   const [svgContent, setSvgContent] = useState('');
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(0.7); // Default zoom level (70%)
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -28,14 +30,22 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
+  // Constants for zoom
   const minZoom = 0.2;
   const maxZoom = 3;
   const zoomStep = 0.1;
   
-  // Load SVG content - using timestamp directly for cache busting
-  // Create unique ID for this particular diagram instance to avoid caching
-  const diagramUniqueKey = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  // Generate a unique key for this component instance
+  // This helps prevent caching at multiple levels
+  const uniqueKey = useMemo(() => 
+    `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`, []);
   
+  // Log the diagram path for debugging
+  useEffect(() => {
+    console.log(`DiagramViewer rendering with path: ${diagramPath}, unique key: ${uniqueKey}`);
+  }, [diagramPath, uniqueKey]);
+  
+  // Load SVG content with aggressive cache busting
   useEffect(() => {
     const loadSvg = async () => {
       setLoading(true);
@@ -44,7 +54,6 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
       
       try {
         // Extract base filename (without extension) and strip any existing query params
-        // First remove any query params that might be in the path
         const pathWithoutParams = diagramPath.split('?')[0];
         const baseFilename = pathWithoutParams.replace(/\.(html|xml|drawio)$/, '');
         
@@ -52,17 +61,13 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
         const filenameOnly = baseFilename.split('/').pop() || baseFilename;
         
         // Ultra-aggressive cache busting with timestamp, random value, and unique key
-        const cacheBuster = `t=${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${diagramUniqueKey}`;
+        const cacheBuster = `t=${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${uniqueKey}`;
         
         // Attempt to load SVG with ultra-strong cache-busting
         const svgUrl = getFullUrl(`/api/diagram-svg/${filenameOnly}.drawio?${cacheBuster}`);
         console.log('Loading diagram from:', svgUrl);
         
-        // Use multiple techniques to prevent caching:
-        // 1. Fetch API cache: 'no-store' option
-        // 2. HTTP Headers for cache control
-        // 3. Random query parameter
-        // 4. Force browser to bypass cache with 'no-cache'
+        // Use multiple techniques to prevent caching
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
         
@@ -73,7 +78,7 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
             'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
             'Pragma': 'no-cache',
             'Expires': '0',
-            'X-Requested-With': diagramUniqueKey // Custom header to help bypass CDN caches
+            'X-Requested-With': uniqueKey // Custom header to help bypass CDN caches
           },
           credentials: 'same-origin',
           signal: controller.signal
@@ -100,8 +105,6 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
         const savedZoom = localStorage.getItem('diagram_zoom_level');
         if (savedZoom && !isNaN(parseFloat(savedZoom))) {
           setZoom(parseFloat(savedZoom));
-        } else {
-          setZoom(0.7); // Default starting zoom
         }
       } catch (err) {
         console.error('Error loading diagram:', err);
@@ -119,7 +122,7 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
     };
     
     loadSvg();
-  }, [diagramPath, diagramUniqueKey]);
+  }, [diagramPath, uniqueKey]);
   
   // Save zoom level to localStorage when it changes
   useEffect(() => {
@@ -175,13 +178,15 @@ export function DiagramViewer({ diagramPath, altText = 'Diagram' }: DiagramViewe
   // Handle PNG download
   const downloadAsPng = async () => {
     try {
-      // Extract base filename (without extension)
-      const baseFilename = diagramPath.replace(/\.(html|xml|drawio)$/, '');
+      // Extract base filename (without extension) and strip any existing query params
+      const pathWithoutParams = diagramPath.split('?')[0];
+      const baseFilename = pathWithoutParams.replace(/\.(html|xml|drawio)$/, '');
+      
       // Get just the filename part, not the full path
       const filenameOnly = baseFilename.split('/').pop() || baseFilename;
       
       // More aggressive cache busting with timestamp and random value
-      const cacheBuster = `t=${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      const cacheBuster = `t=${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${uniqueKey}`;
       
       // Create download URL with cache busting
       const downloadUrl = getFullUrl(`/api/download-full-diagram/${filenameOnly}?${cacheBuster}`);
