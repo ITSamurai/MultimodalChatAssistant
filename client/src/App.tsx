@@ -21,7 +21,7 @@ function Router() {
   
   return (
     <Switch>
-      <ProtectedRoute path="/" component={() => <ChatPage />} />
+      <ProtectedRoute path="/" component={() => <Home />} />
       <ProtectedRoute path="/chat" component={() => <ChatPage />} />
       <ProtectedRoute path="/chat/:id" component={ChatPage} />
       <ProtectedRoute path="/knowledge" component={() => <KnowledgeChatPage />} />
