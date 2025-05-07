@@ -212,23 +212,8 @@ const extractDiagramComponentsFromContext = async (
       return defaultComponents;
     }
     
-    // Check if there's connectivity/timeout issues by using a brief test call
-    try {
-      // Quick verification call with minimal tokens to test API connectivity
-      const connectivityTest = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: 'Verify API connection. Respond with "ok".' }],
-        max_tokens: 10
-      });
-      
-      if (!connectivityTest.choices[0].message.content?.includes('ok')) {
-        console.warn('OpenAI connectivity test failed - response unexpected');
-        return defaultComponents;
-      }
-    } catch (connectError) {
-      console.error('OpenAI connectivity test failed:', connectError);
-      return defaultComponents;
-    }
+    // Skip connectivity test for now as we'll use the Promise.race method
+    console.log('Proceeding with OpenAI diagram generation (with timeout protection)')
     
     console.log('Context relatively small but proceeding with OpenAI diagram generation');
     console.log('Generating diagram components using OpenAI');
@@ -289,7 +274,12 @@ Remember this is for a specific request with ID: ${randomSeed}-${currentTime}-${
 Based on this information, provide ONLY the JSON structure for creating a diagram about RiverMeadow's cloud migration services, with no additional explanation.`;
     
     // Call OpenAI API with reduced max tokens and optimized parameters
-    const response = await openai.chat.completions.create({
+    // Note: We'll use a Promise.race with a timeout to avoid hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('OpenAI request timed out after 30 seconds')), 30000);
+    });
+    
+    const openaiPromise = openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
@@ -299,9 +289,11 @@ Based on this information, provide ONLY the JSON structure for creating a diagra
       max_tokens: 1000, // Reduced from default
       temperature: 1.2, // Slightly reduced but still high for creativity
       presence_penalty: 0.7, // Reduced slightly but still encourages new content
-      frequency_penalty: 0.7, // Same as above
-      timeout: 30 // Add a 30 second timeout to avoid hanging requests
+      frequency_penalty: 0.7 // Same as above
     });
+    
+    // Use Promise.race to implement timeout
+    const response = await Promise.race([openaiPromise, timeoutPromise]) as Awaited<typeof openaiPromise>;
     
     // Parse the JSON response
     const content = response.choices[0].message.content || '{}';
