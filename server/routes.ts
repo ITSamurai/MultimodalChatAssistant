@@ -9,6 +9,8 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { initializePineconeIndex } from './services/pinecone.service';
 import OpenAI from 'openai';
+import { drawioToSvg, ensureDirectoriesExist, drawioToPng } from './services/drawio.service';
+import { generateDiagram, isDiagramGenerationRequest } from './services/diagram-generation.service';
 
 // Define custom types
 interface ChatResponse {
