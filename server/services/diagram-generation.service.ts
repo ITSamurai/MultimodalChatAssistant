@@ -8,6 +8,7 @@ import path from 'path';
 import fs from 'fs';
 import { OpenAI } from 'openai';
 import { saveD2Script, d2ToSvg, d2ToPng } from './d2.service';
+import { storage } from '../storage';
 
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -347,8 +348,23 @@ export async function generateDiagram(prompt: string): Promise<DiagramGeneration
     const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '_');
     const d2FilePath = saveD2Script(script, sanitizedTitle);
     
-    // Generate SVG from the D2 script
-    const svgContent = await d2ToSvg(d2FilePath);
+    // Get configuration settings for D2
+    const config = await storage.getConfig();
+    
+    // Prepare D2 options based on configuration settings
+    const d2Options = {
+      theme: parseInt(config.d2_theme ?? "0", 10),
+      darkTheme: parseInt(config.d2_dark_theme ?? "-1", 10),
+      layout: config.d2_layout || "dagre",
+      sketchMode: config.d2_sketch_mode === true,
+      pad: parseInt(config.d2_padding ?? "100", 10),
+      containerBgColor: config.d2_container_bg_color || "#ffffff"
+    };
+    
+    console.log("Using D2 rendering options:", d2Options);
+    
+    // Generate SVG from the D2 script with configuration options
+    const svgContent = await d2ToSvg(d2FilePath, d2Options);
     
     // Derive the SVG file path from the D2 file path
     const svgFileName = path.basename(d2FilePath, '.d2') + '.svg';
@@ -362,7 +378,7 @@ export async function generateDiagram(prompt: string): Promise<DiagramGeneration
     fs.writeFileSync(svgFilePath, svgContent);
     
     // Trigger PNG generation (this happens asynchronously)
-    d2ToPng(d2FilePath).then(pngBuffer => {
+    d2ToPng(d2FilePath, d2Options).then(pngBuffer => {
       if (pngBuffer) {
         fs.writeFileSync(pngFilePath, pngBuffer);
         console.log(`PNG saved to ${pngFilePath}`);
