@@ -361,23 +361,47 @@ export default function ConfigPage() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="d2_layout">Layout Engine</Label>
+                      <Label htmlFor="d2_dark_theme">Dark Theme ID</Label>
                       <Select 
-                        value={config.d2_layout ?? "dagre"} 
-                        onValueChange={(value) => updateConfig('d2_layout', value)}
+                        value={String(config.d2_dark_theme ?? -1)} 
+                        onValueChange={(value) => updateConfig('d2_dark_theme', parseInt(value))}
                       >
-                        <SelectTrigger id="d2_layout">
-                          <SelectValue placeholder="Select layout" />
+                        <SelectTrigger id="d2_dark_theme">
+                          <SelectValue placeholder="Select dark theme" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="dagre">Dagre (Default)</SelectItem>
-                          <SelectItem value="elk">ELK (Better for complex diagrams)</SelectItem>
+                          <SelectItem value="-1">Use Regular Theme (-1)</SelectItem>
+                          <SelectItem value="0">Dark Default (0)</SelectItem>
+                          <SelectItem value="1">Dark Theme 1</SelectItem>
+                          <SelectItem value="2">Dark Theme 2</SelectItem>
+                          <SelectItem value="3">Dark Theme 3</SelectItem>
+                          <SelectItem value="4">Dark Theme 4</SelectItem>
+                          <SelectItem value="5">Dark Theme 5</SelectItem>
                         </SelectContent>
                       </Select>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Layout algorithm for arranging diagram elements
+                        Theme ID for dark mode viewing (-1 uses regular theme)
                       </p>
                     </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="d2_layout">Layout Engine</Label>
+                    <Select 
+                      value={config.d2_layout ?? "dagre"} 
+                      onValueChange={(value) => updateConfig('d2_layout', value)}
+                    >
+                      <SelectTrigger id="d2_layout">
+                        <SelectValue placeholder="Select layout" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dagre">Dagre (Default)</SelectItem>
+                        <SelectItem value="elk">ELK (Better for complex diagrams)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Layout algorithm for arranging diagram elements
+                    </p>
                   </div>
                   
                   <div className="space-y-2">
@@ -432,6 +456,17 @@ export default function ConfigPage() {
                         Background color for the diagram container
                       </p>
                     </div>
+                  </div>
+                  
+                  <div className="mt-6 p-4 bg-accent/50 rounded-md border border-border">
+                    <h4 className="text-md font-medium mb-2">D2 Diagram Tips</h4>
+                    <ul className="text-sm space-y-1 list-disc pl-5">
+                      <li>The D2 layout engine offers clean, programmatic diagrams that are excellent for technical documentation</li>
+                      <li>Sketch mode creates hand-drawn style diagrams that look more creative and informal</li>
+                      <li>Try different themes to find the best visual style for your specific diagram content</li>
+                      <li>Use ELK layout for more complex diagrams with many nodes and connections</li>
+                      <li>The Dark Theme option allows setting a separate theme for dark mode viewing</li>
+                    </ul>
                   </div>
                 </div>
               )}
