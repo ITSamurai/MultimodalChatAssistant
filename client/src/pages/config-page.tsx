@@ -307,14 +307,15 @@ export default function ConfigPage() {
               <div className="space-y-2">
                 <Label htmlFor="diagram_engine">Diagram Engine</Label>
                 <Select 
-                  value={config.diagram_engine ?? "drawio"} 
+                  value={config.diagram_engine ?? "d2"} 
                   onValueChange={(value) => updateConfig('diagram_engine', value)}
                 >
                   <SelectTrigger id="diagram_engine">
                     <SelectValue placeholder="Select engine" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="drawio">Draw.IO (Recommended)</SelectItem>
+                    <SelectItem value="d2">D2 (Recommended)</SelectItem>
+                    <SelectItem value="drawio">Draw.IO</SelectItem>
                     <SelectItem value="mermaid">Mermaid</SelectItem>
                   </SelectContent>
                 </Select>
@@ -323,28 +324,142 @@ export default function ConfigPage() {
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="drawio_theme">Draw.IO Theme</Label>
-                <Select 
-                  value={config.drawio_theme ?? "default"} 
-                  onValueChange={(value) => updateConfig('drawio_theme', value)}
-                  disabled={config.diagram_engine !== "drawio"}
-                >
-                  <SelectTrigger id="drawio_theme">
-                    <SelectValue placeholder="Select theme" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">Default</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="kennedy">Kennedy (Blue theme)</SelectItem>
-                    <SelectItem value="minimal">Minimal</SelectItem>
-                    <SelectItem value="sketch">Sketch (Hand-drawn style)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Visual theme for Draw.IO diagrams
-                </p>
-              </div>
+              <Separator />
+              
+              {/* D2-specific Settings */}
+              {config.diagram_engine === "d2" && (
+                <div className="space-y-6">
+                  <h3 className="text-lg font-medium">D2 Diagram Settings</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="d2_theme">Theme ID</Label>
+                      <Select 
+                        value={String(config.d2_theme ?? 0)} 
+                        onValueChange={(value) => updateConfig('d2_theme', parseInt(value))}
+                      >
+                        <SelectTrigger id="d2_theme">
+                          <SelectValue placeholder="Select theme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Default (0)</SelectItem>
+                          <SelectItem value="1">Theme 1 (Blue)</SelectItem>
+                          <SelectItem value="2">Theme 2 (Green)</SelectItem>
+                          <SelectItem value="3">Theme 3 (Orange)</SelectItem>
+                          <SelectItem value="4">Theme 4 (Neutral)</SelectItem>
+                          <SelectItem value="5">Theme 5 (Purple)</SelectItem>
+                          <SelectItem value="6">Theme 6 (Yellow)</SelectItem>
+                          <SelectItem value="7">Theme 7 (Cyan)</SelectItem>
+                          <SelectItem value="8">Theme 8 (Red)</SelectItem>
+                          <SelectItem value="9">Theme 9 (Teal)</SelectItem>
+                          <SelectItem value="10">Theme 10 (Pink)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Color theme ID for D2 diagrams (light mode)
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="d2_layout">Layout Engine</Label>
+                      <Select 
+                        value={config.d2_layout ?? "dagre"} 
+                        onValueChange={(value) => updateConfig('d2_layout', value)}
+                      >
+                        <SelectTrigger id="d2_layout">
+                          <SelectValue placeholder="Select layout" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="dagre">Dagre (Default)</SelectItem>
+                          <SelectItem value="elk">ELK (Better for complex diagrams)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Layout algorithm for arranging diagram elements
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="d2_pad">Padding: {config.d2_pad ?? 100}px</Label>
+                    <Slider 
+                      id="d2_pad"
+                      min={0} 
+                      max={200} 
+                      step={10}
+                      value={[config.d2_pad ?? 100]}
+                      onValueChange={(value) => updateConfig('d2_pad', value[0])}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Padding around the generated diagram in pixels
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="d2_sketch_mode">Sketch Mode</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Render diagrams with a hand-drawn appearance
+                        </p>
+                      </div>
+                      <Switch 
+                        id="d2_sketch_mode"
+                        checked={config.d2_sketch_mode ?? false}
+                        onCheckedChange={(checked) => updateConfig('d2_sketch_mode', checked)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="d2_container_bg_color">Background Color</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="d2_container_bg_color"
+                          type="color" 
+                          value={config.d2_container_bg_color ?? "#ffffff"} 
+                          onChange={(e) => updateConfig('d2_container_bg_color', e.target.value)}
+                          className="w-16 h-10 p-1"
+                        />
+                        <Input 
+                          type="text" 
+                          value={config.d2_container_bg_color ?? "#ffffff"} 
+                          onChange={(e) => updateConfig('d2_container_bg_color', e.target.value)}
+                          className="w-32 h-10"
+                          placeholder="#ffffff"
+                        />
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Background color for the diagram container
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Draw.IO Specific Settings */}
+              {config.diagram_engine === "drawio" && (
+                <div className="space-y-2">
+                  <Label htmlFor="drawio_theme">Draw.IO Theme</Label>
+                  <Select 
+                    value={config.drawio_theme ?? "default"} 
+                    onValueChange={(value) => updateConfig('drawio_theme', value)}
+                  >
+                    <SelectTrigger id="drawio_theme">
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="dark">Dark</SelectItem>
+                      <SelectItem value="kennedy">Kennedy (Blue theme)</SelectItem>
+                      <SelectItem value="minimal">Minimal</SelectItem>
+                      <SelectItem value="sketch">Sketch (Hand-drawn style)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Visual theme for Draw.IO diagrams
+                  </p>
+                </div>
+              )}
               
               <Separator />
               

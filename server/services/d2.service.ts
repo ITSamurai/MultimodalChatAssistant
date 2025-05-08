@@ -45,25 +45,57 @@ export function ensureDirectoriesExist() {
 }
 
 /**
- * Converts D2 script to SVG using the d2 CLI tool
+ * Converts D2 script to SVG using the d2 CLI tool with configuration options
  */
 export async function d2ToSvg(
   d2FilePath: string, 
-  options: { theme?: string; layout?: string; } = {}
+  options: { 
+    theme?: number; 
+    darkTheme?: number;
+    layout?: string;
+    sketchMode?: boolean;
+    pad?: number;
+    containerBgColor?: string;
+  } = {}
 ): Promise<string> {
   try {
-    // D2 doesn't use theme and layout options in the same way as our previous code assumed
+    // Get configuration or use defaults
+    const theme = options.theme !== undefined ? options.theme : 0;
+    const darkTheme = options.darkTheme !== undefined ? options.darkTheme : -1;
+    const layout = options.layout || "dagre";
+    const sketchMode = options.sketchMode === true;
+    const pad = options.pad !== undefined ? options.pad : 100;
     
     const svgFileName = path.basename(d2FilePath, '.d2') + '.svg';
     const svgFilePath = path.join(SVG_DIRECTORY, svgFileName);
     
-    // Use our wrapper script instead of calling d2 directly
+    // Build command with arguments based on configuration
     const wrapperPath = path.join(process.cwd(), 'server', 'services', 'd2-wrapper.js');
     // Make sure the script has execute permissions
     await execAsync(`chmod +x "${wrapperPath}"`).catch(e => console.error(`Failed to chmod wrapper: ${e}`));
     
-    console.log(`Running D2 wrapper: "${wrapperPath}" "${d2FilePath}" "${svgFilePath}"`);
-    const command = `node "${wrapperPath}" "${d2FilePath}" "${svgFilePath}"`;
+    // Pass configuration options to the wrapper script
+    const commandArgs = [
+      `--theme=${theme}`,
+      `--layout=${layout}`,
+      `--pad=${pad}`
+    ];
+    
+    // Add optional arguments
+    if (darkTheme >= 0) {
+      commandArgs.push(`--dark-theme=${darkTheme}`);
+    }
+    
+    if (sketchMode) {
+      commandArgs.push('--sketch');
+    }
+    
+    const argsString = commandArgs.join(' ');
+    console.log(`Running D2 wrapper with options: ${argsString}`);
+    
+    // Execute the command with the args
+    console.log(`Running D2 wrapper: "${wrapperPath}" "${d2FilePath}" "${svgFilePath}" ${argsString}`);
+    const command = `node "${wrapperPath}" "${d2FilePath}" "${svgFilePath}" ${argsString}`;
     await execAsync(command, { timeout: 30000 }); // 30 second timeout
     
     if (!fs.existsSync(svgFilePath)) {
@@ -71,7 +103,18 @@ export async function d2ToSvg(
     }
     
     // Read the SVG content
-    const svgContent = fs.readFileSync(svgFilePath, 'utf8');
+    let svgContent = fs.readFileSync(svgFilePath, 'utf8');
+    
+    // Apply background color if specified (by injecting style in the SVG)
+    if (options.containerBgColor) {
+      // Find the opening SVG tag and add a background color
+      const bgColor = options.containerBgColor.replace(/[^a-zA-Z0-9#]/g, ''); // Basic sanitization
+      svgContent = svgContent.replace(
+        /<svg/,
+        `<svg style="background-color: ${bgColor};"`
+      );
+    }
+    
     return svgContent;
   } catch (error) {
     console.error(`Error converting D2 to SVG: ${error}`);
@@ -80,12 +123,19 @@ export async function d2ToSvg(
 }
 
 /**
- * Converts D2 script to PNG using the d2 CLI tool
- * If PNG generation fails, a fallback SVG is created
+ * Converts D2 script to PNG using the d2 CLI tool and puppeteer
+ * If PNG generation fails, a fallback PNG is created
  */
 export async function d2ToPng(
   d2FilePath: string, 
-  options: { theme?: string; layout?: string; } = {}
+  options: { 
+    theme?: number; 
+    darkTheme?: number;
+    layout?: string;
+    sketchMode?: boolean;
+    pad?: number;
+    containerBgColor?: string;
+  } = {}
 ): Promise<Buffer | null> {
   try {
     const pngFileName = path.basename(d2FilePath, '.d2') + '.png';

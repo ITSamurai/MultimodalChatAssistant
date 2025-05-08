@@ -27,8 +27,16 @@ export interface AppConfig {
   diagram_quality?: 'standard' | 'hd';
   diagram_size?: 'small' | 'medium' | 'large';
   enable_network_diagram_detection?: boolean;
-  diagram_engine?: 'drawio' | 'mermaid';
+  diagram_engine?: 'drawio' | 'mermaid' | 'd2';
   drawio_theme?: 'default' | 'dark' | 'kennedy' | 'minimal' | 'sketch';
+  
+  // D2-specific settings
+  d2_theme?: number; // Theme ID (0-20)
+  d2_dark_theme?: number; // Dark theme ID
+  d2_layout?: 'dagre' | 'elk'; // Layout engine
+  d2_sketch_mode?: boolean; // Hand-drawn style
+  d2_pad?: number; // Padding around diagram
+  d2_container_bg_color?: string; // Background color for diagram container
   
   // Advanced settings
   enable_debug_logs?: boolean;
@@ -62,8 +70,16 @@ export const defaultConfig: AppConfig = {
   diagram_quality: "standard",
   diagram_size: "medium",
   enable_network_diagram_detection: true,
-  diagram_engine: "drawio",
+  diagram_engine: "d2", // Changed default to D2
   drawio_theme: "default",
+  
+  // D2-specific settings
+  d2_theme: 0, // Default theme (0)
+  d2_dark_theme: -1, // Use regular theme for dark mode (-1 means no specific dark theme)
+  d2_layout: "dagre", // Default layout engine
+  d2_sketch_mode: false, // Hand-drawn style disabled by default
+  d2_pad: 100, // Default padding (pixels)
+  d2_container_bg_color: "#ffffff", // White background
   
   // Advanced settings
   enable_debug_logs: false,
