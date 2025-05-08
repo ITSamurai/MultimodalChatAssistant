@@ -1,0 +1,47 @@
+direction: down
+
+# Layout configuration
+layout {
+  rankSep: 120
+}
+
+# General style for all elements
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  stroke-width: 2
+  font-size: 18
+  border-radius: 6
+  padding: 20
+}
+
+# Optional custom styles for specific node types
+source: "Source OS" {
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+target: "Target OS" {
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+rivermeadow: "RiverMeadow SaaS"
+discovery: "Discovery"
+migration: "Migration"
+
+source -> discovery -> rivermeadow -> migration -> target

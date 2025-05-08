@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg style="background-color: #ffffff;" width="800" height="600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect width="100%" height="100%" fill="#f8f9fa" />
+  <rect x="50" y="50" width="700" height="500" fill="white" stroke="#e9ecef" stroke-width="2" rx="10" ry="10" />
+  
+  <text x="400" y="100" font-family="Arial" font-size="24" text-anchor="middle" fill="#cc0000">
+    D2 Diagram Generation Error
+  </text>
+  
+  <text x="400" y="150" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">
+    D2 Failed: Command failed: d2 "/home/runner/workspace/uploads/d2/layout_configuration_1746737231037.d2" "/home/runner/workspace/uploads/svg/layout_configuration_1746737231037.svg" --theme=0 --layout=dagre --pad=20
+  </text>
+  
+  <text x="400" y="190" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">
+    Input: layout_configuration_1746737231037.d2
+  </text>
+  
+  <rect x="100" y="220" width="600" height="300" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="5" ry="5" />
+  
+  <foreignObject x="120" y="240" width="560" height="260">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 12px; white-space: pre; color: #333; overflow: auto; height: 100%;">
+direction: down
+
+# Layout configuration
+layout {
+  rankSep: 120
+}
+
+# General style for all elements
+style {
+  fill: &quot;#f5f5f5&quot;
+  stroke: &quot;#333333&quot;
+  stroke-width: 2
+  font-size: 18
+  border-radius: 6
+  padding: 20
+}
+
+# Optional custom styles for specific node types
+source: &quot;Source OS&quot; {
+  style.fill: &quot;#e6f7ff&quot;
+  style.stroke: &quot;#1890ff&quot;
+}
+
+target: &quot;Target OS&quot; {
+  style.fill: &quot;#f6ffed&quot;
+  style.stroke: &quot;#52c41a&quot;
+}
+
+rivermeadow: &quot;RiverMeadow SaaS&quot;
+discovery: &quot;Discovery&quot;
+migration: &quot;Migration&quot;
+
+source -&gt; discovery -&gt; rivermeadow -&gt; migration -&gt; target
+    </div>
+  </foreignObject>
+</svg>
+  
