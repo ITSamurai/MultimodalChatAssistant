@@ -1,0 +1,23 @@
+direction: right
+@os_migration: {
+  layout: {
+    rankSep: 80
+  }
+}
+
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  font-size: 14
+  border-radius: 4
+}
+
+source_os: "Source OS"
+discovery_os: "OS Discovery"
+assessment: "Migration Assessment"
+rivermeadow_saas: "RiverMeadow SaaS"
+os_conversion: "OS Conversion"
+migration_exec: "Migration Execution"
+target_os: "Target OS"
+
+source_os -> discovery_os -> assessment -> rivermeadow_saas -> os_conversion -> migration_exec -> target_os

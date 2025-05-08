@@ -1,0 +1,30 @@
+direction: right
+
+# Layout configuration
+layout {
+  rankSep: 80
+}
+
+# General style for all elements
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  font-size: 14
+  border-radius: 4
+}
+
+# Node definitions
+source: "On-Premise OS" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}discovery: "OS Discovery"
+assessment: "Compatibility Assessment"
+preparation: "Migration Preparation"
+rivermeadow: "RiverMeadow SaaS"
+migration: "OS Migration"
+validation: "Post-Migration Validation"
+target: "Cloud OS Environment" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}# Connections between nodes
+source -> discovery -> assessment -> preparation -> rivermeadow -> migration -> validation -> target

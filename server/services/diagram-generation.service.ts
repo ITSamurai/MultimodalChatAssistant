@@ -14,9 +14,9 @@ import { storage } from '../storage';
  * Fixes common D2 syntax issues related to spacing
  */
 function fixD2SpacingIssues(script: string): string {
-  // Replace direct "spacing: X" with layout.rankSep
+  // Replace direct "spacing: X" with layout.rankSep but use standard format
   script = script.replace(/^spacing:\s*(\d+)\s*$/gm, (match, value) => {
-    return `@new_diagram: {\n  layout: {\n    rankSep: ${value}\n  }\n}`;
+    return `# Setting rank separation\ndirection: right\n\nlayout {\n  rankSep: ${value}\n}`;
   });
   
   // Remove any floating "100" numbers that might be incorrectly generated
@@ -24,6 +24,16 @@ function fixD2SpacingIssues(script: string): string {
   
   // Fix any other numeric values that appear on lines by themselves (common D2 error)
   script = script.replace(/^\s*(\d+)\s*$/gm, '');
+  
+  // Remove custom diagram names which can cause issues with some D2 versions
+  script = script.replace(/@[\w_]+\s*:\s*{([^}]*)}/g, (match, contents) => {
+    // Extract the useful configuration from inside the custom diagram block
+    const rankSepMatch = contents.match(/rankSep\s*:\s*(\d+)/);
+    if (rankSepMatch) {
+      return `# Extracted from custom diagram block\nlayout {\n  rankSep: ${rankSepMatch[1]}\n}`;
+    }
+    return ''; // Remove the custom diagram block if we can't extract useful config
+  });
   
   // Ensure all style blocks are properly closed
   const styleBlockOpenCount = (script.match(/{/g) || []).length;
@@ -208,7 +218,8 @@ export async function generateD2Script(prompt: string): Promise<{
       "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
       "5. Use -> for connections between components to show data flow or dependencies.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
-      "7. Include all key RiverMeadow application components mentioned below.\n\n" +
+      "7. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +
+      "8. Include all key RiverMeadow application components mentioned below.\n\n" +
       "Example D2 application structure diagram for RiverMeadow:\n" +
       "```\n" +
       "direction: down\n\n" +
@@ -269,7 +280,8 @@ export async function generateD2Script(prompt: string): Promise<{
       "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
       "5. Use -> for connections between components to show reporting lines or relationships.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
-      "7. Include key organizational elements like leadership, departments, and teams.\n\n" +
+      "7. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +
+      "8. Include key organizational elements like leadership, departments, and teams.\n\n" +
       "Example D2 organizational diagram:\n" +
       "```\n" +
       "direction: down\n\n" +
@@ -308,14 +320,14 @@ export async function generateD2Script(prompt: string): Promise<{
       "4. Keep node definitions simple with just the label.\n" +
       "5. Always create connections between components using the -> operator.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
-      "7. Keep the diagram focused and not too complex (max 10-15 elements).\n\n" +
+      "7. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +
+      "8. Keep the diagram focused and not too complex (max 10-15 elements).\n\n" +
       "Example D2 diagram:\n" +
       "```\n" +
-      "direction: right\n" +
-      "@new_diagram: {\n" +
-      "  layout: {\n" +
-      "    rankSep: 80\n" +
-      "  }\n" +
+      "direction: right\n\n" +
+      "# Layout configuration\n" +
+      "layout {\n" +
+      "  rankSep: 80\n" +
       "}\n\n" +
       "# General style for all elements\n" +
       "style {\n" +
