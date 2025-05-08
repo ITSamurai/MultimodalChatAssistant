@@ -48,11 +48,22 @@ export async function generateDiagramMetadata(prompt: string): Promise<DiagramMe
   "categories": { // Optional grouping of related items
     "Category 1": ["Item A", "Item B"],
     "Category 2": ["Item C", "Item D"]
+  },
+  "layoutHints": { // Optional layout suggestions for the diagram
+    "direction": "TB", // Direction: TB (top-bottom), BT (bottom-top), LR (left-right), RL (right-left)
+    "spacing": "normal", // Spacing between nodes: "compact", "normal", or "wide"
+    "style": "modern", // Visual style: "modern", "technical", "minimal", or "colorful"
+    "emphasize": ["Node 2"], // List of important nodes to highlight
+    "group": { // Visual clustering of related nodes
+      "Group Name": ["Node 1", "Node 3"],
+      "Another Group": ["Node 4", "Node 5"]
+    }
   }
 }
 
 Always respond with valid JSON, nothing else. Do not include any explanatory text.
-For RiverMeadow-related diagrams, include appropriate components like "Source VM", "Migration Agent", "Target VM", etc.`;
+For RiverMeadow-related diagrams, include appropriate components like "Source VM", "Migration Agent", "Target VM", etc.
+Always include layout hints to improve the diagram's readability, with appropriate direction based on the type of diagram (e.g. LR for process flows, TB for hierarchies).`;
 
     // Make the API call to OpenAI
     const response = await openai.chat.completions.create({
@@ -106,7 +117,7 @@ export function generateFallbackMetadata(prompt: string): DiagramMetadata {
     ? `${prompt.substring(0, 47)}...` 
     : prompt;
   
-  // Create simple fallback metadata
+  // Create simple fallback metadata with layout hints
   return {
     title: `Diagram: ${title}`,
     nodes: ['Source System', 'RiverMeadow Platform', 'Target System'],
@@ -116,6 +127,15 @@ export function generateFallbackMetadata(prompt: string): DiagramMetadata {
     ],
     categories: {
       'Migration Components': ['Source System', 'RiverMeadow Platform', 'Target System']
+    },
+    layoutHints: {
+      direction: 'LR',
+      spacing: 'normal',
+      style: 'modern',
+      emphasize: ['RiverMeadow Platform'],
+      group: {
+        'Migration Environment': ['Source System', 'Target System']
+      }
     }
   };
 }

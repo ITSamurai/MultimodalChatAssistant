@@ -1,0 +1,31 @@
+direction: right
+spacing: 100
+
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  font-size: 14
+  border-radius: 4
+}
+
+source: "Source OS" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+} {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+rivermeadow: "RiverMeadow SaaS"
+analysis: "OS Analysis"
+transformation: "OS Transformation"
+validation: "Validation"
+target: "Target Cloud OS" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+} {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+source -> analysis -> rivermeadow -> transformation -> validation -> target

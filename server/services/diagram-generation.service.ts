@@ -268,7 +268,7 @@ export async function generateD2Script(prompt: string): Promise<{
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
       "2. Start with a layout configuration block at the top with these fields:\n" +
       "   - direction: 'right' or 'down' based on what would be most appropriate for this diagram\n" +
-      "   - spacing: a number in pixels that provides good spacing between elements (usually 80-120)\n" +
+      "   - layout.rankSep: a number in pixels that provides good spacing between elements (usually 50-100)\n" +
       "3. Include a basic style block to enhance visual appearance:\n" +
       "   style.fill: '#f5f5f5'  # A light background color\n" +
       "   style.stroke: '#333333'  # A dark border color\n" +
@@ -281,7 +281,11 @@ export async function generateD2Script(prompt: string): Promise<{
       "Example D2 diagram:\n" +
       "```\n" +
       "direction: right\n" +
-      "spacing: 100\n\n" +
+      "@new_diagram: {\n" +
+      "  layout: {\n" +
+      "    rankSep: 80\n" +
+      "  }\n" +
+      "}\n\n" +
       "# General style for all elements\n" +
       "style {\n" +
       "  fill: \"#f5f5f5\"\n" +
@@ -378,16 +382,29 @@ export async function generateDiagram(prompt: string): Promise<DiagramGeneration
     const targetFill = config.d2_target_fill || "#f6ffed";
     const targetStroke = config.d2_target_stroke || "#52c41a";
     
-    // Look for source/target nodes in the D2 script and add style blocks if they don't exist
-    if (script.includes("source:") && !script.includes("source: {")) {
-      // Simple source node replacement
-      script = script.replace(/source:\s*"([^"]+)"/g, `source: "$1" {\n  style.fill: "${sourceFill}"\n  style.stroke: "${sourceStroke}"\n}`);
+    // Look for source/target nodes in the D2 script, but be more careful with replacements
+    // We need to ensure we don't create invalid D2 syntax
+    
+    // For source nodes, add styling inside existing blocks or create blocks
+    if (script.includes("source:")) {
+      // Match source: "Name" pattern but not if it already has a style block
+      script = script.replace(/source:\s*"([^"]+)"\s*(?!\{)/g, `source: "$1" {\n  style.fill: "${sourceFill}"\n  style.stroke: "${sourceStroke}"\n}`);
+      
+      // Fix any potential double-bracket issue (source: "Name" { ... } { ... })
+      script = script.replace(/source:\s*"([^"]+)"\s*\{([^}]*)\}\s*\{/g, `source: "$1" {\n$2\n  style.fill: "${sourceFill}"\n  style.stroke: "${sourceStroke}"\n`);
     }
     
-    if (script.includes("target:") && !script.includes("target: {")) {
-      // Simple target node replacement
-      script = script.replace(/target:\s*"([^"]+)"/g, `target: "$1" {\n  style.fill: "${targetFill}"\n  style.stroke: "${targetStroke}"\n}`);
+    // For target nodes, add styling inside existing blocks or create blocks
+    if (script.includes("target:")) {
+      // Match target: "Name" pattern but not if it already has a style block
+      script = script.replace(/target:\s*"([^"]+)"\s*(?!\{)/g, `target: "$1" {\n  style.fill: "${targetFill}"\n  style.stroke: "${targetStroke}"\n}`);
+      
+      // Fix any potential double-bracket issue (target: "Name" { ... } { ... })
+      script = script.replace(/target:\s*"([^"]+)"\s*\{([^}]*)\}\s*\{/g, `target: "$1" {\n$2\n  style.fill: "${targetFill}"\n  style.stroke: "${targetStroke}"\n`);
     }
+    
+    // Fix any potential spacing issues in the D2 script
+    script = fixD2SpacingIssues(script);
     
     // Update the file with the modified script
     saveD2Script(script, sanitizedTitle);

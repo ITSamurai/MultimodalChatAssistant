@@ -1,0 +1,62 @@
+direction: right
+spacing: 100
+
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  font-size: 14
+  border-radius: 4
+}
+
+source: "Source Environment" {
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+rivermeadow: "RiverMeadow Platform" {
+  style.fill: "#fffbe6"
+  style.stroke: "#faad14"
+}
+
+discovery: "Discovery" {
+  style.fill: "#fff0f6"
+  style.stroke: "#f759ab"
+}
+
+migration: "Migration" {
+  style.fill: "#f0fff0"
+  style.stroke: "#52c41a"
+}
+
+automation: "Automation" {
+  style.fill: "#e6fffb"
+  style.stroke: "#13c2c2"
+}
+
+orchestration: "Orchestration" {
+  style.fill: "#f9f0ff"
+  style.stroke: "#722ed1"
+}
+
+target: "Target Cloud" {
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+source -> discovery -> rivermeadow -> migration -> target
+rivermeadow -> automation
+rivermeadow -> orchestration

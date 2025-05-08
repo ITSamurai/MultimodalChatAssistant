@@ -32,12 +32,21 @@ export interface DiagramCategory {
   [key: string]: string[];
 }
 
+export interface LayoutHints {
+  direction?: 'TB' | 'BT' | 'LR' | 'RL';  // Top-bottom, Bottom-top, Left-right, Right-left
+  spacing?: 'compact' | 'normal' | 'wide';
+  style?: 'modern' | 'technical' | 'minimal' | 'colorful';
+  emphasize?: string[];  // Node labels to emphasize
+  group?: { [key: string]: string[] };  // Groups of nodes to visually cluster
+}
+
 export interface DiagramMetadata {
   title: string;
   nodes: string[] | DiagramNode[];
   connections: DiagramConnection[];
   categories?: DiagramCategory;
   description?: string;
+  layoutHints?: LayoutHints;
 }
 
 // Default styling options
@@ -244,18 +253,87 @@ export function convertJsonToD2(diagramData: DiagramMetadata): string {
     // Start building the D2 script
     let d2 = `# ${diagramData.title}\n\n`;
     
-    // Define direction and theme
-    d2 += `direction: right\n\n`;
+    // Apply layout hints if available
+    const layoutHints = diagramData.layoutHints || {};
+    
+    // Define direction based on layout hints or default to right
+    const direction = layoutHints.direction ? layoutHints.direction.toLowerCase() : 'right';
+    d2 += `direction: ${direction}\n`;
+    
+    // Apply spacing if specified via layout hints
+    if (layoutHints.spacing) {
+      let spacingValue = 1;
+      switch (layoutHints.spacing) {
+        case 'compact': spacingValue = 0.8; break;
+        case 'normal': spacingValue = 1; break;
+        case 'wide': spacingValue = 1.5; break;
+      }
+      // Use the D2 layout.rankSep parameter instead of spacing
+      d2 += `# Custom spacing modifier for layout\n`;
+      d2 += `@new_diagram: {\n`;
+      d2 += `  layout: {\n`;
+      d2 += `    rankSep: ${spacingValue * 50}\n`;  // Convert to a reasonable pixel value
+      d2 += `  }\n`;
+      d2 += `}\n`;
+    }
+    
+    d2 += '\n';
     
     // Add description if provided
     if (diagramData.description) {
       d2 += `# Description: ${diagramData.description}\n\n`;
     }
     
-    // Define nodes
+    // Define nodes with styling based on layout hints
     processedNodes.forEach(node => {
       const sanitizedLabel = node.label.replace(/"/g, '\\"');
-      d2 += `${node.id}: "${sanitizedLabel}" {\n  shape: rectangle\n  style: {\n    fill: "#f5f5f5"\n    stroke: "#666666"\n    border-radius: 4\n  }\n}\n\n`;
+      
+      // Determine node style based on layout hints style
+      let fill = "#f5f5f5";
+      let stroke = "#666666";
+      let borderRadius = 4;
+      let shape = "rectangle";
+      
+      if (layoutHints.style) {
+        switch (layoutHints.style) {
+          case 'modern':
+            fill = "#f0f7ff";
+            stroke = "#1890ff";
+            borderRadius = 8;
+            break;
+          case 'technical':
+            fill = "#f5f5f5";
+            stroke = "#333333";
+            borderRadius = 0;
+            shape = "rectangle";
+            break;
+          case 'minimal':
+            fill = "#ffffff";
+            stroke = "#d9d9d9";
+            borderRadius = 4;
+            break;
+          case 'colorful':
+            // Use a hash of the node name to generate consistent colors
+            const nodeHash = Math.abs(node.label.split('').reduce((a, b) => (a * 31 + b.charCodeAt(0)) | 0, 0));
+            const hue = nodeHash % 360;
+            fill = `hsl(${hue}, 80%, 95%)`;
+            stroke = `hsl(${hue}, 70%, 60%)`;
+            borderRadius = 6;
+            break;
+        }
+      }
+      
+      // Check if this node should be emphasized
+      if (layoutHints.emphasize && layoutHints.emphasize.includes(node.label)) {
+        // Make emphasized nodes stand out
+        stroke = "#ff4d4f";
+        fill = "#fff2f0";
+        borderRadius = 10;
+        // Add a bold outline
+        d2 += `${node.id}: "${sanitizedLabel}" {\n  shape: ${shape}\n  style: {\n    fill: "${fill}"\n    stroke: "${stroke}"\n    stroke-width: 2\n    border-radius: ${borderRadius}\n  }\n}\n\n`;
+      } else {
+        d2 += `${node.id}: "${sanitizedLabel}" {\n  shape: ${shape}\n  style: {\n    fill: "${fill}"\n    stroke: "${stroke}"\n    border-radius: ${borderRadius}\n  }\n}\n\n`;
+      }
     });
     
     // Define connections
@@ -270,6 +348,41 @@ export function convertJsonToD2(diagramData: DiagramMetadata): string {
       
       d2 += `${connectionStr}\n`;
     });
+    
+    // Add visual grouping if specified in layout hints
+    if (layoutHints.group) {
+      d2 += '\n# Visual groups\n';
+      
+      Object.entries(layoutHints.group).forEach(([groupName, nodeLabels], groupIndex) => {
+        if (nodeLabels && nodeLabels.length > 0) {
+          // Find all node IDs that match the labels
+          const nodeIds = processedNodes
+            .filter(node => nodeLabels.includes(node.label))
+            .map(node => node.id);
+          
+          if (nodeIds.length > 0) {
+            // Create the container for these nodes
+            const groupId = `group_${groupIndex}`;
+            const sanitizedGroupName = groupName.replace(/"/g, '\\"');
+            
+            d2 += `\n${groupId}: "${sanitizedGroupName}" {\n`;
+            d2 += `  style: {\n`;
+            d2 += `    fill: "#fafafa"\n`;
+            d2 += `    stroke: "#d9d9d9"\n`;
+            d2 += `    stroke-dash: 3\n`;
+            d2 += `    border-radius: 10\n`;
+            d2 += `  }\n\n`;
+            
+            // List all nodes in this group
+            nodeIds.forEach(nodeId => {
+              d2 += `  ${nodeId}\n`;
+            });
+            
+            d2 += `}\n`;
+          }
+        }
+      });
+    }
     
     // Add categories if provided
     if (diagramData.categories) {

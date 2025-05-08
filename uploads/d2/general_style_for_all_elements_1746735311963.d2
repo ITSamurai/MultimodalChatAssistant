@@ -1,0 +1,52 @@
+direction: down
+spacing: 100
+
+# General style for all elements
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  font-size: 14
+  border-radius: 4
+}
+
+# Optional custom styles for specific node types
+source: "Source OS Environment" {
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+preparation: "Preparation Phase" {
+  style.fill: "#fff7e6"
+  style.stroke: "#fa8c16"
+}
+
+migration: "Migration Process" {
+  style.fill: "#fff2f0"
+  style.stroke: "#f5222d"
+}
+
+validation: "Validation Phase" {
+  style.fill: "#f9f0ff"
+  style.stroke: "#722ed1"
+}
+
+target: "Target OS Environment" {
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+source -> preparation -> migration -> validation -> target
