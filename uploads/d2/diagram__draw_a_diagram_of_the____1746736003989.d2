@@ -1,0 +1,29 @@
+direction: down
+@new_diagram: {
+  layout: {
+    rankSep: 80
+  }
+}
+
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  font-size: 14
+  border-radius: 4
+}
+
+source_os: "Source OS Environment" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+discovery: "Discovery Phase"
+analysis: "Analysis Phase"
+migration: "Migration Phase"
+validation: "Validation Phase"
+target_os: "Target OS Environment" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+source_os -> discovery -> analysis -> migration -> validation -> target_os

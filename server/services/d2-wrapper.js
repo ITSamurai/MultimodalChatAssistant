@@ -40,6 +40,28 @@ function createFallbackSVG(outputFile, errorMessage) {
   let d2Content = '';
   try {
     d2Content = fs.readFileSync(inputFile, 'utf8').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    // Attempt to fix common D2 syntax issues
+    const originalContent = d2Content;
+    
+    // Check if any style blocks are not properly closed
+    const styleBlockOpenCount = (d2Content.match(/{/g) || []).length;
+    const styleBlockCloseCount = (d2Content.match(/}/g) || []).length;
+    
+    if (styleBlockOpenCount > styleBlockCloseCount) {
+      // There are unclosed style blocks, add closing braces
+      const diff = styleBlockOpenCount - styleBlockCloseCount;
+      for (let i = 0; i < diff; i++) {
+        d2Content += '\n}';
+      }
+      console.log(`Fixed ${diff} unclosed style blocks`);
+    }
+    
+    // If content was fixed, write it back to the file
+    if (originalContent !== d2Content) {
+      console.log('Fixed D2 syntax issues, writing back to file');
+      fs.writeFileSync(inputFile, d2Content);
+    }
   } catch (readError) {
     console.error(`Failed to read input file: ${readError.message}`);
     d2Content = 'Could not read D2 content';

@@ -10,6 +10,37 @@ import { OpenAI } from 'openai';
 import { saveD2Script, d2ToSvg, d2ToPng } from './d2.service';
 import { storage } from '../storage';
 
+/**
+ * Fixes common D2 syntax issues related to spacing
+ */
+function fixD2SpacingIssues(script: string): string {
+  // Replace direct "spacing: X" with layout.rankSep
+  script = script.replace(/^spacing:\s*(\d+)\s*$/gm, (match, value) => {
+    return `@new_diagram: {\n  layout: {\n    rankSep: ${value}\n  }\n}`;
+  });
+  
+  // Remove any floating "100" numbers that might be incorrectly generated
+  script = script.replace(/^\s*100\s*$/gm, '');
+  
+  // Fix any other numeric values that appear on lines by themselves (common D2 error)
+  script = script.replace(/^\s*(\d+)\s*$/gm, '');
+  
+  // Ensure all style blocks are properly closed
+  const styleBlockOpenCount = (script.match(/{/g) || []).length;
+  const styleBlockCloseCount = (script.match(/}/g) || []).length;
+  
+  if (styleBlockOpenCount > styleBlockCloseCount) {
+    console.log(`Fixing ${styleBlockOpenCount - styleBlockCloseCount} unclosed style blocks`);
+    // Add closing braces to fix unclosed blocks
+    const diff = styleBlockOpenCount - styleBlockCloseCount;
+    for (let i = 0; i < diff; i++) {
+      script += '\n}';
+    }
+  }
+  
+  return script;
+}
+
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
