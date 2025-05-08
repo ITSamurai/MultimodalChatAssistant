@@ -64,7 +64,7 @@ export async function d2ToSvg(
     const darkTheme = options.darkTheme !== undefined ? options.darkTheme : -1;
     const layout = options.layout || "dagre";
     const sketchMode = options.sketchMode === true;
-    const pad = options.pad !== undefined ? options.pad : 100;
+    const pad = options.pad !== undefined ? options.pad : 20; // Use a smaller default padding
     
     const svgFileName = path.basename(d2FilePath, '.d2') + '.svg';
     const svgFilePath = path.join(SVG_DIRECTORY, svgFileName);

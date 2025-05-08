@@ -310,13 +310,15 @@ export async function generateD2Script(prompt: string): Promise<{
       "Important rules:\n" +
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
       "2. Start with a layout configuration block at the top with these fields:\n" +
-      "   - direction: 'right' or 'down' based on what would be most appropriate for this diagram\n" +
-      "   - layout.rankSep: a number in pixels that provides good spacing between elements (usually 50-100)\n" +
+      "   - direction: For OS migration diagrams, use 'down' for better visualization of the process flow\n" +
+      "   - layout.rankSep: Use 120 or more for better spacing between elements\n" +
       "3. Include a basic style block to enhance visual appearance:\n" +
       "   style.fill: '#f5f5f5'  # A light background color\n" +
       "   style.stroke: '#333333'  # A dark border color\n" +
-      "   style.font-size: 14  # For readable text\n" +
-      "   style.border-radius: 4  # For slightly rounded corners\n" +
+      "   style.font-size: 18  # For better readable text\n" +
+      "   style.stroke-width: 2  # For more visible borders\n" +
+      "   style.border-radius: 6  # For slightly rounded corners\n" +
+      "   style.padding: 20  # For larger nodes with more whitespace\n" +
       "4. Keep node definitions simple with just the label.\n" +
       "5. Always create connections between components using the -> operator.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
@@ -324,17 +326,19 @@ export async function generateD2Script(prompt: string): Promise<{
       "8. Keep the diagram focused and not too complex (max 10-15 elements).\n\n" +
       "Example D2 diagram:\n" +
       "```\n" +
-      "direction: right\n\n" +
+      "direction: down\n\n" +
       "# Layout configuration\n" +
       "layout {\n" +
-      "  rankSep: 80\n" +
+      "  rankSep: 120\n" +
       "}\n\n" +
       "# General style for all elements\n" +
       "style {\n" +
       "  fill: \"#f5f5f5\"\n" +
       "  stroke: \"#333333\"\n" +
-      "  font-size: 14\n" +
-      "  border-radius: 4\n" +
+      "  stroke-width: 2\n" +
+      "  font-size: 18\n" +
+      "  border-radius: 6\n" +
+      "  padding: 20\n" +
       "}\n\n" +
       "# Optional custom styles for specific node types\n" +
       "source: \"Source Environment\" {\n" +
@@ -458,7 +462,7 @@ export async function generateDiagram(prompt: string): Promise<DiagramGeneration
       darkTheme: parseInt(config.d2_dark_theme ?? "-1", 10),
       layout: config.d2_layout || "dagre",
       sketchMode: config.d2_sketch_mode === true,
-      pad: parseInt(config.d2_pad ?? "100", 10),
+      pad: parseInt(config.d2_pad ?? "20", 10), // Use a smaller default padding to avoid "100" appearing as a visual element
       containerBgColor: config.d2_container_bg_color || "#ffffff"
     };
     
