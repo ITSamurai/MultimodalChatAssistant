@@ -107,16 +107,11 @@ const d2Content = fs.readFileSync(inputFile, 'utf8').slice(0, 200) + '...';
 
 // Try to execute D2
 try {
-  // Use the local D2 installation
-  const homeDir = process.env.HOME || process.env.USERPROFILE;
-  const localD2 = path.join(homeDir, '.local', 'bin', 'd2');
+  // Use the system installed D2 CLI
+  const d2Path = '/nix/store/yzym5q8ib2xqp4nr7s7ggk3alsibwg7a-d2-0.6.5/bin/d2';
   
-  if (!fs.existsSync(localD2)) {
-    throw new Error(`D2 not found at expected location: ${localD2}`);
-  }
-  
-  console.log(`Using D2 installation at: ${localD2}`);
-  const cmd = `"${localD2}" "${inputFile}" "${outputFile}"`;
+  console.log(`Using D2 installation at: ${d2Path}`);
+  const cmd = `"${d2Path}" "${inputFile}" "${outputFile}" ${options}`;
   console.log(`Executing: ${cmd}`);
   
   execSync(cmd, { stdio: 'inherit' });
@@ -131,7 +126,7 @@ try {
     // D2 doesn't natively support PNG export, so we'll use a different approach
     // 1. First create an SVG version
     const svgOutputFile = outputFile.replace(/\.png$/i, '.svg');
-    execSync(`"${localD2}" "${inputFile}" "${svgOutputFile}"`, { stdio: 'inherit' });
+    execSync(`"${d2Path}" "${inputFile}" "${svgOutputFile}" ${options}`, { stdio: 'inherit' });
     
     // 2. Now convert SVG to PNG using a browser-based approach
     const playwright = await import('playwright');
@@ -182,7 +177,7 @@ try {
   try {
     // Try using the system PATH version as a fallback
     console.log('Trying with system PATH D2 installation');
-    const sysCmd = `d2 "${inputFile}" "${outputFile}"`;
+    const sysCmd = `d2 "${inputFile}" "${outputFile}" ${options}`;
     
     execSync(sysCmd, { stdio: 'inherit' });
     
