@@ -477,6 +477,93 @@ export default function ConfigPage() {
                     </div>
                   </div>
                   
+                  {/* Node Style Presets */}
+                  <div className="space-y-4 mb-6">
+                    <h3 className="font-medium">Node Style Presets</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="d2_source_fill">Source Node Fill</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            id="d2_source_fill"
+                            type="color" 
+                            value={config.d2_source_fill ?? "#e6f7ff"} 
+                            onChange={(e) => updateConfig('d2_source_fill', e.target.value)}
+                            className="w-16 h-10 p-1"
+                          />
+                          <Input 
+                            type="text" 
+                            value={config.d2_source_fill ?? "#e6f7ff"} 
+                            onChange={(e) => updateConfig('d2_source_fill', e.target.value)}
+                            className="w-32 h-10"
+                            placeholder="#e6f7ff"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="d2_source_stroke">Source Node Border</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            id="d2_source_stroke"
+                            type="color" 
+                            value={config.d2_source_stroke ?? "#1890ff"} 
+                            onChange={(e) => updateConfig('d2_source_stroke', e.target.value)}
+                            className="w-16 h-10 p-1"
+                          />
+                          <Input 
+                            type="text" 
+                            value={config.d2_source_stroke ?? "#1890ff"} 
+                            onChange={(e) => updateConfig('d2_source_stroke', e.target.value)}
+                            className="w-32 h-10"
+                            placeholder="#1890ff"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="d2_target_fill">Target Node Fill</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            id="d2_target_fill"
+                            type="color" 
+                            value={config.d2_target_fill ?? "#f6ffed"} 
+                            onChange={(e) => updateConfig('d2_target_fill', e.target.value)}
+                            className="w-16 h-10 p-1"
+                          />
+                          <Input 
+                            type="text" 
+                            value={config.d2_target_fill ?? "#f6ffed"} 
+                            onChange={(e) => updateConfig('d2_target_fill', e.target.value)}
+                            className="w-32 h-10"
+                            placeholder="#f6ffed"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="d2_target_stroke">Target Node Border</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            id="d2_target_stroke"
+                            type="color" 
+                            value={config.d2_target_stroke ?? "#52c41a"} 
+                            onChange={(e) => updateConfig('d2_target_stroke', e.target.value)}
+                            className="w-16 h-10 p-1"
+                          />
+                          <Input 
+                            type="text" 
+                            value={config.d2_target_stroke ?? "#52c41a"} 
+                            onChange={(e) => updateConfig('d2_target_stroke', e.target.value)}
+                            className="w-32 h-10"
+                            placeholder="#52c41a"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="mt-6 p-4 bg-accent/50 rounded-md border border-border">
                     <h4 className="text-md font-medium mb-2">D2 Diagram Tips</h4>
                     <ul className="text-sm space-y-1 list-disc pl-5">
@@ -485,6 +572,7 @@ export default function ConfigPage() {
                       <li>Try different themes to find the best visual style for your specific diagram content</li>
                       <li>Use ELK layout for more complex diagrams with many nodes and connections</li>
                       <li>The Dark Theme option allows setting a separate theme for dark mode viewing</li>
+                      <li>Node Style Presets allow you to customize colors for source and target nodes</li>
                     </ul>
                   </div>
                 </div>

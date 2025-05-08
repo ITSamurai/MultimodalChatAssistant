@@ -266,17 +266,38 @@ export async function generateD2Script(prompt: string): Promise<{
       "Generate a complete, valid D2 diagram script based on the user's description.\n\n" +
       "Important rules:\n" +
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
-      "2. Always include 'direction: right' as the first line to set layout direction.\n" +
-      "3. Keep node definitions simple with just the label.\n" +
-      "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
+      "2. Start with a layout configuration block at the top with these fields:\n" +
+      "   - direction: 'right' or 'down' based on what would be most appropriate for this diagram\n" +
+      "   - spacing: a number in pixels that provides good spacing between elements (usually 80-120)\n" +
+      "3. Include a basic style block to enhance visual appearance:\n" +
+      "   style.fill: '#f5f5f5'  # A light background color\n" +
+      "   style.stroke: '#333333'  # A dark border color\n" +
+      "   style.font-size: 14  # For readable text\n" +
+      "   style.border-radius: 4  # For slightly rounded corners\n" +
+      "4. Keep node definitions simple with just the label.\n" +
       "5. Always create connections between components using the -> operator.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
       "7. Keep the diagram focused and not too complex (max 10-15 elements).\n\n" +
       "Example D2 diagram:\n" +
       "```\n" +
-      "direction: right\n\n" +
-      "source: \"Source Environment\"\n" +
-      "target: \"Target Cloud\"\n" +
+      "direction: right\n" +
+      "spacing: 100\n\n" +
+      "# General style for all elements\n" +
+      "style {\n" +
+      "  fill: \"#f5f5f5\"\n" +
+      "  stroke: \"#333333\"\n" +
+      "  font-size: 14\n" +
+      "  border-radius: 4\n" +
+      "}\n\n" +
+      "# Optional custom styles for specific node types\n" +
+      "source: \"Source Environment\" {\n" +
+      "  style.fill: \"#e6f7ff\"\n" +
+      "  style.stroke: \"#1890ff\"\n" +
+      "}\n\n" +
+      "target: \"Target Cloud\" {\n" +
+      "  style.fill: \"#f6ffed\"\n" +
+      "  style.stroke: \"#52c41a\"\n" +
+      "}\n\n" +
       "rivermeadow: \"RiverMeadow SaaS\"\n" +
       "discovery: \"Discovery\"\n" +
       "migration: \"Migration\"\n\n" +
@@ -351,13 +372,33 @@ export async function generateDiagram(prompt: string): Promise<DiagramGeneration
     // Get configuration settings for D2
     const config = await storage.getConfig();
     
+    // Style presets from user configuration
+    const sourceFill = config.d2_source_fill || "#e6f7ff";
+    const sourceStroke = config.d2_source_stroke || "#1890ff";
+    const targetFill = config.d2_target_fill || "#f6ffed";
+    const targetStroke = config.d2_target_stroke || "#52c41a";
+    
+    // Look for source/target nodes in the D2 script and add style blocks if they don't exist
+    if (script.includes("source:") && !script.includes("source: {")) {
+      // Simple source node replacement
+      script = script.replace(/source:\s*"([^"]+)"/g, `source: "$1" {\n  style.fill: "${sourceFill}"\n  style.stroke: "${sourceStroke}"\n}`);
+    }
+    
+    if (script.includes("target:") && !script.includes("target: {")) {
+      // Simple target node replacement
+      script = script.replace(/target:\s*"([^"]+)"/g, `target: "$1" {\n  style.fill: "${targetFill}"\n  style.stroke: "${targetStroke}"\n}`);
+    }
+    
+    // Update the file with the modified script
+    saveD2Script(script, sanitizedTitle);
+    
     // Prepare D2 options based on configuration settings
     const d2Options = {
       theme: parseInt(config.d2_theme ?? "0", 10),
       darkTheme: parseInt(config.d2_dark_theme ?? "-1", 10),
       layout: config.d2_layout || "dagre",
       sketchMode: config.d2_sketch_mode === true,
-      pad: parseInt(config.d2_padding ?? "100", 10),
+      pad: parseInt(config.d2_pad ?? "100", 10),
       containerBgColor: config.d2_container_bg_color || "#ffffff"
     };
     

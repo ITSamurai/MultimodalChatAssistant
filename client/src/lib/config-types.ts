@@ -38,6 +38,12 @@ export interface AppConfig {
   d2_pad?: number; // Padding around diagram
   d2_container_bg_color?: string; // Background color for diagram container
   
+  // Node style presets
+  d2_source_fill?: string; // Fill color for source nodes
+  d2_source_stroke?: string; // Border color for source nodes
+  d2_target_fill?: string; // Fill color for target nodes
+  d2_target_stroke?: string; // Border color for target nodes
+  
   // Advanced settings
   enable_debug_logs?: boolean;
   response_streaming?: boolean;
@@ -80,6 +86,12 @@ export const defaultConfig: AppConfig = {
   d2_sketch_mode: false, // Hand-drawn style disabled by default
   d2_pad: 100, // Default padding (pixels)
   d2_container_bg_color: "#ffffff", // White background
+  
+  // Node style presets
+  d2_source_fill: "#e6f7ff", // Fill color for source nodes
+  d2_source_stroke: "#1890ff", // Border color for source nodes
+  d2_target_fill: "#f6ffed", // Fill color for target nodes
+  d2_target_stroke: "#52c41a", // Border color for target nodes
   
   // Advanced settings
   enable_debug_logs: false,
