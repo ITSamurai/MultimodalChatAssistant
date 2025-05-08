@@ -36,6 +36,7 @@ export interface AppConfig {
   d2_layout?: 'dagre' | 'elk'; // Layout engine
   d2_sketch_mode?: boolean; // Hand-drawn style
   d2_pad?: number; // Padding around diagram
+  d2_padding?: number; // Alternative name for padding
   d2_container_bg_color?: string; // Background color for diagram container
   
   // Node style presets
@@ -85,6 +86,7 @@ export const defaultConfig: AppConfig = {
   d2_layout: "dagre", // Default layout engine
   d2_sketch_mode: false, // Hand-drawn style disabled by default
   d2_pad: 100, // Default padding (pixels)
+  d2_padding: 100, // Alternative name for padding
   d2_container_bg_color: "#ffffff", // White background
   
   // Node style presets

@@ -363,7 +363,7 @@ export async function generateD2Script(prompt: string): Promise<{
 export async function generateDiagram(prompt: string): Promise<DiagramGenerationResult> {
   try {
     // Generate the D2 script based on the prompt
-    const { script, title } = await generateD2Script(prompt);
+    let { script, title } = await generateD2Script(prompt);
     
     // Save the script to a file
     const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '_');
