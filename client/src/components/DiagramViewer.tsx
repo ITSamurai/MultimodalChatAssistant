@@ -130,8 +130,8 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
     border: '0',
     width: '100%', 
     height: 'auto',
-    maxHeight: '300px', // Reduced maximum height for better visibility of whole diagram
-    minHeight: '200px', // Minimum height to ensure consistent sizing
+    maxHeight: '600px', // Doubled maximum height for better visibility 
+    minHeight: '400px', // Doubled minimum height for better vertical space
     padding: '0',
     backgroundColor: 'white',
     margin: '0 auto',
@@ -171,7 +171,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
       
       <div className="relative overflow-hidden bg-background p-0 border-t flex justify-center items-start">
         {isLoading ? (
-          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-[400px] w-full" />
         ) : error ? (
           <div className="text-center p-8 text-destructive">
             <p>Error loading diagram: {error}</p>
