@@ -317,7 +317,7 @@ export async function generateD2Script(prompt: string): Promise<{
       "2. For organizational diagrams, use 'direction: down' as the first line to represent hierarchy.\n" +
       "3. Keep node definitions simple with just the label.\n" +
       "4. IMPORTANT: DO NOT USE GLOBAL STYLE BLOCKS AT ALL for this D2 version (0.6.5). Apply styles directly to each node.\n" +
-      "5. For layout configuration, use proper syntax: layout { rankSep: 120 }\n" +
+      "5. IMPORTANT: DO NOT use layout configuration blocks - this D2 version displays them as nodes.\n" +
       "5. Use -> for connections between components to show reporting lines or relationships.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
       "7. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +
@@ -351,7 +351,7 @@ export async function generateD2Script(prompt: string): Promise<{
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
       "2. Start with 'direction: down' at the top of your diagram for better flow visualization.\n" +
       "3. IMPORTANT: DO NOT USE GLOBAL STYLE BLOCKS AT ALL for this D2 version (0.6.5). Only use per-node styles:\n" +
-      "   layout { rankSep: 120 }\n" +
+      "   # DO NOT use layout blocks as they display as nodes\n" +
       "   source: \"Source\" { style.fill: \"#color\", style.stroke: \"#color\" }\n" +
       "   target: \"Target\" { style.fill: \"#color\", style.stroke: \"#color\" }\n" +
       "4. Keep node definitions simple with just the label.\n" +
@@ -362,8 +362,8 @@ export async function generateD2Script(prompt: string): Promise<{
       "Example D2 diagram:\n" +
       "```\n" +
       "direction: down\n\n" +
-      "// Improved layout config\n" +
-      "layout { rankSep: 120 }\n\n" +
+      "// We don't use layout config as it displays as nodes in D2 v0.6.5\n" +
+      "# layout { rankSep: 120 }\n\n" +
       "// Set styles per node\n" +
       "// Custom styles for specific node types\n" +
       "source: \"Source Environment\" {\n" +
