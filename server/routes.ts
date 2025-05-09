@@ -238,8 +238,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'User not found' });
       }
       
-      // Only superadmins can delete admins or other superadmins
-      if (['admin', 'superadmin'].includes(userToDelete.role) && req.user.role !== 'superadmin') {
+      // Prevent deletion of any superadmin user
+      if (userToDelete.role === 'superadmin') {
+        return res.status(403).json({ error: 'Superadmin accounts cannot be deleted through the API' });
+      }
+      
+      // Only superadmins can delete admin accounts
+      if (userToDelete.role === 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ error: 'Only superadmins can delete admin accounts' });
       }
       
