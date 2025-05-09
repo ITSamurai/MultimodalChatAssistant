@@ -10,10 +10,331 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ChevronLeftIcon, SaveIcon, RefreshCwIcon, SlidersIcon, MessageSquareTextIcon, SettingsIcon, BrainCircuitIcon, Image } from "lucide-react";
+import { ChevronLeftIcon, SaveIcon, RefreshCwIcon, SlidersIcon, MessageSquareTextIcon, SettingsIcon, BrainCircuitIcon, Image, UserPlus, Loader2, Trash } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { AppConfig, defaultConfig } from "@/lib/config-types";
+import { useAuth } from "@/hooks/use-auth";
+
+// User Management Component
+function UserManagement() {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [newUser, setNewUser] = useState({
+    username: '',
+    password: '',
+    role: 'user'
+  });
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  
+  // Query to fetch users
+  const {
+    data: users,
+    isLoading,
+    refetch
+  } = useQuery({
+    queryKey: ['/api/admin/users'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/users');
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      return await response.json();
+    },
+    enabled: user?.role === 'superadmin' || user?.role === 'admin'
+  });
+  
+  // Mutation to add a new user
+  const addUserMutation = useMutation({
+    mutationFn: async (userData: typeof newUser) => {
+      const response = await apiRequest('POST', '/api/admin/users', userData);
+      if (!response.ok) {
+        throw new Error('Failed to create user');
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User created",
+        description: `User "${newUser.username}" has been created successfully.`,
+      });
+      setNewUser({ username: '', password: '', role: 'user' });
+      setIsAddingUser(false);
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to create user",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Mutation to delete a user
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await apiRequest('DELETE', `/api/admin/users/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+      return await response.json();
+    },
+    onSuccess: (_, userId) => {
+      toast({
+        title: "User deleted",
+        description: "The user has been deleted successfully.",
+      });
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to delete user",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleAddUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    addUserMutation.mutate(newUser);
+  };
+  
+  const handleDeleteUser = (userId: number) => {
+    // Don't allow deleting yourself
+    if (userId === user?.id) {
+      toast({
+        title: "Cannot delete your own account",
+        description: "You cannot delete the account you are currently logged in with.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+      deleteUserMutation.mutate(userId);
+    }
+  };
+  
+  if (user?.role !== 'superadmin' && user?.role !== 'admin') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>User Management</CardTitle>
+          <CardDescription>
+            You don't have permission to access this section
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>This area is restricted to administrators only. Please contact your administrator for access.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>User Management</CardTitle>
+          <CardDescription>
+            Manage users and their access to the application
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-end mb-4">
+            <Dialog open={isAddingUser} onOpenChange={setIsAddingUser}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" /> Add New User
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New User</DialogTitle>
+                  <DialogDescription>
+                    Create a new user account with appropriate permissions.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <form onSubmit={handleAddUser} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      value={newUser.username}
+                      onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Role</Label>
+                    <Select
+                      value={newUser.role}
+                      onValueChange={(value) => setNewUser({...newUser, role: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="admin">Administrator</SelectItem>
+                        {user?.role === 'superadmin' && (
+                          <SelectItem value="superadmin">Super Administrator</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsAddingUser(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={addUserMutation.isPending}>
+                      {addUserMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        'Create User'
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Username</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users && users.length > 0 ? (
+                  users.map((user: any) => (
+                    <TableRow key={user.id}>
+                      <TableCell>{user.id}</TableCell>
+                      <TableCell className="font-medium">{user.username}</TableCell>
+                      <TableCell>
+                        <span className={
+                          user.role === 'superadmin' 
+                            ? 'text-rose-500 font-semibold' 
+                            : user.role === 'admin' 
+                              ? 'text-blue-500 font-semibold' 
+                              : ''
+                        }>
+                          {user.role}
+                        </span>
+                      </TableCell>
+                      <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id)}
+                          disabled={deleteUserMutation.isPending}
+                        >
+                          <Trash className="h-4 w-4 text-red-500" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                      No users found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>User Permissions</CardTitle>
+          <CardDescription>
+            Overview of available user roles and their permissions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">User</h3>
+              <p className="text-sm text-muted-foreground">
+                Standard user with access to chats, document viewing, and basic features.
+                <ul className="list-disc ml-6 mt-2">
+                  <li>View and manage own chats</li>
+                  <li>Access shared documents</li>
+                  <li>Use all AI chat features</li>
+                </ul>
+              </p>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Administrator</h3>
+              <p className="text-sm text-muted-foreground">
+                Administrators can manage users and have access to all application features.
+                <ul className="list-disc ml-6 mt-2">
+                  <li>All user privileges</li>
+                  <li>Manage standard users</li>
+                  <li>Configure application settings</li>
+                </ul>
+              </p>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Super Administrator</h3>
+              <p className="text-sm text-muted-foreground">
+                Super administrators have complete control over the application.
+                <ul className="list-disc ml-6 mt-2">
+                  <li>All administrator privileges</li>
+                  <li>Manage all users including administrators</li>
+                  <li>Create other super administrators</li>
+                  <li>Access system-level configurations</li>
+                </ul>
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
 
 export default function ConfigPage() {
   const [config, setConfig] = useState({ ...defaultConfig });
@@ -128,7 +449,7 @@ export default function ConfigPage() {
       </div>
       
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 mb-8">
+        <TabsList className="grid grid-cols-6 mb-8">
           <TabsTrigger value="model">
             <BrainCircuitIcon className="h-4 w-4 mr-2" /> AI Model
           </TabsTrigger>
@@ -143,6 +464,25 @@ export default function ConfigPage() {
           </TabsTrigger>
           <TabsTrigger value="interface">
             <SettingsIcon className="h-4 w-4 mr-2" /> Interface
+          </TabsTrigger>
+          <TabsTrigger value="admin">
+            <svg
+              className="h-4 w-4 mr-2"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            User Admin
           </TabsTrigger>
         </TabsList>
         
