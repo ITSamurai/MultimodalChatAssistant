@@ -98,7 +98,7 @@ export default function AuthPage() {
                   />
                 </div>
               </CardContent>
-              <CardFooter className="flex flex-col gap-4">
+              <CardFooter>
                 <Button 
                   type="submit" 
                   className="w-full"
@@ -109,9 +109,6 @@ export default function AuthPage() {
                   ) : null}
                   Login
                 </Button>
-                <p className="text-center text-sm text-muted-foreground">
-                  New accounts can only be created by an administrator.
-                </p>
               </CardFooter>
             </form>
           </Card>
