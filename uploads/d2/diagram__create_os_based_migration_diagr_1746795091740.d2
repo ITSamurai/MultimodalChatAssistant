@@ -1,0 +1,17 @@
+direction: down
+
+source: "Source OS" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+target: "Target OS" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+rivermeadow: "RiverMeadow SaaS"
+discovery: "OS Discovery"
+migration: "OS Migration"
+
+source -> discovery -> rivermeadow -> migration -> target

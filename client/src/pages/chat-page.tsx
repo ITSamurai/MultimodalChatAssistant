@@ -202,6 +202,7 @@ export default function ChatPage() {
   const handleDeleteChat = (chatId: number, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent the chat from being selected
     setChatToDelete(chatId);
+    console.log('Setting chat to delete:', chatId);
   };
   
   // Confirm chat deletion
@@ -236,17 +237,32 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen bg-background">
       {/* Delete confirmation dialog */}
-      <AlertDialog open={chatToDelete !== null} onOpenChange={() => setChatToDelete(null)}>
-        <AlertDialogContent>
+      <AlertDialog open={chatToDelete !== null} onOpenChange={(open) => {
+        if (!open) setChatToDelete(null);
+      }}>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-lg font-bold">Delete Chat</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
               This will permanently delete this chat and all its messages. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDeleteChat}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteChat} className="bg-red-500 hover:bg-red-600">Delete</AlertDialogAction>
+          <AlertDialogFooter className="gap-2 mt-4">
+            <AlertDialogCancel onClick={(e) => {
+              e.preventDefault();
+              cancelDeleteChat();
+            }} className="border-gray-200">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDeleteChat();
+              }} 
+              className="bg-red-500 hover:bg-red-600 text-white focus:ring-red-500"
+            >
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -352,7 +368,10 @@ export default function ChatPage() {
                           <span>Rename</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={(e) => handleDeleteChat(chat.id, e)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteChat(chat.id, e);
+                          }}
                           className="text-red-500 focus:text-red-500"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
