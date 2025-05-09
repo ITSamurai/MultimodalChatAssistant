@@ -215,14 +215,43 @@ export function isDiagramGenerationRequest(message: string): boolean {
     return true;
   }
   
+  // Additional check for combined diagram requests that might not start with specific verbs
+  if ((lowerMessage.includes('combined diagram') || 
+       lowerMessage.includes('combination of diagrams') || 
+       lowerMessage.includes('combine diagram') || 
+       lowerMessage.includes('merge diagram') ||
+       lowerMessage.includes('combined view') ||
+       lowerMessage.includes('both diagrams') ||
+       (lowerMessage.includes('combine') && lowerMessage.includes('previous')) ||
+       (lowerMessage.includes('merge') && lowerMessage.includes('previous')) ||
+       (lowerMessage.includes('one') && lowerMessage.includes('show') && lowerMessage.includes('both')) ||
+       (lowerMessage.includes('combine') && lowerMessage.includes('into one')))) {
+    console.log(`Detected combined diagram request with general pattern detection`);
+    return true;
+  }
+  
   // Special case for combined or comparison diagram requests
   if (lowerMessage.startsWith('draw') || lowerMessage.startsWith('create') || lowerMessage.startsWith('generate')) {
+    // Check for combined diagram requests without requiring specific layout terms
+    if (lowerMessage.includes('combined diagram') || 
+        lowerMessage.includes('combination of diagrams') || 
+        lowerMessage.includes('combine diagram') || 
+        lowerMessage.includes('merge diagram') ||
+        lowerMessage.includes('combined view') ||
+        lowerMessage.includes('both diagrams') ||
+        (lowerMessage.includes('combine') && lowerMessage.includes('previous')) ||
+        (lowerMessage.includes('merge') && lowerMessage.includes('previous'))) {
+      console.log(`Detected combined diagram request with simplified detection`);
+      return true;
+    }
+    
+    // Original combined/comparison detection with layout terms
     if ((lowerMessage.includes('one diagram') || lowerMessage.includes('combined diagram') || 
          lowerMessage.includes('comparison diagram') || lowerMessage.includes('both')) &&
         (lowerMessage.includes('side by side') || lowerMessage.includes('left side') || 
          lowerMessage.includes('right side') || lowerMessage.includes('together') || 
          lowerMessage.includes('contain both'))) {
-      console.log(`Detected combined/comparison diagram request`);
+      console.log(`Detected combined/comparison diagram request with layout terms`);
       return true;
     }
   }
