@@ -39,6 +39,25 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     textarea.style.height = "inherit";
     textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`;
   };
+  
+  // Handle keyboard shortcuts (Cmd+Enter for Mac, Ctrl+Enter for Windows)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Check for Command+Enter (Mac) or Ctrl+Enter (Windows/Linux)
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault(); // Prevent default behavior (newline)
+      handleSendMessage();
+    }
+  };
+  
+  // Handle message sending
+  const handleSendMessage = () => {
+    if (!inputValue.trim() || !document?.id || sendMessageMutation.isPending) return;
+    
+    sendMessageMutation.mutate({
+      documentId: document.id,
+      content: inputValue.trim(),
+    });
+  };
 
   // Handle sending message
   const sendMessageMutation = useMutation({

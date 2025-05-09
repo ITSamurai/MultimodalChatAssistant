@@ -138,7 +138,8 @@ export default function ChatPage() {
       // Find the first user message
       const firstUserMessage = messages.find(m => m.role === 'user');
       if (firstUserMessage) {
-        const title = firstUserMessage.content.slice(0, 30) + (firstUserMessage.content.length > 30 ? '...' : '');
+        // Create a shorter title - only 15 characters
+        const title = firstUserMessage.content.slice(0, 15) + (firstUserMessage.content.length > 15 ? '...' : '');
         updateChatTitleMutation.mutate({ chatId: parseInt(chatId, 10), title });
       }
     }
@@ -253,11 +254,8 @@ export default function ChatPage() {
       {/* Sidebar */}
       <div className="w-64 border-r flex flex-col sidebar">
         <div className="p-4 border-b app-header">
-          <h2 className="font-semibold text-lg text-white">Knowledge AI</h2>
-        </div>
-        <div className="px-4 py-2">
-          <p className="text-sm text-muted-foreground">
-            Logged in as {user?.username}
+          <p className="text-sm text-white">
+            {user?.username}
           </p>
         </div>
         
@@ -407,8 +405,8 @@ export default function ChatPage() {
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b p-4">
-          <h1 className="text-xl font-bold">Knowledge Assistant</h1>
+        <div className="border-b p-2">
+          {/* Header removed as requested */}
         </div>
         
         <div className="flex-1 overflow-y-auto p-4">

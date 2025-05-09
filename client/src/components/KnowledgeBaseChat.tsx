@@ -56,10 +56,18 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
     }
   }, [messages]);
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!prompt.trim() || !chatId) return;
+  // Handle keyboard shortcuts (Cmd+Enter for Mac, Ctrl+Enter for Windows)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Check for Command+Enter (Mac) or Ctrl+Enter (Windows/Linux)
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault(); // Prevent default behavior (newline)
+      handleSendMessage();
+    }
+  };
+  
+  // Handle sending message logic (separated from form submission)
+  const handleSendMessage = async () => {
+    if (!prompt.trim() || !chatId || isLoading) return;
 
     try {
       // Add user message to the chat
@@ -105,6 +113,12 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSendMessage();
   };
 
   // Handle generating a diagram
@@ -185,9 +199,10 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
       <div className="p-4 mt-auto">
         <form onSubmit={handleSubmit} className="flex w-full gap-3 chat-input-container">
           <Textarea
-            placeholder="Ask a question or request a diagram..."
+            placeholder="Ask a question or request a diagram... (Cmd+Enter or Ctrl+Enter to send)"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={handleKeyDown}
             className="min-h-[100px] flex-1 text-foreground placeholder:text-muted-foreground/70"
           />
           <Button 
