@@ -74,27 +74,28 @@ svg text {
   --border: 0 0% 88%; /* Border light gray */
 }
 
-/* Custom tooltip positioning - moves tooltips to top right */
+/* Tooltips - positioned above elements */
 [title]:hover::before,
 [title]:hover::after,
 [aria-label]:hover::before, 
 [aria-label]:hover::after {
   --tooltip-offset: 7px;
   position: absolute;
-  top: -30px !important;
-  right: 0 !important;
+  top: -50px !important;
+  left: 50% !important;
+  right: auto !important;
   bottom: auto !important;
-  left: auto !important;
-  transform: none !important;
-  z-index: 10;
+  transform: translateX(-50%) !important;
+  z-index: 999;
 }
 
 /* Add custom tooltip styling */
 [aria-label]::before {
   content: attr(aria-label);
   position: absolute;
-  top: -35px;
-  right: 0;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
   padding: 0.5rem 0.75rem;
   background-color: var(--primary-blue);
   color: white;
@@ -103,11 +104,29 @@ svg text {
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s;
-  z-index: 100;
+  transition: opacity 0.2s, visibility 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  z-index: 999;
 }
 
-[aria-label]:hover::before {
+/* Add arrow to tooltip */
+[aria-label]::after {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--primary-blue) transparent transparent transparent;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  z-index: 999;
+}
+
+[aria-label]:hover::before,
+[aria-label]:hover::after {
   opacity: 1;
   visibility: visible;
 }
