@@ -144,32 +144,18 @@ export async function d2ToSvg(
     }
     
     return svgContent;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error converting D2 to SVG: ${error}`);
     
-    // Create a better fallback SVG directly
-    console.log('Creating fallback SVG...');
-    try {
-      // Read the D2 script
-      const d2Content = fs.readFileSync(d2FilePath, 'utf8');
-      
-      // Get the SVG file path
-      const svgFileName = path.basename(d2FilePath, '.d2') + '.svg';
-      const fallbackSvgPath = path.join(SVG_DIRECTORY, svgFileName);
-      
-      // Generate a nice SVG fallback that shows the D2 script
-      const svgContent = generateD2FallbackSVG(d2Content, fallbackSvgPath);
-      return svgContent;
-    } catch (fallbackError) {
-      console.error(`Failed to create fallback SVG: ${fallbackError}`);
-      throw error;
-    }
+    // Don't create fallback SVG, just throw the original error
+    console.error('Error converting D2 to SVG - not creating fallback');
+    throw new Error(`Failed to convert D2 to SVG: ${error.message || String(error)}`);
   }
 }
 
 /**
- * Converts D2 script to PNG using the d2 CLI tool and puppeteer
- * If PNG generation fails, a fallback PNG is created
+ * Converts D2 script to PNG using the d2 CLI tool and Sharp
+ * Throws an error if conversion fails
  */
 export async function d2ToPng(
   d2FilePath: string, 
@@ -181,113 +167,52 @@ export async function d2ToPng(
     pad?: number;
     containerBgColor?: string;
   } = {}
-): Promise<Buffer | null> {
+): Promise<Buffer> {
+  const pngFileName = path.basename(d2FilePath, '.d2') + '.png';
+  const pngFilePath = path.join(PNG_DIRECTORY, pngFileName);
+  
+  // First check if PNG already exists from a previous generation
+  if (fs.existsSync(pngFilePath)) {
+    console.log(`Using existing PNG file: ${pngFilePath}`);
+    const pngBuffer = fs.readFileSync(pngFilePath);
+    return pngBuffer;
+  }
+  
+  // Generate SVG first (we'll convert it to PNG)
+  const svgFileName = path.basename(d2FilePath, '.d2') + '.svg';
+  const svgFilePath = path.join(SVG_DIRECTORY, svgFileName);
+  
+  // If SVG doesn't exist yet, create it
+  if (!fs.existsSync(svgFilePath)) {
+    await d2ToSvg(d2FilePath, options);
+  }
+  
   try {
-    const pngFileName = path.basename(d2FilePath, '.d2') + '.png';
-    const pngFilePath = path.join(PNG_DIRECTORY, pngFileName);
+    // Import sharp dynamically
+    const sharp = await import('sharp');
     
-    // First check if PNG already exists from a previous generation
-    if (fs.existsSync(pngFilePath)) {
-      console.log(`Using existing PNG file: ${pngFilePath}`);
-      const pngBuffer = fs.readFileSync(pngFilePath);
-      return pngBuffer;
-    }
+    // Read the SVG file
+    const svgContent = fs.readFileSync(svgFilePath, 'utf8');
     
-    // Generate SVG first (we'll convert it to PNG)
-    const svgFileName = path.basename(d2FilePath, '.d2') + '.svg';
-    const svgFilePath = path.join(SVG_DIRECTORY, svgFileName);
+    // Convert SVG to PNG using sharp
+    await sharp.default(Buffer.from(svgContent))
+      .resize({ 
+        width: 1200,  // Set reasonably large dimensions for diagram clarity
+        height: 800,
+        fit: 'contain',
+        background: { r: 255, g: 255, b: 255, alpha: 1 } // White background
+      })
+      .png()
+      .toFile(pngFilePath);
     
-    // If SVG doesn't exist yet, create it
-    if (!fs.existsSync(svgFilePath)) {
-      await d2ToSvg(d2FilePath, options);
-    }
+    console.log(`PNG saved to ${pngFilePath} using Sharp`);
     
-    // Use Sharp for SVG to PNG conversion - more reliable in Replit environments
-    try {
-      // Import sharp dynamically
-      const sharp = await import('sharp');
-      
-      // Read the SVG file
-      const svgContent = fs.readFileSync(svgFilePath, 'utf8');
-      
-      // Convert SVG to PNG using sharp
-      await sharp.default(Buffer.from(svgContent))
-        .resize({ 
-          width: 1200,  // Set reasonably large dimensions for diagram clarity
-          height: 800,
-          fit: 'contain',
-          background: { r: 255, g: 255, b: 255, alpha: 1 } // White background
-        })
-        .png()
-        .toFile(pngFilePath);
-      
-      console.log(`PNG saved to ${pngFilePath} using Sharp`);
-      
-      // Return the PNG data
-      const pngBuffer = fs.readFileSync(pngFilePath);
-      return pngBuffer;
-    } catch (sharpError) {
-      console.error('Error converting with Sharp:', sharpError);
-      
-      // Create a fallback PNG using the fallback SVG
-      try {
-        // Read the D2 script
-        const d2Content = fs.readFileSync(d2FilePath, 'utf8');
-        
-        // Generate a fallback SVG
-        const fallbackSvgPath = path.join(SVG_DIRECTORY, 'fallback_' + path.basename(svgFilePath));
-        generateD2FallbackSVG(d2Content, fallbackSvgPath);
-        
-        // Try to convert this simpler SVG to PNG
-        try {
-          const sharp = await import('sharp');
-          const fallbackSvgContent = fs.readFileSync(fallbackSvgPath, 'utf8');
-          
-          await sharp.default(Buffer.from(fallbackSvgContent))
-            .resize({ 
-              width: 800, 
-              height: 600,
-              fit: 'contain',
-              background: { r: 255, g: 255, b: 255, alpha: 1 }
-            })
-            .png()
-            .toFile(pngFilePath);
-          
-          console.log(`Created a fallback PNG at ${pngFilePath} using fallback SVG`);
-          const pngBuffer = fs.readFileSync(pngFilePath);
-          return pngBuffer;
-        } catch (fallbackSharpError) {
-          console.error('Error creating fallback PNG with Sharp:', fallbackSharpError);
-          
-          // Last resort: a simple valid 1x1 PNG
-          const transparentPng = Buffer.from(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
-            'base64'
-          );
-          
-          fs.writeFileSync(pngFilePath, transparentPng);
-          console.log(`Created a basic fallback PNG at ${pngFilePath}`);
-          return transparentPng;
-        }
-      } catch (fallbackError) {
-        console.error('Error in all PNG fallback methods:', fallbackError);
-        
-        // Ultimate fallback - 1x1 transparent PNG
-        const transparentPng = Buffer.from(
-          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
-          'base64'
-        );
-        
-        fs.writeFileSync(pngFilePath, transparentPng);
-        console.log(`Created a basic fallback PNG at ${pngFilePath}`);
-        return transparentPng;
-      }
-    }
-    
-    return null;
-  } catch (error) {
+    // Return the PNG data
+    const pngBuffer = fs.readFileSync(pngFilePath);
+    return pngBuffer;
+  } catch (error: any) {
     console.error(`Error converting D2 to PNG: ${error}`);
-    return null;
+    throw new Error(`Failed to convert SVG to PNG: ${error.message || String(error)}`);
   }
 }
 
@@ -300,143 +225,7 @@ export function generateCacheBustedFilename(baseName: string, extension: string)
   return `${baseName}_${timestamp}_${randomStr}.${extension}`;
 }
 
-/**
- * Generates a fallback SVG when D2 fails to render
- */
-function generateD2FallbackSVG(d2Content: string, outputPath: string): string {
-  // Escape the D2 content for safe embedding in SVG
-  const safeD2Content = d2Content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-  
-  // Parse the D2 content to visualize it better
-  const lines = d2Content.split('\n');
-  let svgElements = '';
-  let yPos = 220;
-  const boxSpacing = 60;
-  const connectionY = 30;
-  
-  // Look for nodes and connections in the D2 script
-  const nodes = new Map();
-  const connections = [];
-  
-  // Simple regex-based parser for D2 script
-  for (const line of lines) {
-    // Look for node definitions: name: "Label"
-    const nodeMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*"([^"]+)"/);
-    if (nodeMatch) {
-      const [, id, label] = nodeMatch;
-      nodes.set(id, { id, label });
-    }
-    
-    // Look for connections: a -> b -> c
-    const connectionMatch = line.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*->\s*([a-zA-Z_][a-zA-Z0-9_]*)/g);
-    if (connectionMatch) {
-      for (const conn of connectionMatch) {
-        const [source, target] = conn.split('->').map(s => s.trim());
-        connections.push({ source, target });
-      }
-    }
-  }
-  
-  // Generate visual boxes for nodes
-  let xPos = 150;
-  const renderedNodes = new Map();
-  const nodesToRender = Array.from(nodes.values());
-  
-  // If parsing didn't work, just show the script as text
-  if (nodesToRender.length === 0) {
-    svgElements = `
-      <rect x="100" y="200" width="600" height="300" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="5" ry="5" />
-      <foreignObject x="120" y="220" width="560" height="260">
-        <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 14px; white-space: pre; color: #333; overflow: auto; height: 100%;">
-${safeD2Content}
-        </div>
-      </foreignObject>
-    `;
-  } else {
-    // Render nodes in a flow layout
-    nodesToRender.forEach((node, index) => {
-      const boxWidth = 150;
-      const boxHeight = 60;
-      
-      // Calculate position (simple horizontal layout)
-      xPos = 150 + (index * (boxWidth + 50));
-      
-      // Reset to next row if we're going too wide
-      if (xPos > 650) {
-        xPos = 150;
-        yPos += boxHeight + 80;
-      }
-      
-      // Record the node position for connections
-      renderedNodes.set(node.id, { x: xPos + boxWidth/2, y: yPos + boxHeight/2 });
-      
-      // Add the node to the SVG
-      svgElements += `
-        <rect x="${xPos}" y="${yPos}" width="${boxWidth}" height="${boxHeight}" rx="6" ry="6" 
-              fill="#f5f5f5" stroke="#333333" stroke-width="2" />
-        <text x="${xPos + boxWidth/2}" y="${yPos + boxHeight/2}" 
-              font-family="Arial" font-size="14" text-anchor="middle" dominant-baseline="middle">
-          ${node.label}
-        </text>
-      `;
-    });
-    
-    // Render connections
-    connections.forEach(conn => {
-      const source = renderedNodes.get(conn.source);
-      const target = renderedNodes.get(conn.target);
-      
-      if (source && target) {
-        // Draw a line connecting the nodes
-        svgElements += `
-          <line x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" 
-                stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" />
-        `;
-      }
-    });
-    
-    // Prepend the arrow marker definition
-    svgElements = `
-      <defs>
-        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-          <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
-        </marker>
-      </defs>
-    ` + svgElements;
-  }
-  
-  // Prepare our complete SVG
-  const svgContent = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#f8f9fa" />
-  <rect x="50" y="50" width="700" height="500" fill="white" stroke="#e9ecef" stroke-width="2" rx="10" ry="10" />
-  
-  <text x="400" y="100" font-family="Arial" font-size="24" text-anchor="middle" fill="#333">
-    D2 Diagram Preview
-  </text>
-  
-  <text x="400" y="150" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">
-    Simplified representation based on your D2 script
-  </text>
-  
-  ${svgElements}
-</svg>`;
-  
-  // Write to file
-  try {
-    fs.writeFileSync(outputPath, svgContent);
-    console.log(`Created fallback SVG: ${outputPath}`);
-  } catch (writeError) {
-    console.error('Error writing fallback SVG:', writeError);
-  }
-  
-  return svgContent;
-}
+// Removed fallback SVG generator function as per user request
 
 export function saveD2Script(script: string, identifier: string): string {
   // Generate a unique filename based on the identifier
