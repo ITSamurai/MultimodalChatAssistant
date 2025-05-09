@@ -80,17 +80,37 @@ svg text {
 
 /* Style for input container in chat */
 .chat-input-container {
-  @apply bg-muted/50 p-3 rounded-xl shadow-sm hover:shadow transition-all duration-200 border border-muted/50;
+  @apply bg-muted/30 p-3 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-muted/40;
+  backdrop-filter: blur(2px);
 }
 
 /* Style for input field */
 textarea {
   border-radius: 0.75rem !important;
+  border-color: hsl(var(--border)) !important;
+  resize: none;
+}
+
+textarea:focus {
+  border-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 1px hsla(var(--primary), 0.1) !important;
+}
+
+/* Style for placeholder text */
+textarea::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+  opacity: 0.6 !important;
 }
 
 /* Style for buttons in chat */
 .chat-button {
-  @apply rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200;
+  @apply rounded-lg shadow-sm hover:shadow-md transition-all duration-200;
+}
+
+.chat-button:hover {
+  transform: translateY(-1px);
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
 @layer base {

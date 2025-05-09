@@ -187,7 +187,7 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
             placeholder="Ask a question or request a diagram..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            className="min-h-[60px] flex-1"
+            className="min-h-[60px] flex-1 text-foreground placeholder:text-muted-foreground/70"
           />
           <div className="flex flex-col gap-2">
             <Button 
