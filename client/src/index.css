@@ -40,28 +40,36 @@ svg text {
   shape-rendering: geometricPrecision;
 }
 
-/* Define Oia, Santorini theme colors */
+/* Define messaging app theme colors based on guide */
 :root {
-  --santorini-blue-1: #03178C; /* Deep royal blue - church domes */
-  --santorini-blue-2: #0540F2; /* Vibrant blue - primary accent */
-  --santorini-blue-3: #91B2F2; /* Soft light blue - sky tones */
-  --santorini-blue-4: #056CF2; /* Medium blue - sea tones */
-  --santorini-blue-5: #0583F2; /* Bright blue - highlights */
+  /* Core colors */
+  --primary-blue: #0088cc; /* Primary blue for app */
+  --outgoing-bubble: #dcf8c6; /* Light green for outgoing messages */
+  --outgoing-bubble-alt: #e1ffc7; /* Light green variant */
+  --incoming-bubble: #ffffff; /* White for incoming messages */
+  --background-light: #f0f0f0; /* Light mode background */
+  --background-dark: #1e1e1e; /* Dark mode background */
+  --text-primary: #000000; /* Primary text color */
+  --text-secondary: #999999; /* Secondary text, timestamps */
+  --border-light: #e0e0e0; /* Light gray borders */
   
-  /* Override theme defaults with Oia Santorini colors */
-  --primary: 225 96% 48%; /* Santorini-2 */
+  /* Shadow */
+  --bubble-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  
+  /* Override theme defaults */
+  --primary: 200 100% 40%; /* Primary blue */
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 213 96% 48%; /* Santorini-4 */
-  --secondary-foreground: 0 0% 100%;
+  --secondary: 103 84% 88%; /* Light green from outgoing bubbles */
+  --secondary-foreground: 0 0% 0%;
   
-  --accent: 219 79% 76%; /* Santorini-3 */
-  --accent-foreground: 230 96% 28%; /* Santorini-1 */
+  --accent: 0 0% 100%; /* White from incoming bubbles */
+  --accent-foreground: 0 0% 0%;
   
-  --muted: 219 79% 97%; /* Lighter version of Santorini-3 */
-  --muted-foreground: 230 96% 28%; /* Santorini-1 */
+  --muted: 0 0% 94%; /* Light gray for background */
+  --muted-foreground: 0 0% 60%; /* Secondary text color */
   
-  --border: 219 79% 92%; /* Lighter version of Santorini-3 */
+  --border: 0 0% 88%; /* Border light gray */
 }
 
 /* Custom tooltip positioning - moves tooltips to top right */
@@ -86,7 +94,7 @@ svg text {
   top: -35px;
   right: 0;
   padding: 0.5rem 0.75rem;
-  background-color: var(--santorini-blue-2);
+  background-color: var(--primary-blue);
   color: white;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -104,134 +112,201 @@ svg text {
 
 /* Style for input container in chat */
 .chat-input-container {
-  background-color: rgba(145, 178, 242, 0.15) !important; /* Santorini-3 with transparency */
-  padding: 0.75rem;
-  border-radius: 1rem !important;
-  box-shadow: 0 2px 8px rgba(3, 23, 140, 0.05) !important; /* Santorini-1 shadow */
+  background-color: var(--incoming-bubble) !important;
+  padding: 0.6rem;
+  border-radius: 24px !important; /* Rounded corners: 20-24px radius */
+  box-shadow: var(--bubble-shadow) !important;
   transition: all 0.2s ease;
-  border: 1px solid rgba(145, 178, 242, 0.3) !important; /* Santorini-3 border */
-  backdrop-filter: blur(3px);
+  border: 1px solid var(--border-light) !important;
 }
 
 .chat-input-container:hover {
-  box-shadow: 0 4px 12px rgba(3, 23, 140, 0.08) !important; /* Santorini-1 shadow */
-  border-color: rgba(5, 108, 242, 0.2) !important; /* Santorini-4 border */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Style for input field */
 textarea {
-  border-radius: 0.75rem !important;
-  border-color: rgba(145, 178, 242, 0.5) !important; /* Santorini-3 */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 14px !important; /* Chat text: 14-16px */
+  border-radius: 20px !important; /* Rounded corners: 20-24px radius */
+  border-color: transparent !important;
   resize: none;
-  min-height: 100px !important; /* Taller textarea */
-  background-color: rgba(255, 255, 255, 0.8) !important;
-  color: rgba(3, 23, 140, 0.7) !important; /* Harmonized with placeholder, but slightly darker */
-  padding: 1rem !important; /* More padding inside textarea */
-  line-height: 1.5 !important; /* Improve line spacing */
+  min-height: 100px !important;
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+  padding: 10px 14px !important; /* Horizontal: 10-14px, Vertical: 6-10px */
+  line-height: 1.4 !important;
+  letter-spacing: 0.2px !important; /* Letter spacing: ~0.2px for normal text */
 }
 
 textarea:focus {
-  border-color: var(--santorini-blue-4) !important; /* Santorini-4 */
-  box-shadow: 0 0 0 2px rgba(5, 108, 242, 0.15) !important; /* Santorini-4 */
-  color: rgba(3, 23, 140, 0.8) !important; /* Slightly darker when focused */
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 /* Style for placeholder text */
 textarea::placeholder {
-  color: rgba(3, 23, 140, 0.5) !important; /* Santorini-1 with transparency */
-  opacity: 0.7 !important;
+  color: var(--text-secondary) !important;
+  opacity: 0.8 !important;
+  font-size: 14px !important;
 }
 
-/* Style for buttons in chat */
+/* Style for buttons in chat - based on messaging design */
 .chat-button {
-  border-radius: 0.75rem !important;
-  box-shadow: 0 2px 4px rgba(5, 64, 242, 0.1) !important; /* Santorini-2 */
+  border-radius: 24px !important; /* Rounded corners */
+  box-shadow: none !important;
   transition: all 0.2s ease-in-out;
+  width: 42px !important;
+  height: 42px !important;
 }
 
 .chat-button:hover {
-  transform: translateY(-1px);
-  background-color: var(--santorini-blue-2) !important; /* Santorini-2 */
+  background-color: var(--primary-blue) !important;
   color: white !important;
-  box-shadow: 0 4px 8px rgba(5, 64, 242, 0.2) !important; /* Santorini-2 */
+  transform: scale(1.05);
 }
 
-/* Style submit button differently from diagram button */
+/* Style submit button */
 button[type="submit"].chat-button {
-  background-color: var(--santorini-blue-2) !important; /* Santorini-2 */
+  background-color: var(--primary-blue) !important;
   color: white !important;
 }
 
 button[type="submit"].chat-button:hover {
-  background-color: var(--santorini-blue-5) !important; /* Santorini-5 */
+  background-color: #0077b6 !important; /* Slightly darker primary blue */
 }
 
-/* Chat message styles */
+/* Chat message styles from messaging design guide */
 .user-message {
-  background-color: rgba(5, 64, 242, 0.12) !important; /* Santorini-2 with transparency */
-  color: var(--santorini-blue-1) !important; /* Santorini-1 */
-  padding: 0.75rem 1rem;
-  border-radius: 1rem 1rem 0 1rem;
+  background-color: var(--outgoing-bubble) !important; /* Light green */
+  color: var(--text-primary) !important;
+  padding: 10px 14px; /* Horizontal: 10-14px, Vertical: 6-10px */
+  border-radius: 16px 16px 0 16px; /* Rounded corners */
   align-self: flex-end;
-  max-width: 80%;
-  box-shadow: 0 2px 4px rgba(3, 23, 140, 0.05); /* Subtle shadow */
-  border: 1px solid rgba(5, 64, 242, 0.08); /* Santorini-2 with transparency */
+  max-width: 75%;
+  box-shadow: var(--bubble-shadow);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 14px !important; /* Chat text: 14-16px */
+  letter-spacing: 0.2px !important;
+  line-height: 1.4 !important;
+  margin-bottom: 4px;
 }
 
 .assistant-message {
-  background-color: rgba(145, 178, 242, 0.15) !important; /* Santorini-3 with transparency */
-  color: var(--santorini-blue-1) !important; /* Santorini-1 */
-  padding: 0.75rem 1rem;
-  border-radius: 1rem 1rem 1rem 0;
+  background-color: var(--incoming-bubble) !important; /* White */
+  color: var(--text-primary) !important;
+  padding: 10px 14px; /* Horizontal: 10-14px, Vertical: 6-10px */
+  border-radius: 16px 16px 16px 0; /* Rounded corners */
   align-self: flex-start;
-  max-width: 80%;
-  box-shadow: 0 2px 4px rgba(3, 23, 140, 0.05); /* Subtle shadow */
-  border: 1px solid rgba(145, 178, 242, 0.2); /* Santorini-3 with transparency */
+  max-width: 75%;
+  box-shadow: var(--bubble-shadow);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 14px !important; /* Chat text: 14-16px */
+  letter-spacing: 0.2px !important;
+  line-height: 1.4 !important;
+  margin-bottom: 4px;
+}
+
+/* Message timestamp */
+.message-timestamp {
+  font-size: 11px !important; /* Timestamps: 11-12px */
+  color: var(--text-secondary) !important;
+  letter-spacing: 0 !important; /* None for timestamps */
+  margin-top: 2px;
+  align-self: flex-end;
 }
 
 .chat-messages-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: 8px; /* Between messages: 4-8px */
+  padding: 16px;
   overflow-y: auto;
   flex: 1;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: var(--background-light);
 }
 
-/* Add a gradient background with Oia Santorini colors */
+/* App background based on light mode design */
 .app-gradient-bg {
-  background: linear-gradient(
-    135deg, 
-    rgba(145, 178, 242, 0.15) 0%, 
-    rgba(255, 255, 255, 0.8) 30%, 
-    rgba(5, 108, 242, 0.08) 70%, 
-    rgba(3, 23, 140, 0.1) 100%
-  );
+  background-color: var(--background-light);
   background-attachment: fixed;
 }
 
-/* Sidebar styling with Oia Santorini theme */
+/* Sidebar styling based on messaging app design */
 .sidebar {
-  background-color: rgba(255, 255, 255, 0.8);
-  border-right: 1px solid rgba(145, 178, 242, 0.3);
-  box-shadow: 0 0 20px rgba(3, 23, 140, 0.05);
+  background-color: white;
+  border-right: 1px solid var(--border-light);
+  height: 100%;
+}
+
+/* Top app bar/header */
+.app-header {
+  height: 56px;
+  background-color: var(--primary-blue);
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-weight: 600;
 }
 
 /* Chat list items */
 .chat-list-item {
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
+  height: 64px; /* Item height: 64px */
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-light);
+  transition: background-color 0.2s;
 }
 
 .chat-list-item:hover {
-  background-color: rgba(5, 108, 242, 0.08);
+  background-color: #f6f6f6;
 }
 
 .chat-list-item.active {
-  background-color: rgba(5, 64, 242, 0.12);
-  color: var(--santorini-blue-1);
-  font-weight: 500;
+  background-color: #e6f7ff;
+  border-left: 3px solid var(--primary-blue);
+}
+
+/* Chat avatar */
+.chat-avatar {
+  width: 40px; /* Avatar: 40px */
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e1e1e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Chat list item content */
+.chat-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.chat-item-name {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-item-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Style for highlighted code and diagrams */
@@ -263,33 +338,93 @@ pre, code {
   box-shadow: 0 0 0 2px rgba(5, 131, 242, 0.1);
 }
 
+/* Animations & transitions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* Ripple effect for buttons */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.4s, opacity 0.8s;
+}
+
+.ripple:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
 @layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply font-sans antialiased text-foreground;
-    background: linear-gradient(
-      135deg, 
-      rgba(145, 178, 242, 0.15) 0%, 
-      rgba(255, 255, 255, 0.8) 30%, 
-      rgba(5, 108, 242, 0.08) 70%, 
-      rgba(3, 23, 140, 0.1) 100%
-    );
-    background-attachment: fixed;
+    /* Use the system font stack from the guide */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    color: var(--text-primary);
+    background-color: var(--background-light);
+    letter-spacing: 0.2px;
+    line-height: 1.4;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    color: var(--santorini-blue-1);
+    color: var(--text-primary);
+    font-weight: 600; /* Bold names/titles: 600-700 */
+    letter-spacing: -0.2px;
+  }
+  
+  h1, h2, .app-title {
+    font-size: 18px;
   }
   
   a {
-    color: var(--santorini-blue-2);
+    color: var(--primary-blue);
     transition: color 0.2s;
   }
   
   a:hover {
-    color: var(--santorini-blue-5);
+    color: #0077b6; /* Slightly darker */
+  }
+  
+  /* Apply system fonts to all inputs */
+  input, textarea, select, button {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
   }
 }

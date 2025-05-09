@@ -1,0 +1,59 @@
+direction: down
+
+source: "On-Premise Servers" {
+
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+}
+
+os_check: "OS Compatibility Check" {
+
+  style.fill: "#fff7e6"
+  style.stroke: "#fa8c16"
+
+}
+
+vm_preparation: "VM Preparation" {
+
+  style.fill: "#fffbe6"
+  style.stroke: "#ffec3d"
+
+}
+
+rivermeadow: "RiverMeadow SaaS" {
+
+  style.fill: "#f0f5ff"
+  style.stroke: "#2f54eb"
+
+}
+
+data_transfer: "Data Transfer" {
+
+  style.fill: "#f9f0ff"
+  style.stroke: "#722ed1"
+
+}
+
+target: "Cloud Environment" {
+
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+}
+
+source -> os_check -> vm_preparation -> rivermeadow -> data_transfer -> target
