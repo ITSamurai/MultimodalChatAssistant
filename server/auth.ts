@@ -264,27 +264,48 @@ export async function setupAuth(app: Express) {
   app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: Error | null, user: any, info: any) => {
       if (err) {
+        console.error('Authentication error:', err);
         return next(err);
       }
       if (!user) {
+        console.log('Login failed: Invalid credentials');
         return res.status(401).json({ message: "Invalid username or password" });
       }
+      
+      // Debug user object before login
+      console.log('User object before login:', {
+        id: user.id,
+        username: user.username,
+        role: user.role, 
+        roleType: typeof user.role
+      });
+      
       req.login(user, (err) => {
         if (err) {
+          console.error('Session login error:', err);
           return next(err);
         }
         
         // Generate token for API access - pass request for device tracking
         const token = generateAuthToken(user.id, req);
+        console.log(`Generated token for user ${user.id} (${user.username}), role: ${user.role}`);
         
         // Set token in Authorization header
         res.setHeader('Authorization', `Bearer ${token}`);
         
         // Return user data with token
-        return res.status(200).json({
+        const responseData = {
           ...user,
           token: token
+        };
+        
+        console.log('Sending login response with user data:', {
+          id: responseData.id,
+          username: responseData.username,
+          role: responseData.role
         });
+        
+        return res.status(200).json(responseData);
       });
     })(req, res, next);
   });

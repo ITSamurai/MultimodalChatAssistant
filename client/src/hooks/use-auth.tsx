@@ -110,12 +110,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authHeader = response.headers.get('authorization');
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
+        console.log('Storing auth token from login response');
         localStorage.setItem('authToken', token);
+      } else {
+        console.warn('No authorization header with token in login response');
       }
       
-      return await response.json();
+      const userData = await response.json();
+      console.log('Login response data:', {
+        id: userData.id,
+        username: userData.username,
+        role: userData.role,
+        hasToken: Boolean(userData.token)
+      });
+      
+      // Store token from response body as fallback
+      if (userData.token && !authHeader) {
+        console.log('Storing token from response body');
+        localStorage.setItem('authToken', userData.token);
+      }
+      
+      return userData;
     },
     onSuccess: (userData: User) => {
+      console.log('Login successful, storing user data in cache:', {
+        id: userData.id,
+        username: userData.username,
+        role: userData.role
+      });
+      
       // Update the cached user data
       queryClient.setQueryData(['/api/user'], userData);
       

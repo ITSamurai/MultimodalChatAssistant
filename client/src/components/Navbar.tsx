@@ -7,7 +7,13 @@ export const Navbar = () => {
   const { user, logoutMutation } = useAuth();
   
   // Debug log to see what's happening with the user
-  console.log("Current user in Navbar:", user);
+  const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
+  console.log("Current user in Navbar:", user ? {
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    isAdmin: isAdmin
+  } : null);
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -32,6 +38,18 @@ export const Navbar = () => {
                 Settings
               </Button>
             </Link>
+            {(() => {
+              // Debug user role
+              console.log("Checking admin access: ", {
+                hasRole: Boolean(user.role),
+                role: user.role,
+                isAdmin: user.role === 'admin',
+                isSuperAdmin: user.role === 'superadmin',
+                shouldShowAdminButton: user.role === 'superadmin' || user.role === 'admin'
+              });
+              return null; // Return null so nothing is rendered
+            })()}
+            
             {(user.role === 'superadmin' || user.role === 'admin') && (
               <Link href="/admin">
                 <Button 
