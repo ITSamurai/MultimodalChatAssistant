@@ -61,9 +61,15 @@ function fixD2SpacingIssues(script: string): string {
     // Extract the useful configuration from inside the custom diagram block
     const rankSepMatch = contents.match(/rankSep\s*:\s*(\d+)/);
     if (rankSepMatch) {
-      return `# Extracted from custom diagram block\nlayout {\n  rankSep: ${rankSepMatch[1]}\n}`;
+      return `# Extracted from custom diagram block\n# layout { rankSep: ${rankSepMatch[1]} }\n`;
     }
     return ''; // Remove the custom diagram block if we can't extract useful config
+  });
+  
+  // Fix layout configuration - need to convert it to a comment
+  // This D2 version does not support layout configuration block as intended
+  script = script.replace(/layout\s*{\s*rankSep\s*:\s*(\d+)\s*}/g, (match, rankSep) => {
+    return `# Layout configuration (commented out to prevent display issues)\n# layout { rankSep: ${rankSep} }`;
   });
   
   // Ensure all style blocks are properly closed
@@ -248,7 +254,7 @@ export async function generateD2Script(prompt: string): Promise<{
       "3. IMPORTANT: DO NOT USE GLOBAL STYLE BLOCKS AT ALL for this D2 version (0.6.5).\n" +
       "4. Apply styles directly to each node: node: \"Label\" { style.fill: \"#color\" }\n" +
       "5. DO NOT use the 'padding' property anywhere in your diagram - this will cause the diagram to fail.\n" +
-      "6. For layout configuration, use proper syntax: layout { rankSep: 120 }\n" +
+      "6. IMPORTANT: DO NOT use layout configuration blocks - this D2 version displays them as nodes.\n" +
       "7. Use -> for connections between components to show data flow or dependencies.\n" +
       "7. DO NOT include a title block as our D2 version doesn't support it.\n" +
       "8. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +

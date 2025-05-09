@@ -1,0 +1,39 @@
+direction: down
+
+layout { rankSep: 120 }
+
+source: "On-Premise Server" {
+
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#ffe7ba"
+  style.stroke: "#fa8c16"
+
+}
+
+target: "Cloud Platform" {
+
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+}
+
+rivermeadow: "RiverMeadow SaaS"
+osDiscovery: "OS Discovery"
+osReplication: "OS Replication"
+osMigration: "OS Migration"
+osValidation: "OS Validation"
+
+source -> osDiscovery -> osReplication -> rivermeadow -> osMigration -> osValidation -> target
