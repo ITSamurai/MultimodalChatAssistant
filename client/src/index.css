@@ -40,28 +40,28 @@ svg text {
   shape-rendering: geometricPrecision;
 }
 
-/* Define Santorini theme colors */
+/* Define Oia, Santorini theme colors */
 :root {
-  --santorini-blue-1: #0460D9; /* Main primary color - deep blue */
-  --santorini-blue-2: #023373; /* Dark blue - good for text */
-  --santorini-blue-3: #0597F2; /* Medium blue - good for accents */
-  --santorini-blue-4: #05AFF2; /* Light blue - good for highlights */
-  --santorini-sand: #D9BBB4;   /* Soft sand color - good for backgrounds */
+  --santorini-blue-1: #03178C; /* Deep royal blue - church domes */
+  --santorini-blue-2: #0540F2; /* Vibrant blue - primary accent */
+  --santorini-blue-3: #91B2F2; /* Soft light blue - sky tones */
+  --santorini-blue-4: #056CF2; /* Medium blue - sea tones */
+  --santorini-blue-5: #0583F2; /* Bright blue - highlights */
   
-  /* Override theme defaults with Santorini colors */
-  --primary: 213 96% 43%; /* Santorini-1 */
+  /* Override theme defaults with Oia Santorini colors */
+  --primary: 225 96% 48%; /* Santorini-2 */
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 202 96% 48%; /* Santorini-3 */
+  --secondary: 213 96% 48%; /* Santorini-4 */
   --secondary-foreground: 0 0% 100%;
   
-  --accent: 196 96% 48%; /* Santorini-4 */
-  --accent-foreground: 213 96% 22%; /* Santorini-2 */
+  --accent: 219 79% 76%; /* Santorini-3 */
+  --accent-foreground: 230 96% 28%; /* Santorini-1 */
   
-  --muted: 11 32% 97%; /* Lighter version of Santorini-5 */
-  --muted-foreground: 213 96% 22%; /* Santorini-2 */
+  --muted: 219 79% 97%; /* Lighter version of Santorini-3 */
+  --muted-foreground: 230 96% 28%; /* Santorini-1 */
   
-  --border: 11 32% 92%; /* Lighter version of Santorini-5 */
+  --border: 219 79% 92%; /* Lighter version of Santorini-3 */
 }
 
 /* Custom tooltip positioning - moves tooltips to top right */
@@ -104,84 +104,84 @@ svg text {
 
 /* Style for input container in chat */
 .chat-input-container {
-  background-color: rgba(217, 187, 180, 0.15) !important; /* Santorini-5 with transparency */
+  background-color: rgba(145, 178, 242, 0.15) !important; /* Santorini-3 with transparency */
   padding: 0.75rem;
   border-radius: 1rem !important;
-  box-shadow: 0 2px 8px rgba(2, 51, 114, 0.05) !important; /* Santorini-2 shadow */
+  box-shadow: 0 2px 8px rgba(3, 23, 140, 0.05) !important; /* Santorini-1 shadow */
   transition: all 0.2s ease;
-  border: 1px solid rgba(217, 187, 180, 0.3) !important; /* Santorini-5 border */
+  border: 1px solid rgba(145, 178, 242, 0.3) !important; /* Santorini-3 border */
   backdrop-filter: blur(3px);
 }
 
 .chat-input-container:hover {
-  box-shadow: 0 4px 12px rgba(2, 51, 114, 0.08) !important; /* Santorini-2 shadow */
-  border-color: rgba(5, 175, 242, 0.2) !important; /* Santorini-4 border */
+  box-shadow: 0 4px 12px rgba(3, 23, 140, 0.08) !important; /* Santorini-1 shadow */
+  border-color: rgba(5, 108, 242, 0.2) !important; /* Santorini-4 border */
 }
 
 /* Style for input field */
 textarea {
   border-radius: 0.75rem !important;
-  border-color: rgba(217, 187, 180, 0.5) !important; /* Santorini-5 */
+  border-color: rgba(145, 178, 242, 0.5) !important; /* Santorini-3 */
   resize: none;
   background-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 textarea:focus {
-  border-color: var(--santorini-blue-3) !important; /* Santorini-3 */
-  box-shadow: 0 0 0 2px rgba(5, 151, 242, 0.15) !important; /* Santorini-3 */
+  border-color: var(--santorini-blue-4) !important; /* Santorini-4 */
+  box-shadow: 0 0 0 2px rgba(5, 108, 242, 0.15) !important; /* Santorini-4 */
 }
 
 /* Style for placeholder text */
 textarea::placeholder {
-  color: rgba(2, 51, 114, 0.5) !important; /* Santorini-2 with transparency */
+  color: rgba(3, 23, 140, 0.5) !important; /* Santorini-1 with transparency */
   opacity: 0.7 !important;
 }
 
 /* Style for buttons in chat */
 .chat-button {
   border-radius: 0.75rem !important;
-  box-shadow: 0 2px 4px rgba(4, 96, 216, 0.1) !important; /* Santorini-1 */
+  box-shadow: 0 2px 4px rgba(5, 64, 242, 0.1) !important; /* Santorini-2 */
   transition: all 0.2s ease-in-out;
 }
 
 .chat-button:hover {
   transform: translateY(-1px);
-  background-color: var(--santorini-blue-1) !important; /* Santorini-1 */
+  background-color: var(--santorini-blue-2) !important; /* Santorini-2 */
   color: white !important;
-  box-shadow: 0 4px 8px rgba(4, 96, 216, 0.2) !important; /* Santorini-1 */
+  box-shadow: 0 4px 8px rgba(5, 64, 242, 0.2) !important; /* Santorini-2 */
 }
 
 /* Style submit button differently from diagram button */
 button[type="submit"].chat-button {
-  background-color: var(--santorini-blue-1) !important; /* Santorini-1 */
+  background-color: var(--santorini-blue-2) !important; /* Santorini-2 */
   color: white !important;
 }
 
 button[type="submit"].chat-button:hover {
-  background-color: var(--santorini-blue-3) !important; /* Santorini-3 */
+  background-color: var(--santorini-blue-5) !important; /* Santorini-5 */
 }
 
 /* Chat message styles */
 .user-message {
-  background-color: rgba(4, 96, 216, 0.12) !important; /* Santorini-1 with transparency */
-  color: var(--santorini-blue-2) !important; /* Santorini-2 */
+  background-color: rgba(5, 64, 242, 0.12) !important; /* Santorini-2 with transparency */
+  color: var(--santorini-blue-1) !important; /* Santorini-1 */
   padding: 0.75rem 1rem;
   border-radius: 1rem 1rem 0 1rem;
   align-self: flex-end;
   max-width: 80%;
-  box-shadow: 0 2px 4px rgba(2, 51, 114, 0.05); /* Subtle shadow */
-  border: 1px solid rgba(4, 96, 216, 0.08); /* Santorini-1 with transparency */
+  box-shadow: 0 2px 4px rgba(3, 23, 140, 0.05); /* Subtle shadow */
+  border: 1px solid rgba(5, 64, 242, 0.08); /* Santorini-2 with transparency */
 }
 
 .assistant-message {
-  background-color: rgba(217, 187, 180, 0.12) !important; /* Santorini-5 with transparency */
-  color: var(--santorini-blue-2) !important; /* Santorini-2 */
+  background-color: rgba(145, 178, 242, 0.15) !important; /* Santorini-3 with transparency */
+  color: var(--santorini-blue-1) !important; /* Santorini-1 */
   padding: 0.75rem 1rem;
   border-radius: 1rem 1rem 1rem 0;
   align-self: flex-start;
   max-width: 80%;
-  box-shadow: 0 2px 4px rgba(2, 51, 114, 0.05); /* Subtle shadow */
-  border: 1px solid rgba(217, 187, 180, 0.15); /* Santorini-5 with transparency */
+  box-shadow: 0 2px 4px rgba(3, 23, 140, 0.05); /* Subtle shadow */
+  border: 1px solid rgba(145, 178, 242, 0.2); /* Santorini-3 with transparency */
 }
 
 .chat-messages-container {
@@ -191,26 +191,26 @@ button[type="submit"].chat-button:hover {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.7);
 }
 
-/* Add a gradient background with Santorini colors */
+/* Add a gradient background with Oia Santorini colors */
 .app-gradient-bg {
   background: linear-gradient(
     135deg, 
-    rgba(217, 187, 180, 0.15) 0%, 
+    rgba(145, 178, 242, 0.15) 0%, 
     rgba(255, 255, 255, 0.8) 30%, 
-    rgba(5, 175, 242, 0.08) 70%, 
-    rgba(4, 96, 216, 0.1) 100%
+    rgba(5, 108, 242, 0.08) 70%, 
+    rgba(3, 23, 140, 0.1) 100%
   );
   background-attachment: fixed;
 }
 
-/* Sidebar styling with Santorini theme */
+/* Sidebar styling with Oia Santorini theme */
 .sidebar {
   background-color: rgba(255, 255, 255, 0.8);
-  border-right: 1px solid rgba(217, 187, 180, 0.3);
-  box-shadow: 0 0 20px rgba(2, 51, 114, 0.05);
+  border-right: 1px solid rgba(145, 178, 242, 0.3);
+  box-shadow: 0 0 20px rgba(3, 23, 140, 0.05);
 }
 
 /* Chat list items */
@@ -220,26 +220,42 @@ button[type="submit"].chat-button:hover {
 }
 
 .chat-list-item:hover {
-  background-color: rgba(5, 151, 242, 0.08);
+  background-color: rgba(5, 108, 242, 0.08);
 }
 
 .chat-list-item.active {
-  background-color: rgba(4, 96, 216, 0.12);
-  color: var(--santorini-blue-2);
+  background-color: rgba(5, 64, 242, 0.12);
+  color: var(--santorini-blue-1);
   font-weight: 500;
 }
 
 /* Style for highlighted code and diagrams */
 pre, code {
-  background-color: rgba(217, 187, 180, 0.1);
-  border: 1px solid rgba(217, 187, 180, 0.2);
+  background-color: rgba(145, 178, 242, 0.1);
+  border: 1px solid rgba(145, 178, 242, 0.2);
   border-radius: 0.5rem;
 }
 
 .diagram-frame {
-  border: 1px solid rgba(217, 187, 180, 0.3);
+  border: 1px solid rgba(145, 178, 242, 0.3);
   border-radius: 0.75rem;
-  box-shadow: 0 4px 12px rgba(2, 51, 114, 0.08);
+  box-shadow: 0 4px 12px rgba(3, 23, 140, 0.08);
+}
+
+/* Button hover effects */
+.button-hover-effect {
+  transition: all 0.2s ease-in-out;
+}
+
+.button-hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(5, 64, 242, 0.2);
+}
+
+/* Accent border for important elements */
+.accent-border {
+  border: 2px solid rgba(5, 131, 242, 0.5); /* Santorini-5 */
+  box-shadow: 0 0 0 2px rgba(5, 131, 242, 0.1);
 }
 
 @layer base {
@@ -251,11 +267,24 @@ pre, code {
     @apply font-sans antialiased text-foreground;
     background: linear-gradient(
       135deg, 
-      rgba(217, 187, 180, 0.15) 0%, 
+      rgba(145, 178, 242, 0.15) 0%, 
       rgba(255, 255, 255, 0.8) 30%, 
-      rgba(5, 175, 242, 0.08) 70%, 
-      rgba(4, 96, 216, 0.1) 100%
+      rgba(5, 108, 242, 0.08) 70%, 
+      rgba(3, 23, 140, 0.1) 100%
     );
     background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--santorini-blue-1);
+  }
+  
+  a {
+    color: var(--santorini-blue-2);
+    transition: color 0.2s;
+  }
+  
+  a:hover {
+    color: var(--santorini-blue-5);
   }
 }
