@@ -1,0 +1,19 @@
+direction: down
+
+source: "On-Premise Environment" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+target: "Cloud Platform" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+rivermeadow: "RiverMeadow SaaS"
+assessment: "OS Assessment"
+preparation: "Migration Preparation"
+execution: "Migration Execution"
+verification: "Post-Migration Verification"
+
+source -> assessment -> preparation -> rivermeadow -> execution -> verification -> target

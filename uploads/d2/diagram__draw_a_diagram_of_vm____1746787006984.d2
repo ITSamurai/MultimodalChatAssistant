@@ -1,0 +1,36 @@
+direction: down
+
+source: "On-Premises VMs" {
+
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+}
+
+target: "Cloud VMs" {
+
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+}
+
+rivermeadow: "RiverMeadow SaaS"
+discovery: "Discovery"
+replication: "Replication"
+cutover: "Cutover"
+
+source -> discovery -> rivermeadow -> replication -> cutover -> target

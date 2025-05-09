@@ -215,6 +215,18 @@ export function isDiagramGenerationRequest(message: string): boolean {
     return true;
   }
   
+  // Special case for combined or comparison diagram requests
+  if (lowerMessage.startsWith('draw') || lowerMessage.startsWith('create') || lowerMessage.startsWith('generate')) {
+    if ((lowerMessage.includes('one diagram') || lowerMessage.includes('combined diagram') || 
+         lowerMessage.includes('comparison diagram') || lowerMessage.includes('both')) &&
+        (lowerMessage.includes('side by side') || lowerMessage.includes('left side') || 
+         lowerMessage.includes('right side') || lowerMessage.includes('together') || 
+         lowerMessage.includes('contain both'))) {
+      console.log(`Detected combined/comparison diagram request`);
+      return true;
+    }
+  }
+  
   return false;
 }
 
