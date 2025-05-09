@@ -41,7 +41,7 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || !chatId) return;
 
     try {
       // Add user message to the chat
@@ -54,15 +54,13 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
       // Show loading state
       setIsLoading(true);
       
-      // Make API request to get AI response
+      // Make API request to get AI response with full message history for context
       const response = await apiRequest('POST', '/api/chat', { 
-        messages: [
-          { role: 'user', content: prompt }
-        ],
+        messages: [...messages, userMessage], // Send full message history for context
         model: 'gpt-4o',
         temperature: 0.7,
         maxTokens: 2048,
-        chatId
+        chatId: parseInt(chatId, 10) // Convert string chatId to number
       });
       
       if (!response.ok) {

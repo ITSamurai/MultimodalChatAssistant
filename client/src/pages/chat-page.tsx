@@ -3,9 +3,11 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { KnowledgeBaseChat } from '@/components/KnowledgeBaseChat';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, LogOut } from 'lucide-react';
+import { PlusCircle, LogOut, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
+import { createChat, getUserChats, getChatMessages, Chat as ChatType } from '@/lib/api';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 interface ChatMessage {
   id?: string;
@@ -24,7 +26,7 @@ export default function ChatPage() {
   const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [chatHistory, setChatHistory] = useState<Record<string, ChatMessage[]>>({});
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   // Check authentication
   useEffect(() => {
@@ -32,6 +34,51 @@ export default function ChatPage() {
       navigate('/auth');
     }
   }, [user, navigate]);
+
+  // Fetch all user chats
+  const { 
+    data: chats = [], 
+    isLoading: isLoadingChats,
+    refetch: refetchChats
+  } = useQuery({
+    queryKey: ['/api/chats'],
+    queryFn: getUserChats,
+    enabled: !!user
+  });
+
+  // Create a new chat mutation
+  const createChatMutation = useMutation({
+    mutationFn: createChat,
+    onSuccess: (newChat) => {
+      setActiveChatId(newChat.id.toString());
+      queryClient.invalidateQueries({ queryKey: ['/api/chats'] });
+      toast({
+        title: 'Chat created',
+        description: 'New chat started successfully.'
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to create new chat.',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Fetch messages for the active chat
+  const { 
+    data: chatHistoryMessages = [],
+    isLoading: isLoadingChatHistory,
+    refetch: refetchMessages
+  } = useQuery({
+    queryKey: ['/api/chats', activeChatId, 'messages'],
+    queryFn: () => getChatMessages(parseInt(activeChatId!, 10)),
+    enabled: !!activeChatId,
+    onSuccess: (data) => {
+      setChatMessages(data);
+    }
+  });
 
   // Log out handler
   const handleLogout = async () => {
@@ -50,20 +97,14 @@ export default function ChatPage() {
 
   // Start a new chat
   const startNewChat = () => {
-    const newChatId = `chat-${Date.now()}`;
-    setActiveChatId(newChatId);
-    setChatHistory(prev => ({
-      ...prev,
-      [newChatId]: []
-    }));
+    createChatMutation.mutate('New Chat');
   };
 
   // Update chat history
   const updateChatHistory = (chatId: string, messages: ChatMessage[]) => {
-    setChatHistory(prev => ({
-      ...prev,
-      [chatId]: messages
-    }));
+    setChatMessages(messages);
+    // No need to update the local state manually, we'll refetch on next message
+    setTimeout(() => refetchMessages(), 500);
   };
 
   return (

@@ -27,6 +27,38 @@ export interface KnowledgeItem {
   metadata?: Record<string, any>;
 }
 
+// Interface for a chat
+export interface Chat {
+  id: number;
+  userId: number;
+  title: string;
+  createdAt: string;
+}
+
+// Create a new chat
+export async function createChat(title: string = "New Chat"): Promise<Chat> {
+  const response = await apiRequest("POST", "/api/chats", { title });
+  return response.json();
+}
+
+// Get all user chats
+export async function getUserChats(): Promise<Chat[]> {
+  const response = await apiRequest("GET", "/api/chats");
+  return response.json();
+}
+
+// Get messages for a specific chat
+export async function getChatMessages(chatId: number): Promise<ChatMessage[]> {
+  const response = await apiRequest("GET", `/api/chats/${chatId}/messages`);
+  return response.json();
+}
+
+// Update chat title
+export async function updateChatTitle(chatId: number, title: string): Promise<Chat> {
+  const response = await apiRequest("PATCH", `/api/chats/${chatId}`, { title });
+  return response.json();
+}
+
 // Upload document
 export async function uploadDocument(file: File): Promise<{ document: Document, imageCount: number }> {
   const formData = new FormData();
