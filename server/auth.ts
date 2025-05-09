@@ -259,7 +259,55 @@ export async function setupAuth(app: Express) {
     }
   });
 
-  // Public registration removed - users can only be created through the admin panel now
+  // Public registration endpoint
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+      
+      // Hash the password
+      const hashedPassword = await hashPassword(req.body.password);
+      
+      // Create the user with default role 'user'
+      const user = await storage.createUser({
+        username: req.body.username,
+        password: hashedPassword,
+        email: req.body.email || '',
+        role: 'user' // Default role is 'user', admin roles can only be set by admins
+      });
+      
+      // Log in the user
+      req.login(user, (err) => {
+        if (err) return next(err);
+        
+        // Generate token for API access
+        const token = generateAuthToken(user.id, req);
+        
+        // Set token in Authorization header
+        res.setHeader('Authorization', `Bearer ${token}`);
+        
+        // Return user data with token
+        const responseData = {
+          ...user,
+          token: token
+        };
+        
+        console.log('User registered and logged in:', {
+          id: user.id,
+          username: user.username,
+          role: user.role
+        });
+        
+        return res.status(201).json(responseData);
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      return res.status(500).json({ error: 'Registration failed' });
+    }
+  });
 
   app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: Error | null, user: any, info: any) => {
