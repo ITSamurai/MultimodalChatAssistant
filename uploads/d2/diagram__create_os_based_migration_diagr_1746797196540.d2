@@ -1,0 +1,33 @@
+direction: down
+
+source: "On-Premises Environment" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+os_check: "OS Compatibility Check" {
+  style.fill: "#fffbe6"
+  style.stroke: "#faad14"
+}
+
+rivermeadow: "RiverMeadow SaaS" {
+  style.fill: "#e6f4ea"
+  style.stroke: "#73d13d"
+}
+
+app_discovery: "Application Discovery" {
+  style.fill: "#fff1f0"
+  style.stroke: "#ff4d4f"
+}
+
+migration: "Migration Execution" {
+  style.fill: "#f0f5ff"
+  style.stroke: "#2f54eb"
+}
+
+target: "Cloud Environment" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+source -> os_check -> rivermeadow -> app_discovery -> migration -> target

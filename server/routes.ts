@@ -91,6 +91,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // All diagram routes are now handled by diagram.routes.ts
   // Keeping this comment as a reference of where the routes used to be
   
+  // Admin routes for user management
+  // Get all users (admin/superadmin only)
+  app.get('/api/admin/users', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user || !['admin', 'superadmin'].includes(req.user.role)) {
+        return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+      }
+      
+      const users = await storage.getAllUsers();
+      return res.json(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ error: 'Failed to fetch users' });
+    }
+  });
+  
+  // Create a new user (admin/superadmin only)
+  app.post('/api/admin/users', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user || !['admin', 'superadmin'].includes(req.user.role)) {
+        return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+      }
+      
+      const { username, password, name, role } = req.body;
+      
+      // Basic validation
+      if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+      }
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+      
+      // Only superadmins can create other superadmins
+      if (role === 'superadmin' && req.user.role !== 'superadmin') {
+        return res.status(403).json({ error: 'Only superadmins can create other superadmins' });
+      }
+      
+      // Hash the password
+      const hashedPassword = await hashPassword(password);
+      
+      // Create the user
+      const user = await storage.createUser({
+        username,
+        password: hashedPassword,
+        name: name || username,
+        role: role || 'user',
+        email: `${username}@example.com`, // Default email pattern
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
+      
+      return res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  });
+  
+  // Delete a user (admin/superadmin only)
+  app.delete('/api/admin/users/:id', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user || !['admin', 'superadmin'].includes(req.user.role)) {
+        return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+      }
+      
+      const userId = parseInt(req.params.id);
+      
+      // Prevent deleting yourself
+      if (userId === req.user.id) {
+        return res.status(400).json({ error: 'Cannot delete your own account' });
+      }
+      
+      // Get the user to check their role
+      const userToDelete = await storage.getUser(userId);
+      if (!userToDelete) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Only superadmins can delete admins or other superadmins
+      if (['admin', 'superadmin'].includes(userToDelete.role) && req.user.role !== 'superadmin') {
+        return res.status(403).json({ error: 'Only superadmins can delete admin accounts' });
+      }
+      
+      await storage.deleteUser(userId);
+      
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ error: 'Failed to delete user' });
+    }
+  });
+  
   // Configuration endpoint
   app.get('/api/config', requireTokenAuth, async (req: Request, res: Response) => {
     try {
