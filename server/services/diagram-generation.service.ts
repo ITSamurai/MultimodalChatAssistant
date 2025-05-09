@@ -219,7 +219,8 @@ export async function generateD2Script(prompt: string): Promise<{
       "2. For application architecture diagrams, use 'direction: down' as the first line.\n" +
       "3. Keep node definitions simple with just the label.\n" +
       "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
-      "5. Use -> for connections between components to show data flow or dependencies.\n" +
+      "5. IMPORTANT: DO NOT use the 'padding' property anywhere in your diagram - this will cause the diagram to fail.\n" +
+      "6. Use -> for connections between components to show data flow or dependencies.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
       "7. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +
       "8. Include all key RiverMeadow application components mentioned below.\n\n" +

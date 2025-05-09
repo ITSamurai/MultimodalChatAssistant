@@ -1,0 +1,47 @@
+direction: down
+
+layout {
+  rankSep: 120
+}
+
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  stroke-width: 2
+  font-size: 18
+  border-radius: 6}
+
+source: "Legacy System" {
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#ffebcc"
+  style.stroke: "#ff7f0e"
+}
+
+assessment: "Assessment" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+preparation: "Preparation"
+rivermeadow: "RiverMeadow SaaS"
+migration: "Migration"
+validation: "Validation"
+target: "New Cloud Environment" {
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+source -> assessment -> preparation -> rivermeadow -> migration -> validation -> target

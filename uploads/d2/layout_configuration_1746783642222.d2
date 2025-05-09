@@ -1,0 +1,29 @@
+direction: down
+
+# Layout configuration
+layout {
+  rankSep: 120
+}
+
+# General style for all elements
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  stroke-width: 2
+  font-size: 18
+  border-radius: 6}
+
+# Node definitions
+source: "Source Environment" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}discovery: "Discovery Phase"
+assessment: "Assessment"
+planning: "Planning"
+migration: "OS Migration"
+validation: "Validation"
+target: "Target Cloud Environment" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}# Connections
+source -> discovery -> assessment -> planning -> migration -> validation -> target

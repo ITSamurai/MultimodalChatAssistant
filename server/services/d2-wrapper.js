@@ -34,76 +34,81 @@ if (!fs.existsSync(inputFile)) {
 // Extract options from the remaining arguments
 const options = args.slice(2).join(' ');
 
-// Create a fallback SVG if D2 fails
-function createFallbackSVG(outputFile, errorMessage) {
-  // Try to read the input D2 file
-  let d2Content = '';
+// Report D2 failure and exit with error status (no fallback SVG)
+function reportD2Failure(errorMessage) {
+  console.error(`D2 DIAGRAM ERROR: ${errorMessage}`);
+  console.error('=== D2 Error Details ===');
+  console.error(`Input file: ${inputFile}`);
+  console.error(`Output file: ${outputFile}`);
+  console.error(`Options: ${options}`);
+  
+  // Read the input file content to help with debugging
   try {
-    d2Content = fs.readFileSync(inputFile, 'utf8').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const fileContent = fs.readFileSync(inputFile, 'utf8');
+    console.error('=== D2 Script Content ===');
+    console.error(fileContent);
+  } catch (readError) {
+    console.error(`Failed to read input file: ${readError.message}`);
+  }
+  
+  // Exit with error status
+  process.exit(1);
+}
+
+// Function to preprocess D2 script and fix common issues
+function preprocessD2Script(filePath) {
+  try {
+    // Read the file content
+    let content = fs.readFileSync(filePath, 'utf8');
     
-    // Attempt to fix common D2 syntax issues
-    const originalContent = d2Content;
+    // Track if we made any changes
+    let modified = false;
+    
+    // Remove padding property which is not supported by the installed D2 version
+    const paddingRegex = /\s*padding\s*:\s*\d+\s*/g;
+    const newContent = content.replace(paddingRegex, '');
+    
+    if (newContent !== content) {
+      console.log('Removed unsupported padding property from D2 script');
+      content = newContent;
+      modified = true;
+    }
     
     // Check if any style blocks are not properly closed
-    const styleBlockOpenCount = (d2Content.match(/{/g) || []).length;
-    const styleBlockCloseCount = (d2Content.match(/}/g) || []).length;
+    const styleBlockOpenCount = (content.match(/{/g) || []).length;
+    const styleBlockCloseCount = (content.match(/}/g) || []).length;
     
     if (styleBlockOpenCount > styleBlockCloseCount) {
       // There are unclosed style blocks, add closing braces
       const diff = styleBlockOpenCount - styleBlockCloseCount;
       for (let i = 0; i < diff; i++) {
-        d2Content += '\n}';
+        content += '\n}';
       }
       console.log(`Fixed ${diff} unclosed style blocks`);
+      modified = true;
     }
     
-    // If content was fixed, write it back to the file
-    if (originalContent !== d2Content) {
-      console.log('Fixed D2 syntax issues, writing back to file');
-      fs.writeFileSync(inputFile, d2Content);
+    // If we made changes, write back the fixed content
+    if (modified) {
+      fs.writeFileSync(filePath, content);
+      console.log('Fixed D2 script issues, wrote back to file');
     }
-  } catch (readError) {
-    console.error(`Failed to read input file: ${readError.message}`);
-    d2Content = 'Could not read D2 content';
-  }
-  
-  const svgContent = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <rect width="100%" height="100%" fill="#f8f9fa" />
-  <rect x="50" y="50" width="700" height="500" fill="white" stroke="#e9ecef" stroke-width="2" rx="10" ry="10" />
-  
-  <text x="400" y="100" font-family="Arial" font-size="24" text-anchor="middle" fill="#cc0000">
-    D2 Diagram Generation Error
-  </text>
-  
-  <text x="400" y="150" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">
-    ${errorMessage || 'An error occurred while generating the diagram'}
-  </text>
-  
-  <text x="400" y="190" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">
-    Input: ${path.basename(inputFile)}
-  </text>
-  
-  <rect x="100" y="220" width="600" height="300" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="5" ry="5" />
-  
-  <foreignObject x="120" y="240" width="560" height="260">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: monospace; font-size: 12px; white-space: pre; color: #333; overflow: auto; height: 100%;">
-${d2Content}
-    </div>
-  </foreignObject>
-</svg>
-  `;
-  
-  try {
-    fs.writeFileSync(outputFile, svgContent);
-    console.log(`Created fallback SVG: ${outputFile}`);
-  } catch (writeError) {
-    console.error(`Failed to write fallback SVG: ${writeError.message}`);
+    
+    return { success: true, content };
+  } catch (error) {
+    console.error(`Error preprocessing D2 script: ${error.message}`);
+    return { success: false, error };
   }
 }
 
 // Extract the D2 content to display in the fallback if needed
 const d2Content = fs.readFileSync(inputFile, 'utf8').slice(0, 200) + '...';
+
+// Preprocess the D2 script to fix any issues
+const preprocessResult = preprocessD2Script(inputFile);
+if (!preprocessResult.success) {
+  console.error('Failed to preprocess D2 script');
+}
 
 // Try to execute D2
 try {
@@ -188,9 +193,9 @@ try {
     }
     
     // If we get here, both attempts failed
-    createFallbackSVG(outputFile, `D2 Failed: ${error.message}`);
+    reportD2Failure(`D2 Failed: ${error.message}`);
   } catch (fallbackError) {
     console.error(`Fallback D2 execution failed: ${fallbackError.message}`);
-    createFallbackSVG(outputFile, `D2 Failed: ${fallbackError.message}`);
+    reportD2Failure(`D2 Failed: ${fallbackError.message}`);
   }
 }
