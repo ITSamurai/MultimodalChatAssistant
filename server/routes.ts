@@ -3,7 +3,7 @@ import path from 'path';
 import * as fs from 'fs';
 import multer from 'multer';
 import { createServer, Server } from 'http';
-import { setupAuth, requireTokenAuth, hashPassword } from './auth';
+import { setupAuth, requireTokenAuth, hashPassword, verifyAuthToken } from './auth';
 import { storage } from './storage';
 import { User } from '@shared/schema';
 import { z } from 'zod';
@@ -641,6 +641,42 @@ Explain that this diagram was generated based on their request, and they can dow
       const error = err as Error;
       console.error('Error processing chat:', error);
       res.status(500).json({ error: 'Failed to process chat: ' + (error.message || 'Unknown error') });
+    }
+  });
+  
+  // Debug endpoint for token information (temporary, for debugging)
+  app.get('/api/debug/token-info', async (req: Request, res: Response) => {
+    try {
+      // Extract token from Authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(400).json({ error: 'No token provided in Authorization header' });
+      }
+      
+      const token = authHeader.split(' ')[1];
+      
+      // Get user from token
+      const user = await verifyAuthToken(token, req);
+      
+      if (!user) {
+        return res.json({ 
+          valid: false, 
+          message: 'Token is invalid or expired',
+          token_prefix: token.substring(0, 10) + '...'
+        });
+      }
+      
+      return res.json({
+        valid: true, 
+        user_id: user.id,
+        username: user.username,
+        role: user.role,
+        token_prefix: token.substring(0, 10) + '...'
+      });
+    } catch (error) {
+      console.error('Error in token debug endpoint:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: 'Error checking token', message: errorMessage });
     }
   });
   

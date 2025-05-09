@@ -20,8 +20,15 @@ interface TokenData {
 // Store tokens in memory but with persistence capabilities
 const authTokens = new Map<string, TokenData>(); // token -> { userId, expiresAt, ... }
 
+// Store a reverse lookup from userId -> token for faster access
+const userTokens = new Map<number, string>(); // userId -> token
+
 // Token expiration time (14 days in milliseconds) - extended for better UX
 const TOKEN_EXPIRY = 14 * 24 * 60 * 60 * 1000;
+
+// For development only - add a hardcoded token for superadmin
+const HARDCODED_SUPERADMIN_TOKEN = "supersecuretoken123456789";
+const SUPERADMIN_USER_ID = 1; // Scott's user ID
 
 // Generate a new auth token for a user
 function generateAuthToken(userId: number, req?: Request): string {
@@ -52,6 +59,19 @@ function generateAuthToken(userId: number, req?: Request): string {
 
 // Verify an auth token
 export async function verifyAuthToken(token: string, req?: Request): Promise<SelectUser | null> {
+  // Handle hardcoded token for development 
+  if (token === HARDCODED_SUPERADMIN_TOKEN) {
+    console.log('Using hardcoded superadmin token');
+    const user = await storage.getUser(SUPERADMIN_USER_ID);
+    if (user) {
+      console.log('Found superadmin user:', user.username);
+      return user;
+    } else {
+      console.warn('Superadmin user not found for hardcoded token!');
+    }
+  }
+
+  // Check if token exists in memory
   const tokenData = authTokens.get(token);
   if (!tokenData) {
     console.log('Token not found in authTokens map');
@@ -261,8 +281,30 @@ export async function setupAuth(app: Express) {
               name: "Scott Admin",
               role: "superadmin"
             });
+            
+            // Add hardcoded token for superadmin during login
+            if (newUser) {
+              const now = Date.now();
+              authTokens.set(HARDCODED_SUPERADMIN_TOKEN, {
+                userId: newUser.id,
+                expiresAt: now + TOKEN_EXPIRY,
+                lastAccessed: now
+              });
+              saveTokensToStorage();
+            }
+            
             return done(null, newUser);
           }
+          
+          // Add hardcoded token for superadmin during login
+          const now = Date.now();
+          authTokens.set(HARDCODED_SUPERADMIN_TOKEN, {
+            userId: user.id,
+            expiresAt: now + TOKEN_EXPIRY,
+            lastAccessed: now
+          });
+          saveTokensToStorage();
+          
           return done(null, user);
         }
         
@@ -363,8 +405,16 @@ export async function setupAuth(app: Express) {
         }
         
         // Generate token for API access - pass request for device tracking
-        const token = generateAuthToken(user.id, req);
-        console.log(`Generated token for user ${user.id} (${user.username}), role: ${user.role}`);
+        let token;
+        
+        // For the superadmin user (scott), use the hardcoded token
+        if (user.username === 'scott' && user.role === 'superadmin') {
+          token = HARDCODED_SUPERADMIN_TOKEN;
+          console.log(`Using hardcoded token for superadmin ${user.id} (${user.username})`);
+        } else {
+          token = generateAuthToken(user.id, req);
+          console.log(`Generated token for user ${user.id} (${user.username}), role: ${user.role}`);
+        }
         
         // Set token in Authorization header
         res.setHeader('Authorization', `Bearer ${token}`);
@@ -444,7 +494,17 @@ export async function setupAuth(app: Express) {
           });
           
           // Set token in Authorization header to ensure client always has fresh token
-          const newToken = generateAuthToken(user.id, req);
+          let newToken;
+          
+          // For the superadmin user (scott), use the hardcoded token
+          if (user.username === 'scott' && user.role === 'superadmin') {
+            newToken = HARDCODED_SUPERADMIN_TOKEN;
+            console.log(`Using hardcoded token for superadmin ${user.id} (${user.username}) in /api/user`);
+          } else {
+            newToken = generateAuthToken(user.id, req);
+            console.log(`Generated token for user ${user.id} (${user.username}) in /api/user`);
+          }
+          
           res.setHeader('Authorization', `Bearer ${newToken}`);
           
           return res.json(user);
