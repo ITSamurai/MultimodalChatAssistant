@@ -123,8 +123,11 @@ textarea {
   border-radius: 0.75rem !important;
   border-color: rgba(145, 178, 242, 0.5) !important; /* Santorini-3 */
   resize: none;
+  min-height: 100px !important; /* Taller textarea */
   background-color: rgba(255, 255, 255, 0.8) !important;
   color: rgba(3, 23, 140, 0.7) !important; /* Harmonized with placeholder, but slightly darker */
+  padding: 1rem !important; /* More padding inside textarea */
+  line-height: 1.5 !important; /* Improve line spacing */
 }
 
 textarea:focus {

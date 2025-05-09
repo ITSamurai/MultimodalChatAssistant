@@ -195,7 +195,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
                 autoResizeTextarea(e);
               }}
               placeholder="Ask about the document..."
-              className="w-full rounded-lg px-4 py-3 pr-12 resize-none min-h-12 max-h-36 transition"
+              className="w-full rounded-lg px-4 py-3 pr-12 resize-none min-h-[100px] max-h-36 transition"
               style={{
                 borderColor: "rgba(145, 178, 242, 0.5)",
                 backgroundColor: "rgba(255, 255, 255, 0.8)",
@@ -207,7 +207,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
               type="submit"
               size="icon"
               variant="ghost"
-              className="absolute right-3 bottom-3 text-primary hover:text-blue-700 transition"
+              className="absolute right-3 bottom-6 text-primary hover:bg-primary hover:text-white transition-all chat-button"
               disabled={!inputValue.trim() || sendMessageMutation.isPending}
             >
               <FoldVertical className="h-5 w-5" />

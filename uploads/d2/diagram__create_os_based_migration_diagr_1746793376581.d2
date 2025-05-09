@@ -1,0 +1,20 @@
+direction: down
+
+source: "On-Premise Servers" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+target: "Cloud Environment" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+rivermeadow: "RiverMeadow Migration Platform"
+windows: "Windows OS"
+linux: "Linux OS"
+discovery: "Discovery Phase"
+migration: "Migration Phase"
+
+source -> discovery -> windows -> rivermeadow -> migration -> target
+source -> discovery -> linux -> rivermeadow -> migration -> target
