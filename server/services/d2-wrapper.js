@@ -79,11 +79,8 @@ function preprocessD2Script(filePath) {
     content = content.replace(badStyleBlockRegex, (match, styleContent) => {
       console.log('Found style block to fix');
       
-      // Fix style attributes by adding style. prefix if missing
-      const fixedStyleContent = styleContent.replace(
-        /(\s+)(fill|stroke|stroke-width|font-size|border-radius)(\s*:)/g, 
-        '$1style.$2$3'
-      );
+      // For global style block, we do NOT use style. prefix
+      const fixedStyleContent = styleContent;
       
       // Create a proper style block
       return 'style {\n' + fixedStyleContent + '\n}';

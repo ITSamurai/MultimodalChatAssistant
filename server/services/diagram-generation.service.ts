@@ -22,8 +22,34 @@ function fixD2SpacingIssues(script: string): string {
   // Remove any "padding" properties which are not supported in this D2 version
   script = script.replace(/\s*padding\s*:\s*\d+\s*/g, '');
   
-  // Fix style attributes that don't have style. prefix
-  script = script.replace(/(\s+)(fill|stroke|stroke-width|font-size|border-radius)(\s*:)/g, '$1style.$2$3');
+  // Fix style attributes in the global style block (should NOT have style. prefix)
+  script = script.replace(/style\s*{\s*([^}]*)}/g, (match, styleContent) => {
+    // Remove style. prefix from global style block
+    const fixedContent = styleContent.replace(/\s*style\.(fill|stroke|stroke-width|font-size|border-radius)\s*:/g, ' $1:');
+    return `style {\n${fixedContent}\n}`;
+  });
+
+  // Fix style attributes in node blocks (SHOULD have style. prefix)
+  // Process multiple node blocks by iterating
+  let nodeBlockRegex = /([a-zA-Z0-9_]+):\s*"([^"]+)"\s*{([^{}]*?)}/g;
+  let nodeMatch;
+  let processedScript = script;
+  
+  // Use a safer approach without relying on 's' flag
+  while ((nodeMatch = nodeBlockRegex.exec(script)) !== null) {
+    const [fullMatch, nodeName, nodeLabel, nodeContent] = nodeMatch;
+    
+    // Add style. prefix to node style attributes if missing
+    const fixedContent = nodeContent.replace(/\s+(fill|stroke|stroke-width|font-size|border-radius)(\s*:)/g, ' style.$1$2');
+    
+    // Replace this specific match
+    processedScript = processedScript.replace(
+      fullMatch, 
+      `${nodeName}: "${nodeLabel}" {\n${fixedContent}\n}`
+    );
+  }
+  
+  script = processedScript;
   
   // Remove any floating "100" numbers that might be incorrectly generated
   script = script.replace(/^\s*100\s*$/gm, '');
@@ -220,10 +246,11 @@ export async function generateD2Script(prompt: string): Promise<{
       "Important rules:\n" +
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
       "2. For application architecture diagrams, use 'direction: down' as the first line.\n" +
-      "3. Use proper style attributes with the 'style.' prefix: 'style.fill', 'style.stroke', 'style.font-size', etc.\n" +
-      "4. DO NOT use the 'padding' property anywhere in your diagram - this will cause the diagram to fail.\n" +
-      "5. For layout configuration, use proper syntax: layout { rankSep: 120 }\n" +
-      "6. Use -> for connections between components to show data flow or dependencies.\n" +
+      "3. For global style blocks, use style without prefix: style { fill: \"#color\", stroke: \"#color\" }.\n" +
+      "4. For node-specific style attributes, use 'style.' prefix: style.fill, style.stroke, style.font-size, etc.\n" +
+      "5. DO NOT use the 'padding' property anywhere in your diagram - this will cause the diagram to fail.\n" +
+      "6. For layout configuration, use proper syntax: layout { rankSep: 120 }\n" +
+      "7. Use -> for connections between components to show data flow or dependencies.\n" +
       "7. DO NOT include a title block as our D2 version doesn't support it.\n" +
       "8. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +
       "9. Include all key RiverMeadow application components mentioned below.\n\n" +
@@ -320,7 +347,8 @@ export async function generateD2Script(prompt: string): Promise<{
       "2. Start with 'direction: down' at the top of your diagram for better flow visualization.\n" +
       "3. Add layout and style configurations using proper syntax. Be sure to use style.*property names:\n" +
       "   layout { rankSep: 120 }\n" +
-      "   style { style.fill: \"#color\", style.stroke: \"#color\" }\n" +
+      "   style { fill: \"#color\", stroke: \"#color\" }\n" +
+      "   source: \"Source\" { style.fill: \"#color\", style.stroke: \"#color\" }\n" +
       "4. Keep node definitions simple with just the label.\n" +
       "5. Always create connections between components using the -> operator.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
@@ -333,11 +361,11 @@ export async function generateD2Script(prompt: string): Promise<{
       "layout { rankSep: 120 }\n\n" +
       "// Global styles\n" +
       "style {\n" +
-      "  style.fill: \"#f5f5f5\"\n" +
-      "  style.stroke: \"#333333\"\n" +
-      "  style.stroke-width: 2\n" +
-      "  style.font-size: 18\n" +
-      "  style.border-radius: 6\n" +
+      "  fill: \"#f5f5f5\"\n" +
+      "  stroke: \"#333333\"\n" +
+      "  stroke-width: 2\n" +
+      "  font-size: 18\n" +
+      "  border-radius: 6\n" +
       "}\n\n" +
       "// Custom styles for specific node types\n" +
       "source: \"Source Environment\" {\n" +
