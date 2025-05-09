@@ -74,6 +74,28 @@ function preprocessD2Script(filePath) {
       modified = true;
     }
     
+    // Fix @d2 style blocks that were generated incorrectly
+    const badStyleBlockRegex = /\/\/\s*@d2\s+style\s*\{\s*([^}]*)\}/gs;
+    content = content.replace(badStyleBlockRegex, (match, styleContent) => {
+      console.log('Found style block to fix');
+      
+      // Fix style attributes by adding style. prefix if missing
+      const fixedStyleContent = styleContent.replace(
+        /(\s+)(fill|stroke|stroke-width|font-size|border-radius)(\s*:)/g, 
+        '$1style.$2$3'
+      );
+      
+      // Create a proper style block
+      return 'style {\n' + fixedStyleContent + '\n}';
+    });
+    
+    // Fix @d2 layout blocks
+    const badLayoutBlockRegex = /\/\/\s*@d2\s+layout\s*\{\s*([^}]*)\}/gs;
+    content = content.replace(badLayoutBlockRegex, (match, layoutContent) => {
+      console.log('Found layout block to fix');
+      return 'layout {\n' + layoutContent + '\n}';
+    });
+    
     // Check if any style blocks are not properly closed
     const styleBlockOpenCount = (content.match(/{/g) || []).length;
     const styleBlockCloseCount = (content.match(/}/g) || []).length;

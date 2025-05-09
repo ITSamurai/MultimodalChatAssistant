@@ -11,7 +11,7 @@ import { saveD2Script, d2ToSvg, d2ToPng } from './d2.service';
 import { storage } from '../storage';
 
 /**
- * Fixes common D2 syntax issues related to spacing
+ * Fixes common D2 syntax issues related to spacing and removes unsupported properties like 'padding'
  */
 function fixD2SpacingIssues(script: string): string {
   // Replace direct "spacing: X" with layout.rankSep but use standard format
@@ -21,6 +21,9 @@ function fixD2SpacingIssues(script: string): string {
   
   // Remove any "padding" properties which are not supported in this D2 version
   script = script.replace(/\s*padding\s*:\s*\d+\s*/g, '');
+  
+  // Fix style attributes that don't have style. prefix
+  script = script.replace(/(\s+)(fill|stroke|stroke-width|font-size|border-radius)(\s*:)/g, '$1style.$2$3');
   
   // Remove any floating "100" numbers that might be incorrectly generated
   script = script.replace(/^\s*100\s*$/gm, '');
@@ -217,13 +220,13 @@ export async function generateD2Script(prompt: string): Promise<{
       "Important rules:\n" +
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
       "2. For application architecture diagrams, use 'direction: down' as the first line.\n" +
-      "3. Keep node definitions simple with just the label.\n" +
-      "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
-      "5. IMPORTANT: DO NOT use the 'padding' property anywhere in your diagram - this will cause the diagram to fail.\n" +
+      "3. Use proper style attributes with the 'style.' prefix: 'style.fill', 'style.stroke', 'style.font-size', etc.\n" +
+      "4. DO NOT use the 'padding' property anywhere in your diagram - this will cause the diagram to fail.\n" +
+      "5. For layout configuration, use proper syntax: layout { rankSep: 120 }\n" +
       "6. Use -> for connections between components to show data flow or dependencies.\n" +
-      "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
-      "7. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +
-      "8. Include all key RiverMeadow application components mentioned below.\n\n" +
+      "7. DO NOT include a title block as our D2 version doesn't support it.\n" +
+      "8. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +
+      "9. Include all key RiverMeadow application components mentioned below.\n\n" +
       "Example D2 application structure diagram for RiverMeadow:\n" +
       "```\n" +
       "direction: down\n\n" +
@@ -281,7 +284,8 @@ export async function generateD2Script(prompt: string): Promise<{
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
       "2. For organizational diagrams, use 'direction: down' as the first line to represent hierarchy.\n" +
       "3. Keep node definitions simple with just the label.\n" +
-      "4. DO NOT use complex style attributes as they may not be compatible with our D2 version.\n" +
+      "4. Use proper style attributes with the 'style.' prefix: 'style.fill', 'style.stroke', 'style.font-size', etc.\n" +
+      "5. For layout configuration, use proper syntax: layout { rankSep: 120 }\n" +
       "5. Use -> for connections between components to show reporting lines or relationships.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
       "7. DO NOT use custom diagram names with @ symbol, this breaks our D2 version.\n" +
@@ -313,16 +317,10 @@ export async function generateD2Script(prompt: string): Promise<{
       "Generate a complete, valid D2 diagram script based on the user's description.\n\n" +
       "Important rules:\n" +
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
-      "2. Start with a layout configuration block at the top with these fields:\n" +
-      "   - direction: For OS migration diagrams, use 'down' for better visualization of the process flow\n" +
-      "   - layout.rankSep: Use 120 or more for better spacing between elements\n" +
-      "3. Include a basic style block to enhance visual appearance:\n" +
-      "   style.fill: '#f5f5f5'  # A light background color\n" +
-      "   style.stroke: '#333333'  # A dark border color\n" +
-      "   style.font-size: 18  # For better readable text\n" +
-      "   style.stroke-width: 2  # For more visible borders\n" +
-      "   style.border-radius: 6  # For slightly rounded corners\n" +
-      "   style.padding: 20  # For larger nodes with more whitespace\n" +
+      "2. Start with 'direction: down' at the top of your diagram for better flow visualization.\n" +
+      "3. Add layout and style configurations using proper syntax. Be sure to use style.*property names:\n" +
+      "   layout { rankSep: 120 }\n" +
+      "   style { style.fill: \"#color\", style.stroke: \"#color\" }\n" +
       "4. Keep node definitions simple with just the label.\n" +
       "5. Always create connections between components using the -> operator.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
@@ -331,20 +329,17 @@ export async function generateD2Script(prompt: string): Promise<{
       "Example D2 diagram:\n" +
       "```\n" +
       "direction: down\n\n" +
-      "# Layout configuration\n" +
-      "layout {\n" +
-      "  rankSep: 120\n" +
-      "}\n\n" +
-      "# General style for all elements\n" +
+      "// Improved layout config\n" +
+      "layout { rankSep: 120 }\n\n" +
+      "// Global styles\n" +
       "style {\n" +
-      "  fill: \"#f5f5f5\"\n" +
-      "  stroke: \"#333333\"\n" +
-      "  stroke-width: 2\n" +
-      "  font-size: 18\n" +
-      "  border-radius: 6\n" +
-      "  padding: 20\n" +
+      "  style.fill: \"#f5f5f5\"\n" +
+      "  style.stroke: \"#333333\"\n" +
+      "  style.stroke-width: 2\n" +
+      "  style.font-size: 18\n" +
+      "  style.border-radius: 6\n" +
       "}\n\n" +
-      "# Optional custom styles for specific node types\n" +
+      "// Custom styles for specific node types\n" +
       "source: \"Source Environment\" {\n" +
       "  style.fill: \"#e6f7ff\"\n" +
       "  style.stroke: \"#1890ff\"\n" +

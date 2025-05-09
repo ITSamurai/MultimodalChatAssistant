@@ -1,0 +1,54 @@
+
+Error converting D2 to SVG - not creating fallback
+Error generating diagram: Error: Failed to convert D2 to SVG: Command failed: node "/home/runner/workspace/server/services/d2-wrapper.js" "/home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2" "/home/runner/workspace/uploads/svg/diagram__draw_a_diagram_of_the____1746784774878.svg" --theme=0 --layout=dagre --pad=20
+err: failed to compile uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:6:3: fill must be style.fill
+err: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:7:3: stroke must be style.stroke
+err: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:8:3: stroke-width must be style.stroke-width
+err: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:9:3: font-size must be style.font-size
+err: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:10:3: border-radius must be style.border-radius
+D2 execution failed: Command failed: "/nix/store/yzym5q8ib2xqp4nr7s7ggk3alsibwg7a-d2-0.6.5/bin/d2" "/home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2" "/home/runner/workspace/uploads/svg/diagram__draw_a_diagram_of_the____1746784774878.svg" --theme=0 --layout=dagre --pad=20
+err: failed to compile uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:6:3: fill must be style.fill
+err: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:7:3: stroke must be style.stroke
+err: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:8:3: stroke-width must be style.stroke-width
+err: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:9:3: font-size must be style.font-size
+err: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2:10:3: border-radius must be style.border-radius
+Fallback D2 execution failed: Command failed: d2 "/home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2" "/home/runner/workspace/uploads/svg/diagram__draw_a_diagram_of_the____1746784774878.svg" --theme=0 --layout=dagre --pad=20
+D2 DIAGRAM ERROR: D2 Failed: Command failed: d2 "/home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2" "/home/runner/workspace/uploads/svg/diagram__draw_a_diagram_of_the____1746784774878.svg" --theme=0 --layout=dagre --pad=20
+=== D2 Error Details ===
+Input file: /home/runner/workspace/uploads/d2/diagram__draw_a_diagram_of_the____1746784774878.d2
+Output file: /home/runner/workspace/uploads/svg/diagram__draw_a_diagram_of_the____1746784774878.svg
+Options: --theme=0 --layout=dagre --pad=20
+=== D2 Script Content ===
+direction: down
+
+// @d2 layout { rankSep: 120 }
+
+// @d2 style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  stroke-width: 2
+  font-size: 18
+  border-radius: 6
+}
+
+source_os: "Source OS"
+discovery: "Discovery Tool"
+preparation: "Pre-Migration Preparation"
+rivermeadow: "RiverMeadow SaaS"
+replication: "Data Replication"
+cutover: "Cutover Phase"
+target_os: "Target OS"
+
+source_os -> discovery -> preparation -> rivermeadow -> replication -> cutover -> target_os
+
+    at d2ToSvg (/home/runner/workspace/server/services/d2.service.ts:152:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async generateDiagram (/home/runner/workspace/server/services/diagram-generation.service.ts:465:24)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:368:33)
+Error generating diagram: Error: Failed to generate diagram
+    at generateDiagram (/home/runner/workspace/server/services/diagram-generation.service.ts:497:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:368:33)
+Using model: gpt-4o temp: 0.7 max_tokens: 2048
+Successfully generated response from knowledge base
+9:59:41 AM [express] POST /api/chat 200 in 8590ms :: {"role":"assistant","content":"Creating a diagr…
