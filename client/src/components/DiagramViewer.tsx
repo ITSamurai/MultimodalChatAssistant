@@ -82,14 +82,14 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
     setZoomLevel(prev => Math.min(prev + 10, 200));
   };
   
-  // Zoom out by 10%
+  // Zoom out by 10%, allowing much lower zoom levels (down to 10%)
   const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 10, 30));
+    setZoomLevel(prev => Math.max(prev - 10, 10));
   };
   
-  // Reset zoom to 100%
+  // Reset zoom to 25% (our default)
   const handleResetZoom = () => {
-    setZoomLevel(100);
+    setZoomLevel(25);
   };
   
   // Handle download
@@ -117,9 +117,9 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
     alert('If the diagram PNG is empty, please try right-clicking on the diagram and selecting "Save Image As..." instead.');
   };
   
-  // Set initial zoom level to 33% (one-third size) when component mounts
+  // Set initial zoom level to 25% (one-fourth size) when component mounts
   useEffect(() => {
-    setZoomLevel(33); // Set initial zoom to 33% to make diagrams one-third original size
+    setZoomLevel(25); // Set initial zoom to 25% to make more of the diagram visible
   }, []);
   
   // Common image style for both SVG and regular images
@@ -128,9 +128,10 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
     transformOrigin: 'top center', // Align from the top to prevent vertical overflow
     transition: 'transform 0.2s ease-in-out',
     border: '0',
-    width: '100%',
+    width: '100%', 
     height: 'auto',
-    maxHeight: '400px',
+    maxHeight: '300px', // Reduced maximum height for better visibility of whole diagram
+    minHeight: '200px', // Minimum height to ensure consistent sizing
     padding: '0',
     backgroundColor: 'white',
     margin: '0 auto',
@@ -142,7 +143,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
       <div className="flex justify-between items-center px-4 py-2 bg-muted/50">
         <div className="text-sm font-medium">{altText}</div>
         <div className="flex space-x-1">
-          <Button variant="ghost" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 30}>
+          <Button variant="ghost" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 10}>
             <ZoomOut className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="sm" onClick={handleResetZoom}>
