@@ -3,7 +3,7 @@ import path from 'path';
 import * as fs from 'fs';
 import multer from 'multer';
 import { createServer, Server } from 'http';
-import { setupAuth, requireTokenAuth } from './auth';
+import { setupAuth, requireTokenAuth, hashPassword } from './auth';
 import { storage } from './storage';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
@@ -141,9 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
         name: name || username,
         role: role || 'user',
-        email: `${username}@example.com`, // Default email pattern
-        createdAt: new Date(),
-        updatedAt: new Date()
+        email: `${username}@example.com` // Default email pattern
       });
       
       // Remove password from response

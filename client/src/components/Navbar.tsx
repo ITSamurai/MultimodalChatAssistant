@@ -29,7 +29,7 @@ export const Navbar = () => {
                 Settings
               </Button>
             </Link>
-            {user.role === 'superadmin' && (
+            {(user.role === 'superadmin' || user.role === 'admin') && (
               <Link href="/admin">
                 <Button 
                   variant="ghost"

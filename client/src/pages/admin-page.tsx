@@ -28,8 +28,8 @@ export default function AdminPage() {
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState('user');
 
-  // Only allow superadmin to access this page
-  if (!user || user.role !== 'superadmin') {
+  // Only allow admin and superadmin users to access this page
+  if (!user || (user.role !== 'superadmin' && user.role !== 'admin')) {
     return <Redirect to="/" />;
   }
 
