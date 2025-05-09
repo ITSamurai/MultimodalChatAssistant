@@ -1281,6 +1281,11 @@ export default function ConfigPage() {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        {/* User Admin tab content */}
+        <TabsContent value="admin">
+          <UserManagement />
+        </TabsContent>
       </Tabs>
       
       <div className="flex justify-end mt-8 space-x-4">
