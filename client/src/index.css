@@ -44,14 +44,16 @@ svg text {
 :root {
   /* Core colors */
   --primary-blue: #0088cc; /* Primary blue for app */
+  --primary-light: #e6f7ff; /* Light blue for active items */
   --outgoing-bubble: #dcf8c6; /* Light green for outgoing messages */
   --outgoing-bubble-alt: #e1ffc7; /* Light green variant */
   --incoming-bubble: #ffffff; /* White for incoming messages */
-  --background-light: #f0f0f0; /* Light mode background */
+  --background-light: #f7f7f7; /* Light clean background */
+  --background-white: #ffffff; /* Pure white background */
   --background-dark: #1e1e1e; /* Dark mode background */
-  --text-primary: #000000; /* Primary text color */
-  --text-secondary: #999999; /* Secondary text, timestamps */
-  --border-light: #e0e0e0; /* Light gray borders */
+  --text-primary: #333333; /* Primary text color */
+  --text-secondary: #8a8a8a; /* Secondary text, timestamps */
+  --border-light: #e6e6e6; /* Light gray borders */
   
   /* Shadow */
   --bubble-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
@@ -311,15 +313,17 @@ button[type="submit"].chat-button:hover {
 
 /* Style for highlighted code and diagrams */
 pre, code {
-  background-color: rgba(145, 178, 242, 0.1);
-  border: 1px solid rgba(145, 178, 242, 0.2);
-  border-radius: 0.5rem;
+  background-color: #f5f7fa;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
 }
 
 .diagram-frame {
-  border: 1px solid rgba(145, 178, 242, 0.3);
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 12px rgba(3, 23, 140, 0.08);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  background-color: var(--background-white);
+  padding: 8px;
 }
 
 /* Button hover effects */
@@ -329,13 +333,13 @@ pre, code {
 
 .button-hover-effect:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(5, 64, 242, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Accent border for important elements */
 .accent-border {
-  border: 2px solid rgba(5, 131, 242, 0.5); /* Santorini-5 */
-  box-shadow: 0 0 0 2px rgba(5, 131, 242, 0.1);
+  border: 2px solid var(--primary-blue);
+  box-shadow: 0 0 0 2px rgba(0, 136, 204, 0.1);
 }
 
 /* Animations & transitions */
@@ -401,6 +405,16 @@ pre, code {
     background-color: var(--background-light);
     letter-spacing: 0.2px;
     line-height: 1.4;
+    
+    /* Clean background without any brownish tints */
+    background: linear-gradient(
+      135deg, 
+      rgba(230, 247, 255, 0.4) 0%, 
+      rgba(255, 255, 255, 0.9) 40%, 
+      rgba(240, 248, 255, 0.6) 80%, 
+      rgba(230, 247, 255, 0.4) 100%
+    );
+    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {

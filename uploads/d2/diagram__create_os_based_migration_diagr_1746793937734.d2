@@ -1,0 +1,19 @@
+direction: down
+
+// Set styles per node
+source: "Source OS Environment" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+target: "Target OS Environment" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+rivermeadow: "RiverMeadow SaaS"
+discovery: "OS Discovery"
+compatibility: "OS Compatibility Check"
+migration: "OS Migration"
+
+source -> discovery -> compatibility -> rivermeadow -> migration -> target
