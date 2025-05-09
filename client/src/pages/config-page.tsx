@@ -28,6 +28,13 @@ function UserManagement() {
     role: 'user'
   });
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [isEditingUser, setIsEditingUser] = useState(false);
+  const [editingUser, setEditingUser] = useState<{
+    id: number;
+    username: string;
+    password: string;
+    role: string;
+  } | null>(null);
   
   // Query to fetch users
   const {
@@ -73,6 +80,33 @@ function UserManagement() {
     }
   });
   
+  // Mutation to update a user
+  const updateUserMutation = useMutation({
+    mutationFn: async (userData: { id: number, data: any }) => {
+      const response = await apiRequest('PATCH', `/api/admin/users/${userData.id}`, userData.data);
+      if (!response.ok) {
+        throw new Error('Failed to update user');
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User updated",
+        description: "User information has been updated successfully.",
+      });
+      setEditingUser(null);
+      setIsEditingUser(false);
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update user",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Mutation to delete a user
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -101,6 +135,32 @@ function UserManagement() {
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
     addUserMutation.mutate(newUser);
+  };
+  
+  const handleEditUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    
+    // Create a copy of the user data, excluding id for the update
+    const { id, ...userData } = editingUser;
+    
+    // If password is empty, don't update it
+    if (!userData.password) {
+      const { password, ...dataWithoutPassword } = userData;
+      updateUserMutation.mutate({ id, data: dataWithoutPassword });
+    } else {
+      updateUserMutation.mutate({ id, data: userData });
+    }
+  };
+  
+  const openEditDialog = (userData: any) => {
+    setEditingUser({
+      id: userData.id,
+      username: userData.username,
+      password: '', // Don't include the current password
+      role: userData.role
+    });
+    setIsEditingUser(true);
   };
   
   const handleDeleteUser = (userId: number) => {

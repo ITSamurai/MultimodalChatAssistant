@@ -24,6 +24,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   updateUserLastLogin(id: number): Promise<void>;
+  updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
   deleteUser(id: number): Promise<void>;
   
   // Chat methods
@@ -149,6 +150,20 @@ export class MemStorage implements IStorage {
       user.lastLogin = new Date();
       this.users.set(id, user);
     }
+  }
+  
+  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (user) {
+      const updatedUser: User = {
+        ...user,
+        ...userData,
+        updatedAt: new Date()
+      };
+      this.users.set(id, updatedUser);
+      return updatedUser;
+    }
+    return undefined;
   }
   
   async deleteUser(id: number): Promise<void> {
@@ -441,6 +456,17 @@ export class DatabaseStorage implements IStorage {
     await db.update(users)
       .set({ lastLogin: new Date() })
       .where(eq(users.id, id));
+  }
+  
+  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set({
+        ...userData,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
   }
   
   async deleteUser(id: number): Promise<void> {
