@@ -1,0 +1,36 @@
+direction: down
+
+source: "Source OS" {
+
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+}
+
+target: "Target OS" {
+
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+}
+
+rivermeadow: "RiverMeadow Platform"
+discovery: "OS Discovery"
+migration: "OS Migration"
+validation: "Post-Migration Validation"
+
+source -> discovery -> rivermeadow -> migration -> validation -> target

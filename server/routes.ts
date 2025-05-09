@@ -531,11 +531,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
          latestUserMessage.toLowerCase().includes('show') &&
            latestUserMessage.toLowerCase().includes('visual'));
       
+      // Additional check for combined OS and VM based migration diagrams
+      const isCombinedMigrationRequest = 
+        latestUserMessage.toLowerCase().includes('combine') && 
+        latestUserMessage.toLowerCase().includes('os') && 
+        latestUserMessage.toLowerCase().includes('vm') ||
+        (latestUserMessage.toLowerCase().includes('combine') && 
+         latestUserMessage.toLowerCase().includes('both')) ||
+        (latestUserMessage.toLowerCase().includes('both') && 
+         latestUserMessage.toLowerCase().includes('in one')) ||
+        (latestUserMessage.toLowerCase().includes('create') && 
+         latestUserMessage.toLowerCase().includes('diagram') && 
+         latestUserMessage.toLowerCase().includes('both')) || 
+        (latestUserMessage.toLowerCase().includes('migration') && 
+         latestUserMessage.toLowerCase().includes('both') && 
+         latestUserMessage.toLowerCase().includes('one'));
+      
       // Check if the message is requesting a diagram generation
-      const isDiagramRequest = forceDiagram || isDiagramGenerationRequest(latestUserMessage);
+      const isDiagramRequest = forceDiagram || isDiagramGenerationRequest(latestUserMessage) || isCombinedMigrationRequest;
       
       if (forceDiagram) {
         console.log('Forcing diagram generation for RiverMeadow structure request');
+      }
+      
+      if (isCombinedMigrationRequest) {
+        console.log('Detected combined OS and VM migration diagram request');
       }
       
       console.log('Diagram generation requested?', isDiagramRequest ? (forceDiagram ? 'FORCED YES' : 'YES') : 'NO', 'for prompt:', JSON.stringify(latestUserMessage));
