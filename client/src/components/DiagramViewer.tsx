@@ -103,13 +103,6 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
     const baseNameWithoutExtension = baseFileName.split('.')[0];
     const downloadUrl = `/api/download-full-diagram/${baseNameWithoutExtension}?format=png&t=${Date.now()}`;
     
-    // Log information for debugging
-    console.log('Download information:', {
-      originalUrl: imageUrl,
-      downloadUrl: downloadUrl,
-      fileName: `${baseNameWithoutExtension}.png`
-    });
-    
     // Create download link
     const a = document.createElement('a');
     a.href = downloadUrl;
@@ -128,6 +121,21 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
   useEffect(() => {
     setZoomLevel(33); // Set initial zoom to 33% to make diagrams one-third original size
   }, []);
+  
+  // Common image style for both SVG and regular images
+  const imageStyle = {
+    transform: `scale(${zoomLevel / 100})`,
+    transformOrigin: 'top center', // Align from the top to prevent vertical overflow
+    transition: 'transform 0.2s ease-in-out',
+    border: '0',
+    width: '100%',
+    height: 'auto',
+    maxHeight: '400px',
+    padding: '0',
+    backgroundColor: 'white',
+    margin: '0 auto',
+    display: 'block'
+  };
   
   return (
     <Card className="overflow-hidden flex flex-col p-0 m-0 border-0">
@@ -160,7 +168,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
         </div>
       </div>
       
-      <div className="relative overflow-auto bg-background p-0 border-t flex justify-center">
+      <div className="relative overflow-hidden bg-background p-0 border-t flex justify-center items-start">
         {isLoading ? (
           <Skeleton className="h-32 w-full" />
         ) : error ? (
@@ -168,42 +176,17 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
             <p>Error loading diagram: {error}</p>
           </div>
         ) : (
-          <div className="overflow-hidden inline-block p-0 m-0 w-full" style={{ margin: 0, padding: 0 }}>
-            {/* Remove debug text to save space */}
+          <div className="overflow-hidden p-0 m-0 w-full" style={{ padding: 0, margin: 0 }}>
             {svgContent ? (
               <div
-                style={{ 
-                  transform: `scale(${zoomLevel / 100})`,
-                  transformOrigin: 'center center',
-                  transition: 'transform 0.2s ease-in-out',
-                  border: '0', // Remove border
-                  width: '100%', // Make it fit container width
-                  height: 'auto', // Maintain aspect ratio
-                  maxHeight: '400px', // Maximum height
-                  padding: '0', // No padding
-                  backgroundColor: 'white',
-                  margin: '0 auto', // Center horizontally
-                  display: 'block' // Block display for proper containment
-                }}
+                style={imageStyle}
                 dangerouslySetInnerHTML={{ __html: svgContent }}
               />
             ) : (
               <img 
                 src={imageUrl} 
                 alt={altText}
-                style={{ 
-                  transform: `scale(${zoomLevel / 100})`,
-                  transformOrigin: 'center center',
-                  transition: 'transform 0.2s ease-in-out',
-                  border: '0', // Remove border
-                  width: '100%', // Make it fit container width
-                  height: 'auto', // Maintain aspect ratio
-                  maxHeight: '400px', // Maximum height
-                  padding: '0', // No padding
-                  backgroundColor: 'white',
-                  margin: '0 auto', // Center horizontally
-                  display: 'block' // Block display for proper containment
-                }}
+                style={imageStyle}
                 onError={(e) => {
                   console.error('Image loading error:', e);
                   setError(`Failed to load diagram from ${imageUrl}`);
