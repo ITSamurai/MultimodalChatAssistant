@@ -1,0 +1,19 @@
+direction: down
+
+source: "On-Premise VMs" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+target: "Cloud VMs" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+rivermeadow: "RiverMeadow SaaS"
+assessment: "Assessment"
+planning: "Migration Planning"
+transfer: "Data Transfer"
+testing: "Testing & Validation"
+
+source -> assessment -> planning -> rivermeadow -> transfer -> testing -> target

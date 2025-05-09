@@ -130,7 +130,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
   }, []);
   
   return (
-    <Card className="overflow-hidden flex flex-col p-0">
+    <Card className="overflow-hidden flex flex-col p-0 mb-2">
       <div className="flex justify-between items-center px-4 py-2 bg-muted/50">
         <div className="text-sm font-medium">{altText}</div>
         <div className="flex space-x-1">
@@ -160,7 +160,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
         </div>
       </div>
       
-      <div className="relative overflow-auto bg-background p-4 border-t flex justify-center">
+      <div className="relative overflow-auto bg-background p-1 border-t flex justify-center">
         {isLoading ? (
           <Skeleton className="h-32 w-full" />
         ) : error ? (
@@ -168,7 +168,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
             <p>Error loading diagram: {error}</p>
           </div>
         ) : (
-          <div className="overflow-auto inline-block min-w-fit">
+          <div className="overflow-auto inline-block min-w-fit" style={{ margin: 0 }}>
             {/* Remove debug text to save space */}
             {svgContent ? (
               <div
@@ -178,9 +178,9 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
                   transition: 'transform 0.2s ease-in-out',
                   border: '1px solid #eee',
                   minWidth: '200px',
-                  minHeight: '100px', // Further reduced height
+                  minHeight: '80px', // Even smaller height
                   maxWidth: '900px', // Limit maximum width
-                  padding: '5px',
+                  padding: '0px', // No padding
                   backgroundColor: 'white'
                 }}
                 dangerouslySetInnerHTML={{ __html: svgContent }}
@@ -195,9 +195,9 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
                   transition: 'transform 0.2s ease-in-out',
                   border: '1px solid #eee',
                   minWidth: '200px',
-                  minHeight: '100px', // Further reduced height
+                  minHeight: '80px', // Even smaller height
                   maxWidth: '900px', // Limit maximum width
-                  padding: '5px'
+                  padding: '0px' // No padding
                 }}
                 onError={(e) => {
                   console.error('Image loading error:', e);
