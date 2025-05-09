@@ -6,20 +6,14 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, LogOut, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
-import { createChat, getUserChats, getChatMessages, Chat as ChatType } from '@/lib/api';
+import { 
+  createChat, 
+  getUserChats, 
+  getChatMessages, 
+  Chat as ChatType,
+  ChatMessage
+} from '@/lib/api';
 import { useQuery, useMutation } from '@tanstack/react-query';
-
-interface ChatMessage {
-  id?: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  references?: Array<{
-    type: string;
-    imagePath: string;
-    caption: string;
-    content: string;
-  }>;
-}
 
 export default function ChatPage() {
   const { user, logoutMutation } = useAuth();
@@ -74,11 +68,15 @@ export default function ChatPage() {
   } = useQuery({
     queryKey: ['/api/chats', activeChatId, 'messages'],
     queryFn: () => getChatMessages(parseInt(activeChatId!, 10)),
-    enabled: !!activeChatId,
-    onSuccess: (data) => {
-      setChatMessages(data);
-    }
+    enabled: !!activeChatId
   });
+  
+  // Update chat messages when the query data changes
+  useEffect(() => {
+    if (chatHistoryMessages && chatHistoryMessages.length > 0) {
+      setChatMessages(chatHistoryMessages);
+    }
+  }, [chatHistoryMessages]);
 
   // Log out handler
   const handleLogout = async () => {
@@ -131,22 +129,32 @@ export default function ChatPage() {
         
         <div className="flex-1 overflow-y-auto p-2">
           {/* Chat list */}
-          {Object.keys(chatHistory).map(chatId => (
-            <div
-              key={chatId}
-              className={`p-3 rounded-md mb-1 cursor-pointer hover:bg-muted ${
-                chatId === activeChatId ? 'bg-muted' : ''
-              }`}
-              onClick={() => setActiveChatId(chatId)}
-            >
-              <div className="font-medium truncate">
-                {chatHistory[chatId][0]?.content.substring(0, 30) || 'New Chat'}
-              </div>
-              <div className="text-xs text-muted-foreground truncate">
-                {new Date().toLocaleDateString()}
-              </div>
+          {isLoadingChats ? (
+            <div className="flex justify-center p-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-          ))}
+          ) : chats.length === 0 ? (
+            <div className="text-center p-4 text-muted-foreground">
+              No chats yet. Start a new conversation!
+            </div>
+          ) : (
+            chats.map(chat => (
+              <div
+                key={chat.id}
+                className={`p-3 rounded-md mb-1 cursor-pointer hover:bg-muted ${
+                  chat.id.toString() === activeChatId ? 'bg-muted' : ''
+                }`}
+                onClick={() => setActiveChatId(chat.id.toString())}
+              >
+                <div className="font-medium truncate">
+                  {chat.title || 'New Chat'}
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {new Date(chat.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))
+          )}
         </div>
         
         <div className="p-4 border-t mt-auto">

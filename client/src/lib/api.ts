@@ -1,6 +1,21 @@
 import { apiRequest } from "./queryClient";
-import { Document, DocumentImage, Message, ChatMessage } from "@shared/schema";
+import { Document, DocumentImage, Message, ChatMessage as DbChatMessage } from "@shared/schema";
 import { getFullUrl } from "./config";
+
+// Interface for frontend chat messages
+export interface ChatMessage {
+  id?: number;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  chatId?: number;
+  createdAt?: Date | string;
+  references?: Array<{
+    type: string;
+    imagePath: string;
+    caption: string;
+    content: string;
+  }>;
+}
 
 // Interface for chat with knowledge base
 export interface KnowledgeBaseChatMessage {

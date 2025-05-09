@@ -6,18 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { DiagramViewer } from './DiagramViewer';
 import { apiRequest } from '@/lib/queryClient';
-
-interface ChatMessage {
-  id?: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  references?: Array<{
-    type: string;
-    imagePath: string;
-    caption: string;
-    content: string;
-  }>;
-}
+import { ChatMessage } from '@/lib/api';
 
 interface KnowledgeBaseChatProps {
   chatId?: string;
@@ -30,6 +19,35 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
   const [isLoading, setIsLoading] = useState(false);
   const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
+  
+  // Load chat messages when the component mounts or chat ID changes
+  useEffect(() => {
+    if (chatId) {
+      const loadMessages = async () => {
+        try {
+          const response = await apiRequest('GET', `/api/chats/${chatId}/messages`);
+          if (response.ok) {
+            const loadedMessages = await response.json();
+            setMessages(loadedMessages);
+            
+            // Update parent component with loaded messages
+            if (onUpdateChatHistory) {
+              onUpdateChatHistory(loadedMessages);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading chat messages:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to load chat history.',
+            variant: 'destructive',
+          });
+        }
+      };
+      
+      loadMessages();
+    }
+  }, [chatId]);
 
   // Scroll to the bottom when messages change
   useEffect(() => {
