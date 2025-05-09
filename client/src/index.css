@@ -273,6 +273,23 @@ button[type="submit"].chat-button:hover {
   border-left: 3px solid var(--primary-blue);
 }
 
+/* Action buttons in chat list */
+.chat-list-item .h-6.w-6 {
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-list-item .h-3.w-3 {
+  width: 14px;
+  height: 14px;
+}
+
+.chat-list-item:hover .opacity-0 {
+  opacity: 1 !important;
+}
+
 /* Chat avatar */
 .chat-avatar {
   width: 40px; /* Avatar: 40px */

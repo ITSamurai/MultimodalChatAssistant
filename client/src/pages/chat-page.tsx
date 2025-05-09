@@ -349,36 +349,31 @@ export default function ChatPage() {
                         {new Date(chat.createdAt).toLocaleDateString()}
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem 
-                          onClick={(e) => startEditingTitle(chat.id, chat.title, e)}
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          <span>Rename</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteChat(chat.id, e);
-                          }}
-                          className="text-red-500 focus:text-red-500"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Delete</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditingTitle(chat.id, chat.title, e);
+                        }}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700 hover:bg-red-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteChat(chat.id, e);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
