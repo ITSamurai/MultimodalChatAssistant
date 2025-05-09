@@ -206,6 +206,7 @@ function UserManagement() {
         </CardHeader>
         <CardContent>
           <div className="flex justify-end mb-4">
+            {/* Add User Dialog */}
             <Dialog open={isAddingUser} onOpenChange={setIsAddingUser}>
               <DialogTrigger asChild>
                 <Button>
@@ -279,6 +280,80 @@ function UserManagement() {
                 </form>
               </DialogContent>
             </Dialog>
+            
+            {/* Edit User Dialog */}
+            <Dialog open={isEditingUser} onOpenChange={setIsEditingUser}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit User</DialogTitle>
+                  <DialogDescription>
+                    Update user information and permissions.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                {editingUser && (
+                  <form onSubmit={handleEditUser} className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-username">Username</Label>
+                      <Input
+                        id="edit-username"
+                        value={editingUser.username}
+                        onChange={(e) => setEditingUser({...editingUser, username: e.target.value})}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-password">
+                        Password <span className="text-sm text-muted-foreground">(leave empty to keep current)</span>
+                      </Label>
+                      <Input
+                        id="edit-password"
+                        type="password"
+                        value={editingUser.password}
+                        onChange={(e) => setEditingUser({...editingUser, password: e.target.value})}
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-role">Role</Label>
+                      <Select
+                        value={editingUser.role}
+                        onValueChange={(value) => setEditingUser({...editingUser, role: value})}
+                      >
+                        <SelectTrigger id="edit-role">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="admin">Administrator</SelectItem>
+                          {user?.role === 'superadmin' && (
+                            <SelectItem value="superadmin">Super Administrator</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsEditingUser(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={updateUserMutation.isPending}>
+                        {updateUserMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Updating...
+                          </>
+                        ) : (
+                          'Update User'
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
           
           {isLoading ? (
@@ -315,15 +390,40 @@ function UserManagement() {
                       </TableCell>
                       <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
-                          disabled={deleteUserMutation.isPending}
-                        >
-                          <Trash className="h-4 w-4 text-red-500" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
+                        <div className="flex justify-end space-x-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => openEditDialog(user)}
+                            disabled={updateUserMutation.isPending}
+                          >
+                            <svg 
+                              className="h-4 w-4 text-blue-500" 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              width="24" 
+                              height="24" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                              <path d="m15 5 4 4"/>
+                            </svg>
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.id)}
+                            disabled={deleteUserMutation.isPending}
+                          >
+                            <Trash className="h-4 w-4 text-red-500" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

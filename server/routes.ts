@@ -154,6 +154,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Update a user (admin/superadmin only)
+  app.patch('/api/admin/users/:id', requireTokenAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user || !['admin', 'superadmin'].includes(req.user.role)) {
+        return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+      }
+      
+      const userId = parseInt(req.params.id);
+      
+      // Get the user to update
+      const userToUpdate = await storage.getUser(userId);
+      if (!userToUpdate) {
+        return res.status(404).json({ error: 'User not found.' });
+      }
+      
+      // Role-based restrictions
+      // Only superadmins can modify other superadmins
+      if (userToUpdate.role === 'superadmin' && req.user.role !== 'superadmin') {
+        return res.status(403).json({ error: 'You do not have permission to modify a superadmin.' });
+      }
+      
+      // Only superadmins can promote users to superadmin
+      if (req.body.role === 'superadmin' && req.user.role !== 'superadmin') {
+        return res.status(403).json({ error: 'Only superadmins can promote users to superadmin.' });
+      }
+      
+      // Prepare update data
+      const updateData: Partial<User> = {};
+      
+      if (req.body.username && req.body.username !== userToUpdate.username) {
+        // Check if new username already exists (if changing username)
+        const existingUser = await storage.getUserByUsername(req.body.username);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ error: 'Username already exists.' });
+        }
+        updateData.username = req.body.username;
+      }
+      
+      if (req.body.password) {
+        // Update password if provided
+        updateData.password = await hashPassword(req.body.password);
+      }
+      
+      if (req.body.role) {
+        updateData.role = req.body.role;
+      }
+      
+      // Update the user
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: 'User not found.' });
+      }
+      
+      // Return the user without password
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: 'An error occurred while updating the user.' });
+    }
+  });
+  
   // Delete a user (admin/superadmin only)
   app.delete('/api/admin/users/:id', requireTokenAuth, async (req: Request, res: Response) => {
     try {
