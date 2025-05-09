@@ -115,16 +115,16 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
   // Render different message types
   const renderMessage = (message: ChatMessage, index: number) => {
     const isUser = message.role === 'user';
+    const messageDate = message.createdAt ? new Date(message.createdAt) : new Date();
+    const messageTime = messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     return (
       <div
         key={message.id || index}
-        className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+        className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} mb-2 fade-in`}
       >
         <div
-          className={`max-w-[80%] rounded-lg p-4 ${
-            isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'
-          }`}
+          className={isUser ? 'user-message' : 'assistant-message'}
         >
           <div className="whitespace-pre-wrap">{message.content}</div>
           
@@ -132,7 +132,7 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
           {!isUser && message.references && message.references.length > 0 && (
             <div className="mt-4">
               {message.references.map((reference, refIndex) => (
-                <div key={refIndex} className="mt-2">
+                <div key={refIndex} className="mt-2 diagram-frame">
                   {reference.type === 'image' && (
                     <DiagramViewer 
                       diagramPath={reference.imagePath} 
@@ -144,6 +144,7 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
             </div>
           )}
         </div>
+        <span className="message-timestamp">{messageTime}</span>
       </div>
     );
   };
@@ -153,22 +154,22 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
       <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center text-center p-8">
-            <div className="max-w-md">
+            <div className="max-w-md scale-in">
               <h3 className="text-xl font-semibold mb-2">
-                RiverMeadow Knowledge Assistant
+                Welcome to the Chat
               </h3>
               <p className="text-muted-foreground mb-4">
-                Ask questions about RiverMeadow, cloud migration processes, or request diagrams.
+                Ask questions or request diagrams about various topics.
               </p>
               <div className="flex flex-col gap-2">
-                <ExamplePrompt onClick={() => setPrompt("What is RiverMeadow and how does it work?")}>
-                  What is RiverMeadow and how does it work?
+                <ExamplePrompt onClick={() => setPrompt("Tell me about cloud migration strategies")}>
+                  Tell me about cloud migration strategies
                 </ExamplePrompt>
-                <ExamplePrompt onClick={() => setPrompt("What cloud platforms are supported by RiverMeadow?")}>
-                  What cloud platforms are supported by RiverMeadow?
+                <ExamplePrompt onClick={() => setPrompt("What are the benefits of OS-based migrations?")}>
+                  What are the benefits of OS-based migrations?
                 </ExamplePrompt>
-                <ExamplePrompt onClick={() => setPrompt("Draw a diagram of the OS-based migration process")}>
-                  Draw a diagram of the OS-based migration process
+                <ExamplePrompt onClick={() => setPrompt("Create a diagram showing VM-based migration process")}>
+                  Create a diagram showing VM-based migration process
                 </ExamplePrompt>
               </div>
             </div>
@@ -207,7 +208,7 @@ function ExamplePrompt({ children, onClick }: { children: React.ReactNode; onCli
   return (
     <button
       onClick={onClick}
-      className="text-left px-4 py-3 rounded-lg bg-muted/50 hover:bg-muted text-sm transition-colors"
+      className="text-left px-4 py-3 rounded-lg bg-primary/10 hover:bg-primary/15 text-sm transition-colors border border-primary/20 text-primary-foreground ripple"
     >
       {children}
     </button>
