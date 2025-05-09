@@ -614,63 +614,95 @@ export default function ConfigPage() {
           >
             <ChevronLeftIcon className="h-4 w-4 mr-1" /> Back
           </Button>
-          <h1 className="text-3xl font-bold">Configuration Settings</h1>
+          <h1 className="text-3xl font-bold">
+            {user?.role === 'admin' ? 'User Management' : 'Configuration Settings'}
+          </h1>
         </div>
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <svg 
-            className="h-4 w-4" 
-            width="24" 
-            height="24" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          <span>Configure AI model and diagram settings</span>
+          {user?.role === 'admin' ? (
+            <>
+              <svg
+                className="h-4 w-4"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              <span>Manage users and permissions</span>
+            </>
+          ) : (
+            <>
+              <svg 
+                className="h-4 w-4" 
+                width="24" 
+                height="24" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <span>Configure AI model and diagram settings</span>
+            </>
+          )}
         </div>
       </div>
       
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-6 mb-8">
-          <TabsTrigger value="model">
-            <BrainCircuitIcon className="h-4 w-4 mr-2" /> AI Model
-          </TabsTrigger>
-          <TabsTrigger value="prompt">
-            <MessageSquareTextIcon className="h-4 w-4 mr-2" /> Prompts
-          </TabsTrigger>
-          <TabsTrigger value="retrieval">
-            <SlidersIcon className="h-4 w-4 mr-2" /> Retrieval
-          </TabsTrigger>
-          <TabsTrigger value="diagrams">
-            <Image className="h-4 w-4 mr-2" /> Diagrams
-          </TabsTrigger>
-          <TabsTrigger value="interface">
-            <SettingsIcon className="h-4 w-4 mr-2" /> Interface
-          </TabsTrigger>
-          <TabsTrigger value="admin">
-            <svg
-              className="h-4 w-4 mr-2"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            User Admin
-          </TabsTrigger>
+      <Tabs defaultValue={user?.role === 'admin' ? 'admin' : activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className={`grid ${user?.role === 'admin' ? 'grid-cols-1' : 'grid-cols-6'} mb-8`}>
+          {user?.role === 'superadmin' && (
+            <>
+              <TabsTrigger value="model">
+                <BrainCircuitIcon className="h-4 w-4 mr-2" /> AI Model
+              </TabsTrigger>
+              <TabsTrigger value="prompt">
+                <MessageSquareTextIcon className="h-4 w-4 mr-2" /> Prompts
+              </TabsTrigger>
+              <TabsTrigger value="retrieval">
+                <SlidersIcon className="h-4 w-4 mr-2" /> Retrieval
+              </TabsTrigger>
+              <TabsTrigger value="diagrams">
+                <Image className="h-4 w-4 mr-2" /> Diagrams
+              </TabsTrigger>
+              <TabsTrigger value="interface">
+                <SettingsIcon className="h-4 w-4 mr-2" /> Interface
+              </TabsTrigger>
+            </>
+          )}
+          {(user?.role === 'admin' || user?.role === 'superadmin') && (
+            <TabsTrigger value="admin">
+              <svg
+                className="h-4 w-4 mr-2"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              User Admin
+            </TabsTrigger>
+          )}
         </TabsList>
         
         {/* Model Settings Tab */}
