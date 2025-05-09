@@ -181,8 +181,8 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
         )}
       </div>
       
-      <div className="border-t p-4 mt-auto">
-        <form onSubmit={handleSubmit} className="flex w-full gap-2">
+      <div className="p-4 mt-auto">
+        <form onSubmit={handleSubmit} className="flex w-full gap-3 chat-input-container">
           <Textarea
             placeholder="Ask a question or request a diagram..."
             value={prompt}
@@ -194,7 +194,7 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
               type="submit" 
               size="icon" 
               disabled={isLoading || !prompt.trim()}
-              className="h-12 w-12"
+              className="h-12 w-12 chat-button"
             >
               {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
@@ -203,10 +203,11 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
               size="icon"
               variant="outline"
               onClick={handleGenerateDiagram}
-              className="h-12 w-12"
-              title="Generate a diagram"
+              className="h-12 w-12 chat-button"
+              aria-label="Generate a diagram"
             >
               <ImagePlus className="h-5 w-5" />
+              <span className="sr-only">Generate a diagram</span>
             </Button>
           </div>
         </form>
