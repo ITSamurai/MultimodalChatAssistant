@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 export const Navbar = () => {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
+  
+  // Debug log to see what's happening with the user
+  console.log("Current user in Navbar:", user);
 
   const handleLogout = () => {
     logoutMutation.mutate();

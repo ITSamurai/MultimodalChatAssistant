@@ -28,8 +28,12 @@ export default function AdminPage() {
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState('user');
 
+  // Debug the current user
+  console.log("Current user in AdminPage:", user);
+  
   // Only allow admin and superadmin users to access this page
   if (!user || (user.role !== 'superadmin' && user.role !== 'admin')) {
+    console.log("Access denied to admin page. User role:", user?.role);
     return <Redirect to="/" />;
   }
 
