@@ -305,14 +305,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Chat endpoint for AI responses with diagram generation
   app.post('/api/chat', requireTokenAuth, async (req: Request, res: Response) => {
     try {
-      const { messages, model, temperature, maxTokens } = req.body;
+      const { messages, model, temperature, maxTokens, chatId } = req.body;
       
       if (!messages || !Array.isArray(messages) || messages.length === 0) {
         return res.status(400).json({ error: 'Invalid or missing messages' });
       }
+
+      // Ensure we have a valid chatId
+      if (!chatId || typeof chatId !== 'number') {
+        return res.status(400).json({ error: 'Valid chatId is required' });
+      }
       
       // Log the chat request
-      console.log('Received chat request:', JSON.stringify({ messages, model, temperature, maxTokens }));
+      console.log('Received chat request:', JSON.stringify({ chatId, messages, model, temperature, maxTokens }));
       
       // Validate that we have at least one message
       const validatedMessages = messages.filter(msg => 
@@ -327,11 +332,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Validated ' + validatedMessages.length + ' messages, proceeding with chat...');
       
-      // Get the latest user message
+      // Get the latest user message (it should be the last one in the array)
       const latestUserMessage = validatedMessages
         .slice()
         .reverse()
         .find(m => m.role === 'user')?.content || '';
+      
+      // Get the latest message object (for storing in DB)
+      const latestMessage = validatedMessages[validatedMessages.length - 1];
+      
+      // Store the latest user message in the database for this chat
+      if (latestMessage.role === 'user') {
+        await storage.createChatMessage({
+          chatId,
+          content: latestMessage.content,
+          role: latestMessage.role,
+          references: null
+        });
+      }
       
       console.log('Latest user message:', latestUserMessage);
       
@@ -393,10 +411,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Create the OpenAI API request with enhanced messages that reference the diagram
-      let enhancedMessages = [...validatedMessages];
+      // Retrieve the chat history from the database
+      const chatHistory = await storage.getChatMessages(chatId);
+      console.log(`Retrieved ${chatHistory.length} messages from chat history`);
       
-      // If a diagram was generated, append an assistant message that mentions it
+      // Convert the database chat messages to the format expected by OpenAI
+      const historyMessages = chatHistory.map(msg => ({
+        role: msg.role as 'system' | 'user' | 'assistant',
+        content: msg.content
+      }));
+      
+      // Create the OpenAI API request with chat history and the latest message
+      // Note: We use the history from the database instead of the passed messages
+      // to ensure we have the complete conversation context
+      let enhancedMessages = [...historyMessages];
+      
+      // If a diagram was generated, append a system message that mentions it
       if (diagramReference) {
         // Add a system message before the user's message to instruct the AI about the diagram
         enhancedMessages.push({
@@ -436,7 +466,15 @@ Explain that this diagram was generated based on their request, and they can dow
         response.references = [diagramReference];
       }
       
-      console.log('Successfully generated response from knowledge base');
+      // Store the AI response in the database
+      await storage.createChatMessage({
+        chatId,
+        content: aiResponse,
+        role: 'assistant',
+        references: diagramReference ? [diagramReference] : null
+      });
+      
+      console.log('Successfully generated and stored response from knowledge base');
       return res.status(200).json(response);
     } catch (err) {
       const error = err as Error;

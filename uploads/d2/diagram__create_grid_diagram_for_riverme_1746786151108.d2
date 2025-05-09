@@ -1,0 +1,42 @@
+direction: down
+
+source: "Source Environment" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+rivermeadow: "RiverMeadow Platform" {
+  style.fill: "#e8f5e9"
+  style.stroke: "#4caf50"
+}
+
+discovery: "Discovery" {
+  style.fill: "#fff8e1"
+  style.stroke: "#ffb300"
+}
+
+migration: "Migration" {
+  style.fill: "#e3f2fd"
+  style.stroke: "#2196f3"
+}
+
+orchestration: "Orchestration" {
+  style.fill: "#f3e5f5"
+  style.stroke: "#9c27b0"
+}
+
+api: "API Services" {
+  style.fill: "#fbe9e7"
+  style.stroke: "#ff5722"
+}
+
+target: "Target Cloud" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+source -> discovery -> rivermeadow
+rivermeadow -> migration
+rivermeadow -> orchestration
+rivermeadow -> api
+migration -> target

@@ -1,0 +1,74 @@
+direction: down
+
+source: "On-Premises Environment" {
+
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+}
+
+os_analysis: "OS Analysis" {
+
+  style.fill: "#f0f5ff"
+  style.stroke: "#2f54eb"
+
+}
+
+compatibility_check: "Compatibility Check" {
+
+  style.fill: "#f0f5ff"
+  style.stroke: "#2f54eb"
+
+}
+
+middleware_config: "Middleware Configuration" {
+
+  style.fill: "#f0f5ff"
+  style.stroke: "#2f54eb"
+
+}
+
+data_migration: "Data Migration" {
+
+  style.fill: "#fff7e6"
+  style.stroke: "#fa8c16"
+
+}
+
+application_migration: "Application Migration" {
+
+  style.fill: "#fff7e6"
+  style.stroke: "#fa8c16"
+
+}
+
+validation: "Validation & Testing" {
+
+  style.fill: "#fffbe6"
+  style.stroke: "#faad14"
+
+}
+
+target: "Cloud Environment" {
+
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+}
+
+source -> os_analysis -> compatibility_check -> middleware_config -> data_migration
+data_migration -> application_migration -> validation -> target

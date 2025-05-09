@@ -1,0 +1,41 @@
+direction: down
+
+api_gateway: "API Gateway" {
+
+  style.fill: "#fff7e6"
+  style.stroke: "#faad14"
+
+}
+
+auth_service: "Authentication Service" {
+
+  style.fill: "#fff1f0"
+  style.stroke: "#f5222d"
+
+}
+
+data_service: "Data Service" {
+
+  style.fill: "#f0f5ff"
+  style.stroke: "#2f54eb"
+
+}
+
+logging_service: "Logging Service" {
+
+  style.fill: "#f9f0ff"
+  style.stroke: "#722ed1"
+
+}
+
+client_app: "Client Application" {
+
+  style.fill: "#e6fffb"
+  style.stroke: "#13c2c2"
+
+}
+
+client_app -> api_gateway
+api_gateway -> auth_service
+auth_service -> data_service
+data_service -> logging_service

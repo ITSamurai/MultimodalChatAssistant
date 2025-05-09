@@ -1,0 +1,37 @@
+direction: down
+
+source: "Source VM" {
+
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+}
+
+target: "Target VM" {
+
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+}
+
+rivermeadow: "RiverMeadow SaaS"
+discovery: "Discovery"
+migration: "Migration"
+validation: "Validation"
+completion: "Completion"
+
+source -> discovery -> rivermeadow -> migration -> validation -> completion -> target
