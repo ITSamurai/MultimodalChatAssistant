@@ -5,6 +5,7 @@ import multer from 'multer';
 import { createServer, Server } from 'http';
 import { setupAuth, requireTokenAuth, hashPassword } from './auth';
 import { storage } from './storage';
+import { User } from '@shared/schema';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { initializePineconeIndex } from './services/pinecone.service';
