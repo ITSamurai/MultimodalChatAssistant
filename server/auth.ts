@@ -336,21 +336,39 @@ export async function setupAuth(app: Express) {
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
+        console.log('Verifying token auth for /api/user');
         const user = await verifyAuthToken(token, req);
         
         if (user) {
+          console.log('Token auth successful for user:', {
+            id: user.id,
+            username: user.username,
+            role: user.role
+          });
+          
           // Set token in Authorization header to ensure client always has fresh token
           const newToken = generateAuthToken(user.id, req);
           res.setHeader('Authorization', `Bearer ${newToken}`);
           
           return res.json(user);
+        } else {
+          console.log('Token auth failed: user not found');
         }
+      } else {
+        console.log('No authorization header found for token auth');
       }
       
       // Fall back to session-based authentication
       if (!req.isAuthenticated()) {
+        console.log('Session auth failed: user not authenticated');
         return res.status(401).json({ message: "Not authenticated" });
       }
+      
+      console.log('Session auth successful for user:', {
+        id: req.user.id,
+        username: req.user.username,
+        role: req.user.role
+      });
       
       res.json(req.user);
     } catch (error) {

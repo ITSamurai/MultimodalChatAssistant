@@ -43,6 +43,7 @@ export async function apiRequest<T = any>(
 
   // Get auth token from localStorage
   const authToken = localStorage.getItem('authToken');
+  console.log(`API Request to ${url} - Auth token exists: ${Boolean(authToken)}`);
 
   // Prepare request options
   const requestOptions: RequestInit = {
@@ -60,6 +61,7 @@ export async function apiRequest<T = any>(
       ...requestOptions.headers,
       'Authorization': `Bearer ${authToken}`,
     };
+    console.log(`Using token for ${url}: ${authToken.substring(0, 15)}...`);
   }
 
   // Add body if provided
