@@ -1,0 +1,44 @@
+direction: down
+
+source_os: "Source OS Environment" {
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+}
+
+source_vs: "Source Virtual Server" {
+
+  style.fill: "#fffbeb"
+  style.stroke: "#faad14"
+
+}
+
+target_os: "Target OS Cloud" {
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+}
+
+target_vs: "Target VS Cloud" {
+
+  style.fill: "#f0f5ff"
+  style.stroke: "#2f54eb"
+
+}
+
+rivermeadow_os: "RiverMeadow OS SaaS"
+rivermeadow_vs: "RiverMeadow VS SaaS"
+
+discovery_os: "OS Discovery"
+discovery_vs: "VS Discovery"
+
+migration_os: "OS Migration"
+migration_vs: "VS Migration"
+
+// OS Based Migration Path
+source_os -> discovery_os -> rivermeadow_os -> migration_os -> target_os
+
+// VS Based Migration Path
+source_vs -> discovery_vs -> rivermeadow_vs -> migration_vs -> target_vs

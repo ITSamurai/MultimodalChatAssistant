@@ -74,6 +74,11 @@ export async function updateChatTitle(chatId: number, title: string): Promise<Ch
   return response.json();
 }
 
+// Delete a chat
+export async function deleteChat(chatId: number): Promise<void> {
+  await apiRequest("DELETE", `/api/chats/${chatId}`);
+}
+
 // Upload document
 export async function uploadDocument(file: File): Promise<{ document: Document, imageCount: number }> {
   const formData = new FormData();

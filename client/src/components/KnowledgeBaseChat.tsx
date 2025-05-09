@@ -149,8 +149,8 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
   };
 
   return (
-    <Card className="flex flex-col h-[700px] border-0 shadow-none">
-      <CardContent className="flex-1 overflow-y-auto p-4">
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center text-center p-8">
             <div className="max-w-md">
@@ -179,9 +179,9 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
             <div ref={endOfMessagesRef} />
           </>
         )}
-      </CardContent>
+      </div>
       
-      <CardFooter className="border-t p-4">
+      <div className="border-t p-4 mt-auto">
         <form onSubmit={handleSubmit} className="flex w-full gap-2">
           <Textarea
             placeholder="Ask a question or request a diagram..."
@@ -210,8 +210,8 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
             </Button>
           </div>
         </form>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }
 
