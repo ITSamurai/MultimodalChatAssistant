@@ -101,8 +101,16 @@ function saveTokensToStorage() {
       tokens[token] = data;
     });
     
+    console.log(`Saving ${authTokens.size} tokens to storage`);
+    
     // Store in storage
-    storage.saveConfig({ auth_tokens: tokens });
+    storage.saveConfig({ auth_tokens: tokens })
+      .then(() => {
+        console.log('Auth tokens saved successfully');
+      })
+      .catch(err => {
+        console.error('Error in saving tokens promise:', err);
+      });
   } catch (error) {
     console.error('Error saving auth tokens:', error);
   }
@@ -112,7 +120,10 @@ function saveTokensToStorage() {
 async function loadTokensFromStorage() {
   try {
     const config = await storage.getConfig();
+    console.log('Loaded config:', Object.keys(config));
+    
     const tokens = config.auth_tokens || {};
+    console.log(`Found ${Object.keys(tokens).length} tokens in storage`);
     
     // Clear existing tokens
     authTokens.clear();
@@ -120,13 +131,30 @@ async function loadTokensFromStorage() {
     // Add tokens from storage
     Object.entries(tokens).forEach(([token, data]) => {
       const tokenData = data as TokenData;
+      
+      if (!tokenData) {
+        console.warn(`Invalid token data for token: ${token.substring(0, 10)}...`);
+        return;
+      }
+      
       if (tokenData.expiresAt > Date.now()) {
         // Only load non-expired tokens
         authTokens.set(token, tokenData);
+        console.log(`Loaded token for user ${tokenData.userId}, expires: ${new Date(tokenData.expiresAt).toISOString()}`);
+      } else {
+        console.log(`Skipping expired token for user ${tokenData.userId}, expired: ${new Date(tokenData.expiresAt).toISOString()}`);
       }
     });
     
     console.log(`Loaded ${authTokens.size} valid auth tokens from storage`);
+    
+    // For debugging, show what's in the authTokens map
+    if (authTokens.size > 0) {
+      console.log('Auth tokens loaded:');
+      authTokens.forEach((data, token) => {
+        console.log(`- Token ${token.substring(0, 10)}... for user ${data.userId}, expires: ${new Date(data.expiresAt).toISOString()}`);
+      });
+    }
   } catch (error) {
     console.error('Error loading auth tokens:', error);
   }

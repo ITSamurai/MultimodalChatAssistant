@@ -38,19 +38,46 @@ function UserManagement() {
   
   // Query to fetch users
   const {
-    data: users,
+    data: users = [],
     isLoading,
-    refetch
+    refetch,
+    isError,
+    error
   } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/users');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
+      try {
+        console.log('Fetching users, auth token exists:', Boolean(localStorage.getItem('authToken')));
+        const token = localStorage.getItem('authToken');
+        console.log('Using token (first 10 chars):', token ? token.substring(0, 10) + '...' : 'No token');
+        
+        const response = await apiRequest('GET', '/api/admin/users');
+        
+        if (!response.ok) {
+          console.error('Users API error:', response.status);
+          toast({
+            title: 'Error fetching users',
+            description: `Server returned status ${response.status}`,
+            variant: 'destructive'
+          });
+          throw new Error(`Failed to fetch users: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log(`Fetched ${data.length} users successfully`);
+        return data;
+      } catch (err) {
+        console.error('Error in users query:', err);
+        toast({
+          title: 'Error fetching users',
+          description: err instanceof Error ? err.message : 'Unknown error',
+          variant: 'destructive'
+        });
+        throw err;
       }
-      return await response.json();
     },
-    enabled: user?.role === 'superadmin' || user?.role === 'admin'
+    enabled: Boolean(user) && (user?.role === 'superadmin' || user?.role === 'admin'),
+    retry: 1
   });
   
   // Mutation to add a new user
