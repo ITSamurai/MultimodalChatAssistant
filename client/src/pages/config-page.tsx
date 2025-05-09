@@ -528,6 +528,7 @@ export default function ConfigPage() {
   const [activeTab, setActiveTab] = useState("model");
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
+  const { user } = useAuth();
   
   // Query to fetch current config
   const { data, isLoading } = useQuery({
@@ -1320,30 +1321,32 @@ export default function ConfigPage() {
         </TabsContent>
       </Tabs>
       
-      <div className="flex justify-end mt-8 space-x-4">
-        <Button 
-          variant="outline" 
-          onClick={handleReset}
-          disabled={isLoading || saveConfigMutation.isPending}
-        >
-          <RefreshCwIcon className="h-4 w-4 mr-2" /> Reset to Default
-        </Button>
-        <Button 
-          onClick={handleSave}
-          disabled={isLoading || saveConfigMutation.isPending}
-        >
-          {saveConfigMutation.isPending ? (
-            <>
-              <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <SaveIcon className="h-4 w-4 mr-2" /> Save Settings
-            </>
-          )}
-        </Button>
-      </div>
+      {user?.role === 'superadmin' && (
+        <div className="flex justify-end mt-8 space-x-4">
+          <Button 
+            variant="outline" 
+            onClick={handleReset}
+            disabled={isLoading || saveConfigMutation.isPending}
+          >
+            <RefreshCwIcon className="h-4 w-4 mr-2" /> Reset to Default
+          </Button>
+          <Button 
+            onClick={handleSave}
+            disabled={isLoading || saveConfigMutation.isPending}
+          >
+            {saveConfigMutation.isPending ? (
+              <>
+                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <SaveIcon className="h-4 w-4 mr-2" /> Save Settings
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
