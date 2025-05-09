@@ -22,10 +22,11 @@ function fixD2SpacingIssues(script: string): string {
   // Remove any "padding" properties which are not supported in this D2 version
   script = script.replace(/\s*padding\s*:\s*\d+\s*/g, '');
   
-  // Fix style attributes in the global style block (should NOT have style. prefix)
+  // Fix style attributes in the global style block
+  // IMPORTANT: For this specific D2 version (0.6.5), we DO need style. prefix in global style blocks
   script = script.replace(/style\s*{\s*([^}]*)}/g, (match, styleContent) => {
-    // Remove style. prefix from global style block
-    const fixedContent = styleContent.replace(/\s*style\.(fill|stroke|stroke-width|font-size|border-radius)\s*:/g, ' $1:');
+    // Add style. prefix to global style block properties if missing
+    const fixedContent = styleContent.replace(/\s+(fill|stroke|stroke-width|font-size|border-radius)(\s*:)/g, ' style.$1$2');
     return `style {\n${fixedContent}\n}`;
   });
 
@@ -246,8 +247,8 @@ export async function generateD2Script(prompt: string): Promise<{
       "Important rules:\n" +
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
       "2. For application architecture diagrams, use 'direction: down' as the first line.\n" +
-      "3. For global style blocks, use style without prefix: style { fill: \"#color\", stroke: \"#color\" }.\n" +
-      "4. For node-specific style attributes, use 'style.' prefix: style.fill, style.stroke, style.font-size, etc.\n" +
+      "3. IMPORTANT: For our D2 version (0.6.5), you MUST use 'style.' prefix even in global style blocks.\n" +
+      "4. Style example: style { style.fill: \"#color\", style.stroke: \"#color\" }\n" +
       "5. DO NOT use the 'padding' property anywhere in your diagram - this will cause the diagram to fail.\n" +
       "6. For layout configuration, use proper syntax: layout { rankSep: 120 }\n" +
       "7. Use -> for connections between components to show data flow or dependencies.\n" +
@@ -311,7 +312,7 @@ export async function generateD2Script(prompt: string): Promise<{
       "1. Use D2 language syntax, not mermaid or any other format.\n" +
       "2. For organizational diagrams, use 'direction: down' as the first line to represent hierarchy.\n" +
       "3. Keep node definitions simple with just the label.\n" +
-      "4. Use proper style attributes with the 'style.' prefix: 'style.fill', 'style.stroke', 'style.font-size', etc.\n" +
+      "4. IMPORTANT: For our D2 version (0.6.5), you MUST use 'style.' prefix in all style properties.\n" +
       "5. For layout configuration, use proper syntax: layout { rankSep: 120 }\n" +
       "5. Use -> for connections between components to show reporting lines or relationships.\n" +
       "6. DO NOT include a title block as our D2 version doesn't support it.\n" +
@@ -347,7 +348,7 @@ export async function generateD2Script(prompt: string): Promise<{
       "2. Start with 'direction: down' at the top of your diagram for better flow visualization.\n" +
       "3. Add layout and style configurations using proper syntax. Be sure to use style.*property names:\n" +
       "   layout { rankSep: 120 }\n" +
-      "   style { fill: \"#color\", stroke: \"#color\" }\n" +
+      "   style { style.fill: \"#color\", style.stroke: \"#color\" }\n" +
       "   source: \"Source\" { style.fill: \"#color\", style.stroke: \"#color\" }\n" +
       "4. Keep node definitions simple with just the label.\n" +
       "5. Always create connections between components using the -> operator.\n" +
@@ -361,11 +362,11 @@ export async function generateD2Script(prompt: string): Promise<{
       "layout { rankSep: 120 }\n\n" +
       "// Global styles\n" +
       "style {\n" +
-      "  fill: \"#f5f5f5\"\n" +
-      "  stroke: \"#333333\"\n" +
-      "  stroke-width: 2\n" +
-      "  font-size: 18\n" +
-      "  border-radius: 6\n" +
+      "  style.fill: \"#f5f5f5\"\n" +
+      "  style.stroke: \"#333333\"\n" +
+      "  style.stroke-width: 2\n" +
+      "  style.font-size: 18\n" +
+      "  style.border-radius: 6\n" +
       "}\n\n" +
       "// Custom styles for specific node types\n" +
       "source: \"Source Environment\" {\n" +

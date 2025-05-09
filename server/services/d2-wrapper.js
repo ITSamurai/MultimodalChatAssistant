@@ -79,8 +79,9 @@ function preprocessD2Script(filePath) {
     content = content.replace(badStyleBlockRegex, (match, styleContent) => {
       console.log('Found style block to fix');
       
-      // For global style block, we do NOT use style. prefix
-      const fixedStyleContent = styleContent;
+      // IMPORTANT: For this specific D2 version (0.6.5), we DO need style. prefix in global style blocks
+      // This is the opposite of the standard D2 convention but required for our installation
+      const fixedStyleContent = styleContent.replace(/(\s+)(fill|stroke|stroke-width|font-size|border-radius)(\s*:)/g, '$1style.$2$3');
       
       // Create a proper style block
       return 'style {\n' + fixedStyleContent + '\n}';
