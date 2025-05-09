@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ['/api/user'],
     queryFn: async () => {
       try {
+        console.log('Fetching user data, auth token exists:', Boolean(localStorage.getItem('authToken')));
         const response = await apiRequest('GET', '/api/user');
         
         if (response.status === 401) {
@@ -55,7 +56,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error('Failed to fetch user data');
         }
         
-        return await response.json();
+        const userData = await response.json();
+        console.log('User data fetched successfully:', {
+          id: userData.id,
+          username: userData.username,
+          role: userData.role,
+          roleType: typeof userData.role
+        });
+        
+        // Ensure the role is properly set
+        if (!userData.role) {
+          console.warn('User data is missing role property');
+        }
+        
+        return userData;
       } catch (error) {
         console.error('Error fetching user:', error);
         return null;

@@ -50,7 +50,8 @@ export const Navbar = () => {
               return null; // Return null so nothing is rendered
             })()}
             
-            {(user.role === 'superadmin' || user.role === 'admin') && (
+            {/* Show Admin button if user has admin or superadmin role */}
+            {isAdmin && (
               <Link href="/admin">
                 <Button 
                   variant="ghost"
