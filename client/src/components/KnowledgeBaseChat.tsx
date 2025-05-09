@@ -135,7 +135,7 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
     return (
       <div
         key={message.id || index}
-        className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} mb-2 fade-in`}
+        className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} mb-1 fade-in`}
       >
         <div
           className={isUser ? 'user-message' : 'assistant-message'}
@@ -144,9 +144,9 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
           
           {/* Render references (diagrams, images, etc.) */}
           {!isUser && message.references && message.references.length > 0 && (
-            <div className="mt-4">
+            <div className="mt-2">
               {message.references.map((reference, refIndex) => (
-                <div key={refIndex} className="mt-2 diagram-frame">
+                <div key={refIndex} className="mt-1 diagram-frame">
                   {reference.type === 'image' && (
                     <DiagramViewer 
                       diagramPath={reference.imagePath} 
