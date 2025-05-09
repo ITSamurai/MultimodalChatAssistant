@@ -214,10 +214,6 @@ export default function AuthPage() {
               </Card>
             </TabsContent>
           </Tabs>
-          
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>For testing, use: <strong>username: scott, password: tiger</strong></p>
-          </div>
         </div>
       </div>
       
