@@ -169,7 +169,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
         </div>
       </div>
       
-      <div className="relative overflow-hidden bg-background p-0 border-t flex justify-center items-start">
+      <div className="relative overflow-auto bg-background p-0 border-t flex justify-center items-start h-[400px]">
         {isLoading ? (
           <Skeleton className="h-[400px] w-full" />
         ) : error ? (
@@ -177,7 +177,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
             <p>Error loading diagram: {error}</p>
           </div>
         ) : (
-          <div className="overflow-hidden p-0 m-0 w-full" style={{ padding: 0, margin: 0 }}>
+          <div className="overflow-auto p-0 m-0 w-full" style={{ padding: 0, margin: 0 }}>
             {svgContent ? (
               <div
                 style={imageStyle}
