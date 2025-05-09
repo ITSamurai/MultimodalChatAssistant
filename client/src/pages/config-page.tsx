@@ -201,6 +201,29 @@ function UserManagement() {
       return;
     }
     
+    // Find the user to check if it's a superadmin
+    const userToDelete = users.find((u: any) => u.id === userId);
+    
+    // Don't allow admin users to delete superadmins
+    if (userToDelete?.role === 'superadmin' && user?.role === 'admin') {
+      toast({
+        title: "Permission denied",
+        description: "Admin users cannot delete superadmin accounts.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Don't allow deleting superadmin accounts at all
+    if (userToDelete?.role === 'superadmin') {
+      toast({
+        title: "Cannot delete superadmin",
+        description: "Superadmin accounts cannot be deleted through the UI.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
       deleteUserMutation.mutate(userId);
     }
@@ -445,7 +468,11 @@ function UserManagement() {
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleDeleteUser(user.id)}
-                            disabled={deleteUserMutation.isPending}
+                            disabled={
+                              deleteUserMutation.isPending || 
+                              user.role === 'superadmin' ||
+                              (user?.role === 'admin' && user.role === 'superadmin')
+                            }
                           >
                             <Trash className="h-4 w-4 text-red-500" />
                             <span className="sr-only">Delete</span>
