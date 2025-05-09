@@ -40,6 +40,30 @@ svg text {
   shape-rendering: geometricPrecision;
 }
 
+/* Define Santorini theme colors */
+:root {
+  --santorini-blue-1: #0460D9; /* Main primary color - deep blue */
+  --santorini-blue-2: #023373; /* Dark blue - good for text */
+  --santorini-blue-3: #0597F2; /* Medium blue - good for accents */
+  --santorini-blue-4: #05AFF2; /* Light blue - good for highlights */
+  --santorini-sand: #D9BBB4;   /* Soft sand color - good for backgrounds */
+  
+  /* Override theme defaults with Santorini colors */
+  --primary: 213 96% 43%; /* Santorini-1 */
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 202 96% 48%; /* Santorini-3 */
+  --secondary-foreground: 0 0% 100%;
+  
+  --accent: 196 96% 48%; /* Santorini-4 */
+  --accent-foreground: 213 96% 22%; /* Santorini-2 */
+  
+  --muted: 11 32% 97%; /* Lighter version of Santorini-5 */
+  --muted-foreground: 213 96% 22%; /* Santorini-2 */
+  
+  --border: 11 32% 92%; /* Lighter version of Santorini-5 */
+}
+
 /* Custom tooltip positioning - moves tooltips to top right */
 [title]:hover::before,
 [title]:hover::after,
@@ -62,7 +86,7 @@ svg text {
   top: -35px;
   right: 0;
   padding: 0.5rem 0.75rem;
-  background-color: #333;
+  background-color: var(--santorini-blue-2);
   color: white;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -80,37 +104,142 @@ svg text {
 
 /* Style for input container in chat */
 .chat-input-container {
-  @apply bg-muted/30 p-3 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-muted/40;
-  backdrop-filter: blur(2px);
+  background-color: rgba(217, 187, 180, 0.15) !important; /* Santorini-5 with transparency */
+  padding: 0.75rem;
+  border-radius: 1rem !important;
+  box-shadow: 0 2px 8px rgba(2, 51, 114, 0.05) !important; /* Santorini-2 shadow */
+  transition: all 0.2s ease;
+  border: 1px solid rgba(217, 187, 180, 0.3) !important; /* Santorini-5 border */
+  backdrop-filter: blur(3px);
+}
+
+.chat-input-container:hover {
+  box-shadow: 0 4px 12px rgba(2, 51, 114, 0.08) !important; /* Santorini-2 shadow */
+  border-color: rgba(5, 175, 242, 0.2) !important; /* Santorini-4 border */
 }
 
 /* Style for input field */
 textarea {
   border-radius: 0.75rem !important;
-  border-color: hsl(var(--border)) !important;
+  border-color: rgba(217, 187, 180, 0.5) !important; /* Santorini-5 */
   resize: none;
+  background-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 textarea:focus {
-  border-color: hsl(var(--primary)) !important;
-  box-shadow: 0 0 0 1px hsla(var(--primary), 0.1) !important;
+  border-color: var(--santorini-blue-3) !important; /* Santorini-3 */
+  box-shadow: 0 0 0 2px rgba(5, 151, 242, 0.15) !important; /* Santorini-3 */
 }
 
 /* Style for placeholder text */
 textarea::placeholder {
-  color: hsl(var(--muted-foreground)) !important;
-  opacity: 0.6 !important;
+  color: rgba(2, 51, 114, 0.5) !important; /* Santorini-2 with transparency */
+  opacity: 0.7 !important;
 }
 
 /* Style for buttons in chat */
 .chat-button {
-  @apply rounded-lg shadow-sm hover:shadow-md transition-all duration-200;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 2px 4px rgba(4, 96, 216, 0.1) !important; /* Santorini-1 */
+  transition: all 0.2s ease-in-out;
 }
 
 .chat-button:hover {
   transform: translateY(-1px);
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background-color: var(--santorini-blue-1) !important; /* Santorini-1 */
+  color: white !important;
+  box-shadow: 0 4px 8px rgba(4, 96, 216, 0.2) !important; /* Santorini-1 */
+}
+
+/* Style submit button differently from diagram button */
+button[type="submit"].chat-button {
+  background-color: var(--santorini-blue-1) !important; /* Santorini-1 */
+  color: white !important;
+}
+
+button[type="submit"].chat-button:hover {
+  background-color: var(--santorini-blue-3) !important; /* Santorini-3 */
+}
+
+/* Chat message styles */
+.user-message {
+  background-color: rgba(4, 96, 216, 0.12) !important; /* Santorini-1 with transparency */
+  color: var(--santorini-blue-2) !important; /* Santorini-2 */
+  padding: 0.75rem 1rem;
+  border-radius: 1rem 1rem 0 1rem;
+  align-self: flex-end;
+  max-width: 80%;
+  box-shadow: 0 2px 4px rgba(2, 51, 114, 0.05); /* Subtle shadow */
+  border: 1px solid rgba(4, 96, 216, 0.08); /* Santorini-1 with transparency */
+}
+
+.assistant-message {
+  background-color: rgba(217, 187, 180, 0.12) !important; /* Santorini-5 with transparency */
+  color: var(--santorini-blue-2) !important; /* Santorini-2 */
+  padding: 0.75rem 1rem;
+  border-radius: 1rem 1rem 1rem 0;
+  align-self: flex-start;
+  max-width: 80%;
+  box-shadow: 0 2px 4px rgba(2, 51, 114, 0.05); /* Subtle shadow */
+  border: 1px solid rgba(217, 187, 180, 0.15); /* Santorini-5 with transparency */
+}
+
+.chat-messages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Add a gradient background with Santorini colors */
+.app-gradient-bg {
+  background: linear-gradient(
+    135deg, 
+    rgba(217, 187, 180, 0.15) 0%, 
+    rgba(255, 255, 255, 0.8) 30%, 
+    rgba(5, 175, 242, 0.08) 70%, 
+    rgba(4, 96, 216, 0.1) 100%
+  );
+  background-attachment: fixed;
+}
+
+/* Sidebar styling with Santorini theme */
+.sidebar {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-right: 1px solid rgba(217, 187, 180, 0.3);
+  box-shadow: 0 0 20px rgba(2, 51, 114, 0.05);
+}
+
+/* Chat list items */
+.chat-list-item {
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.chat-list-item:hover {
+  background-color: rgba(5, 151, 242, 0.08);
+}
+
+.chat-list-item.active {
+  background-color: rgba(4, 96, 216, 0.12);
+  color: var(--santorini-blue-2);
+  font-weight: 500;
+}
+
+/* Style for highlighted code and diagrams */
+pre, code {
+  background-color: rgba(217, 187, 180, 0.1);
+  border: 1px solid rgba(217, 187, 180, 0.2);
+  border-radius: 0.5rem;
+}
+
+.diagram-frame {
+  border: 1px solid rgba(217, 187, 180, 0.3);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(2, 51, 114, 0.08);
 }
 
 @layer base {
@@ -119,6 +248,14 @@ textarea::placeholder {
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased text-foreground;
+    background: linear-gradient(
+      135deg, 
+      rgba(217, 187, 180, 0.15) 0%, 
+      rgba(255, 255, 255, 0.8) 30%, 
+      rgba(5, 175, 242, 0.08) 70%, 
+      rgba(4, 96, 216, 0.1) 100%
+    );
+    background-attachment: fixed;
   }
 }

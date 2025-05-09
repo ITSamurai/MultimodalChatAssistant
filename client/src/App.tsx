@@ -41,8 +41,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ChatTitlesProvider>
-          <Router />
-          <Toaster />
+          <div className="min-h-screen app-gradient-bg">
+            <Router />
+            <Toaster />
+          </div>
         </ChatTitlesProvider>
       </AuthProvider>
     </QueryClientProvider>
