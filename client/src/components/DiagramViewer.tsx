@@ -124,9 +124,9 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
     alert('If the diagram PNG is empty, please try right-clicking on the diagram and selecting "Save Image As..." instead.');
   };
   
-  // Set initial zoom level to 50% (half size) when component mounts
+  // Set initial zoom level to 33% (one-third size) when component mounts
   useEffect(() => {
-    setZoomLevel(50); // Set initial zoom to 50% to make diagrams half size
+    setZoomLevel(33); // Set initial zoom to 33% to make diagrams one-third original size
   }, []);
   
   return (
@@ -162,15 +162,14 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
       
       <div className="relative overflow-auto bg-background p-4 border-t flex justify-center">
         {isLoading ? (
-          <Skeleton className="h-80 w-full" />
+          <Skeleton className="h-32 w-full" />
         ) : error ? (
           <div className="text-center p-8 text-destructive">
             <p>Error loading diagram: {error}</p>
           </div>
         ) : (
           <div className="overflow-auto inline-block min-w-fit">
-            <div className="text-xs text-gray-500 mb-2">Debug: Loading from {imageUrl}</div>
-            
+            {/* Remove debug text to save space */}
             {svgContent ? (
               <div
                 style={{ 
@@ -178,9 +177,10 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
                   transformOrigin: 'center center',
                   transition: 'transform 0.2s ease-in-out',
                   border: '1px solid #eee',
-                  minWidth: '300px',
-                  minHeight: '150px', // Reduced height
-                  padding: '10px',
+                  minWidth: '200px',
+                  minHeight: '100px', // Further reduced height
+                  maxWidth: '900px', // Limit maximum width
+                  padding: '5px',
                   backgroundColor: 'white'
                 }}
                 dangerouslySetInnerHTML={{ __html: svgContent }}
@@ -194,8 +194,10 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
                   transformOrigin: 'center center',
                   transition: 'transform 0.2s ease-in-out',
                   border: '1px solid #eee',
-                  minWidth: '300px',
-                  minHeight: '150px' // Reduced height
+                  minWidth: '200px',
+                  minHeight: '100px', // Further reduced height
+                  maxWidth: '900px', // Limit maximum width
+                  padding: '5px'
                 }}
                 onError={(e) => {
                   console.error('Image loading error:', e);
