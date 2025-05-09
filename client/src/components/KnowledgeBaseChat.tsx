@@ -196,7 +196,7 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
         )}
       </div>
       
-      <div className="p-4 mt-auto">
+      <div className="border-t mt-auto p-4">
         <form onSubmit={handleSubmit} className="flex w-full gap-3 chat-input-container">
           <Textarea
             placeholder="Ask a question or request a diagram... (Cmd+Enter or Ctrl+Enter to send)"

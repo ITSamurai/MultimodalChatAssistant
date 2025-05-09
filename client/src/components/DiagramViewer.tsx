@@ -124,6 +124,11 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
     alert('If the diagram PNG is empty, please try right-clicking on the diagram and selecting "Save Image As..." instead.');
   };
   
+  // Set initial zoom level to 50% (half size) when component mounts
+  useEffect(() => {
+    setZoomLevel(50); // Set initial zoom to 50% to make diagrams half size
+  }, []);
+  
   return (
     <Card className="overflow-hidden flex flex-col p-0">
       <div className="flex justify-between items-center px-4 py-2 bg-muted/50">
@@ -174,7 +179,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
                   transition: 'transform 0.2s ease-in-out',
                   border: '1px solid #eee',
                   minWidth: '300px',
-                  minHeight: '200px',
+                  minHeight: '150px', // Reduced height
                   padding: '10px',
                   backgroundColor: 'white'
                 }}
@@ -190,7 +195,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
                   transition: 'transform 0.2s ease-in-out',
                   border: '1px solid #eee',
                   minWidth: '300px',
-                  minHeight: '200px'
+                  minHeight: '150px' // Reduced height
                 }}
                 onError={(e) => {
                   console.error('Image loading error:', e);
