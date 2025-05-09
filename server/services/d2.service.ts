@@ -202,74 +202,85 @@ export async function d2ToPng(
       await d2ToSvg(d2FilePath, options);
     }
     
-    // Run the wrapper script directly with await to ensure the PNG is generated properly
+    // Use Sharp for SVG to PNG conversion - more reliable in Replit environments
     try {
-      // Use Puppeteer directly to convert the SVG to PNG - this approach is more reliable
-      // Use dynamic import for ESM compatibility
-      const puppeteer = await import('puppeteer');
+      // Import sharp dynamically
+      const sharp = await import('sharp');
       
-      const browser = await puppeteer.default.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        headless: true
-      });
+      // Read the SVG file
+      const svgContent = fs.readFileSync(svgFilePath, 'utf8');
       
+      // Convert SVG to PNG using sharp
+      await sharp.default(Buffer.from(svgContent))
+        .resize({ 
+          width: 1200,  // Set reasonably large dimensions for diagram clarity
+          height: 800,
+          fit: 'contain',
+          background: { r: 255, g: 255, b: 255, alpha: 1 } // White background
+        })
+        .png()
+        .toFile(pngFilePath);
+      
+      console.log(`PNG saved to ${pngFilePath} using Sharp`);
+      
+      // Return the PNG data
+      const pngBuffer = fs.readFileSync(pngFilePath);
+      return pngBuffer;
+    } catch (sharpError) {
+      console.error('Error converting with Sharp:', sharpError);
+      
+      // Create a fallback PNG using the fallback SVG
       try {
-        const page = await browser.newPage();
+        // Read the D2 script
+        const d2Content = fs.readFileSync(d2FilePath, 'utf8');
         
-        // Read the SVG file
-        const svgContent = fs.readFileSync(svgFilePath, 'utf8');
+        // Generate a fallback SVG
+        const fallbackSvgPath = path.join(SVG_DIRECTORY, 'fallback_' + path.basename(svgFilePath));
+        generateD2FallbackSVG(d2Content, fallbackSvgPath);
         
-        // Create an HTML page with the SVG embedded
-        await page.setContent(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <style>
-                body { margin: 0; padding: 20px; background: white; }
-                svg { max-width: 100%; height: auto; }
-              </style>
-            </head>
-            <body>
-              ${svgContent}
-            </body>
-          </html>
-        `);
+        // Try to convert this simpler SVG to PNG
+        try {
+          const sharp = await import('sharp');
+          const fallbackSvgContent = fs.readFileSync(fallbackSvgPath, 'utf8');
+          
+          await sharp.default(Buffer.from(fallbackSvgContent))
+            .resize({ 
+              width: 800, 
+              height: 600,
+              fit: 'contain',
+              background: { r: 255, g: 255, b: 255, alpha: 1 }
+            })
+            .png()
+            .toFile(pngFilePath);
+          
+          console.log(`Created a fallback PNG at ${pngFilePath} using fallback SVG`);
+          const pngBuffer = fs.readFileSync(pngFilePath);
+          return pngBuffer;
+        } catch (fallbackSharpError) {
+          console.error('Error creating fallback PNG with Sharp:', fallbackSharpError);
+          
+          // Last resort: a simple valid 1x1 PNG
+          const transparentPng = Buffer.from(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+            'base64'
+          );
+          
+          fs.writeFileSync(pngFilePath, transparentPng);
+          console.log(`Created a basic fallback PNG at ${pngFilePath}`);
+          return transparentPng;
+        }
+      } catch (fallbackError) {
+        console.error('Error in all PNG fallback methods:', fallbackError);
         
-        // Wait for any rendering to complete
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Take a screenshot as PNG
-        await page.screenshot({
-          path: pngFilePath,
-          fullPage: true,
-          omitBackground: false,
-          type: 'png'
-        });
-        
-        console.log(`PNG saved to ${pngFilePath}`);
-        
-        // Return the PNG data
-        const pngBuffer = fs.readFileSync(pngFilePath);
-        return pngBuffer;
-      } finally {
-        await browser.close();
-      }
-    } catch (puppeteerError) {
-      console.error('Error converting with Puppeteer:', puppeteerError);
-      
-      // Create a simple valid PNG file if conversion failed
-      try {
-        // This is a 1x1 transparent PNG
+        // Ultimate fallback - 1x1 transparent PNG
         const transparentPng = Buffer.from(
           'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
           'base64'
         );
         
         fs.writeFileSync(pngFilePath, transparentPng);
-        console.log(`Created a fallback PNG at ${pngFilePath}`);
+        console.log(`Created a basic fallback PNG at ${pngFilePath}`);
         return transparentPng;
-      } catch (fallbackError) {
-        console.error('Error creating fallback PNG:', fallbackError);
       }
     }
     

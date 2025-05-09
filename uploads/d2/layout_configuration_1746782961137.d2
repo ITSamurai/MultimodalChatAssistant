@@ -1,0 +1,31 @@
+direction: down
+
+# Layout configuration
+layout {
+  rankSep: 120
+}
+
+# General style for all elements
+style {
+  fill: "#f5f5f5"
+  stroke: "#333333"
+  stroke-width: 2
+  font-size: 18
+  border-radius: 6
+  padding: 20
+}
+
+# Nodes representing components in the OS-based migration process
+source: "Source Machine" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}agent: "Migration Agent"
+rivermeadow: "RiverMeadow SaaS"
+osprep: "OS Preparation"
+data: "Data Transfer"
+target: "Target Machine" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}# Connections between components
+source -> agent -> rivermeadow
+rivermeadow -> osprep -> data -> target

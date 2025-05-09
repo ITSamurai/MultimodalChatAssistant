@@ -19,6 +19,9 @@ function fixD2SpacingIssues(script: string): string {
     return `# Setting rank separation\ndirection: right\n\nlayout {\n  rankSep: ${value}\n}`;
   });
   
+  // Remove any "padding" properties which are not supported in this D2 version
+  script = script.replace(/\s*padding\s*:\s*\d+\s*/g, '');
+  
   // Remove any floating "100" numbers that might be incorrectly generated
   script = script.replace(/^\s*100\s*$/gm, '');
   
