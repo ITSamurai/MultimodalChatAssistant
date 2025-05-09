@@ -144,9 +144,9 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
           
           {/* Render references (diagrams, images, etc.) */}
           {!isUser && message.references && message.references.length > 0 && (
-            <div className="mt-2">
+            <div className="mt-1">
               {message.references.map((reference, refIndex) => (
-                <div key={refIndex} className="mt-1 diagram-frame">
+                <div key={refIndex} className="diagram-frame">
                   {reference.type === 'image' && (
                     <DiagramViewer 
                       diagramPath={reference.imagePath} 

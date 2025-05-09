@@ -130,7 +130,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
   }, []);
   
   return (
-    <Card className="overflow-hidden flex flex-col p-0 mb-2">
+    <Card className="overflow-hidden flex flex-col p-0 m-0 border-0">
       <div className="flex justify-between items-center px-4 py-2 bg-muted/50">
         <div className="text-sm font-medium">{altText}</div>
         <div className="flex space-x-1">
@@ -160,7 +160,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
         </div>
       </div>
       
-      <div className="relative overflow-auto bg-background p-1 border-t flex justify-center">
+      <div className="relative overflow-auto bg-background p-0 border-t flex justify-center">
         {isLoading ? (
           <Skeleton className="h-32 w-full" />
         ) : error ? (
@@ -168,7 +168,7 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
             <p>Error loading diagram: {error}</p>
           </div>
         ) : (
-          <div className="overflow-auto inline-block min-w-fit" style={{ margin: 0 }}>
+          <div className="overflow-hidden inline-block p-0 m-0 w-full" style={{ margin: 0, padding: 0 }}>
             {/* Remove debug text to save space */}
             {svgContent ? (
               <div
@@ -176,12 +176,14 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
                   transform: `scale(${zoomLevel / 100})`,
                   transformOrigin: 'center center',
                   transition: 'transform 0.2s ease-in-out',
-                  border: '1px solid #eee',
-                  minWidth: '200px',
-                  minHeight: '80px', // Even smaller height
-                  maxWidth: '900px', // Limit maximum width
-                  padding: '0px', // No padding
-                  backgroundColor: 'white'
+                  border: '0', // Remove border
+                  width: '100%', // Make it fit container width
+                  height: 'auto', // Maintain aspect ratio
+                  maxHeight: '400px', // Maximum height
+                  padding: '0', // No padding
+                  backgroundColor: 'white',
+                  margin: '0 auto', // Center horizontally
+                  display: 'block' // Block display for proper containment
                 }}
                 dangerouslySetInnerHTML={{ __html: svgContent }}
               />
@@ -193,11 +195,14 @@ export function DiagramViewer({ diagramPath, altText = 'Generated Diagram', onRe
                   transform: `scale(${zoomLevel / 100})`,
                   transformOrigin: 'center center',
                   transition: 'transform 0.2s ease-in-out',
-                  border: '1px solid #eee',
-                  minWidth: '200px',
-                  minHeight: '80px', // Even smaller height
-                  maxWidth: '900px', // Limit maximum width
-                  padding: '0px' // No padding
+                  border: '0', // Remove border
+                  width: '100%', // Make it fit container width
+                  height: 'auto', // Maintain aspect ratio
+                  maxHeight: '400px', // Maximum height
+                  padding: '0', // No padding
+                  backgroundColor: 'white',
+                  margin: '0 auto', // Center horizontally
+                  display: 'block' // Block display for proper containment
                 }}
                 onError={(e) => {
                   console.error('Image loading error:', e);

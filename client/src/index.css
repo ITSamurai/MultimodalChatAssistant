@@ -355,12 +355,13 @@ pre, code {
 }
 
 .diagram-frame {
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   background-color: var(--background-white);
-  padding: 2px;
-  margin: 4px 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
 }
 
 /* Button hover effects */
