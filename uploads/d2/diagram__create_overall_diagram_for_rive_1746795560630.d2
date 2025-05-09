@@ -1,0 +1,54 @@
+direction: down
+
+on_prem: "On-Premise Environment" {
+
+  style.fill: "#ffe7ba"
+  style.stroke: "#fa8c16"
+
+}
+
+cloud: "Cloud Environment" {
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+}
+
+rivermeadow_saas: "RiverMeadow SaaS Platform" {
+
+  style.fill: "#f0f5ff"
+  style.stroke: "#2f54eb"
+
+}
+
+discovery: "Discovery Service" {
+
+  style.fill: "#f9f0ff"
+  style.stroke: "#722ed1"
+
+}
+
+migration: "Migration Service" {
+
+  style.fill: "#fff7e6"
+  style.stroke: "#faad14"
+
+}
+
+orchestration: "Orchestration" {
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+}
+
+monitoring: "Monitoring" {
+
+  style.fill: "#fff0f6"
+  style.stroke: "#eb2f96"
+
+}
+
+on_prem -> discovery -> rivermeadow_saas -> migration -> cloud
+rivermeadow_saas -> orchestration
+rivermeadow_saas -> monitoring

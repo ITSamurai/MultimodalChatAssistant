@@ -270,9 +270,12 @@ export default function ChatPage() {
       {/* Sidebar */}
       <div className="w-64 border-r flex flex-col sidebar">
         <div className="p-4 border-b app-header">
-          <p className="text-sm text-white">
-            {user?.username}
-          </p>
+          <div className="flex items-center">
+            <span className="text-sm text-white opacity-80 mr-2">Logged in User:</span>
+            <span className="text-sm text-white font-semibold">
+              {user?.username}
+            </span>
+          </div>
         </div>
         
         <div className="p-4">
