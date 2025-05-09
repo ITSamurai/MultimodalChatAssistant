@@ -124,11 +124,13 @@ textarea {
   border-color: rgba(145, 178, 242, 0.5) !important; /* Santorini-3 */
   resize: none;
   background-color: rgba(255, 255, 255, 0.8) !important;
+  color: rgba(3, 23, 140, 0.7) !important; /* Harmonized with placeholder, but slightly darker */
 }
 
 textarea:focus {
   border-color: var(--santorini-blue-4) !important; /* Santorini-4 */
   box-shadow: 0 0 0 2px rgba(5, 108, 242, 0.15) !important; /* Santorini-4 */
+  color: rgba(3, 23, 140, 0.8) !important; /* Slightly darker when focused */
 }
 
 /* Style for placeholder text */

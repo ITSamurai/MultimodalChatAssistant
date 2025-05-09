@@ -195,7 +195,12 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
                 autoResizeTextarea(e);
               }}
               placeholder="Ask about the document..."
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 resize-none min-h-12 max-h-36 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
+              className="w-full rounded-lg px-4 py-3 pr-12 resize-none min-h-12 max-h-36 transition"
+              style={{
+                borderColor: "rgba(145, 178, 242, 0.5)",
+                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                color: "rgba(3, 23, 140, 0.7)"
+              }}
               disabled={sendMessageMutation.isPending}
             />
             <Button

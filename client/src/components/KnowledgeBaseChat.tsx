@@ -189,27 +189,14 @@ export function KnowledgeBaseChat({ chatId, onUpdateChatHistory }: KnowledgeBase
             onChange={(e) => setPrompt(e.target.value)}
             className="min-h-[60px] flex-1 text-foreground placeholder:text-muted-foreground/70"
           />
-          <div className="flex flex-col gap-2">
-            <Button 
-              type="submit" 
-              size="icon" 
-              disabled={isLoading || !prompt.trim()}
-              className="h-12 w-12 chat-button"
-            >
-              {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-            </Button>
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={handleGenerateDiagram}
-              className="h-12 w-12 chat-button"
-              aria-label="Generate a diagram"
-            >
-              <ImagePlus className="h-5 w-5" />
-              <span className="sr-only">Generate a diagram</span>
-            </Button>
-          </div>
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={isLoading || !prompt.trim()}
+            className="h-12 w-12 chat-button"
+          >
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+          </Button>
         </form>
       </div>
     </div>

@@ -1,0 +1,58 @@
+direction: down
+
+source: "On-Premise Environment" {
+
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+
+}
+
+linux: "Linux Servers" {
+
+  style.fill: "#e1f5fe"
+  style.stroke: "#0288d1"
+
+}
+
+windows: "Windows Servers" {
+
+  style.fill: "#e8eaf6"
+  style.stroke: "#3f51b5"
+
+}
+
+discovery: "Discovery Phase"
+assessment: "Assessment Phase"
+migration: "Migration Phase"
+
+target: "Cloud Environment" {
+
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+
+}
+
+source -> linux
+source -> windows
+
+linux -> discovery
+windows -> discovery
+
+discovery -> assessment
+assessment -> migration
+
+migration -> target
