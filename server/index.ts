@@ -10,6 +10,24 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
+// Add www to non-www redirect middleware
+app.use((req, res, next) => {
+  const host = req.headers.host;
+  
+  // Check if request is coming from www subdomain
+  if (host && host.startsWith('www.')) {
+    // Extract the domain without www
+    const nonWwwDomain = host.replace(/^www\./, '');
+    
+    // Perform 301 (permanent) redirect to non-www domain
+    // Preserve protocol, path, and query parameters
+    return res.redirect(301, `${req.protocol}://${nonWwwDomain}${req.originalUrl}`);
+  }
+  
+  // Continue to next middleware if not www
+  next();
+});
+
 // Set up CORS - during development, allow all origins
 app.use(cors({
   origin: true, // Allow all origins for now

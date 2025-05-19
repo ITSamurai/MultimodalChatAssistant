@@ -1,0 +1,25 @@
+direction: down
+
+source_vm: "Source VM Environment" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+source_os: "Source OS Environment" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+target: "Target Cloud" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+rivermeadow: "RiverMeadow SaaS"
+discovery: "Discovery"
+vm_migration: "VM Migration"
+os_migration: "OS Migration"
+
+source_vm -> discovery -> rivermeadow -> vm_migration -> target
+source_os -> discovery
+discovery -> os_migration -> target

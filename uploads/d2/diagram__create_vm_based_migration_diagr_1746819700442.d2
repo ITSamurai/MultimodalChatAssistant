@@ -1,0 +1,19 @@
+direction: down
+
+source: "Source VM" {
+  style.fill: "#e6f7ff"
+  style.stroke: "#1890ff"
+}
+
+target: "Target VM" {
+  style.fill: "#f6ffed"
+  style.stroke: "#52c41a"
+}
+
+rivermeadow: "RiverMeadow SaaS"
+discovery: "Discovery"
+migration: "Migration"
+orchestration: "Orchestration"
+validation: "Validation"
+
+source -> discovery -> rivermeadow -> migration -> orchestration -> validation -> target
