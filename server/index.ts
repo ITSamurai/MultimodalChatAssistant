@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Handle both www and non-www domains
+// Special handling for both www and non-www domains
 app.use((req, res, next) => {
   const host = req.headers.host;
   
@@ -19,14 +19,18 @@ app.use((req, res, next) => {
   
   // Check if request is coming from www subdomain
   if (host && host.startsWith('www.')) {
-    console.log('Handling www subdomain request');
+    console.log('Handling www subdomain request directly');
     
-    // Instead of redirecting (which might not work with SSL issues),
-    // we'll just continue processing the request for any domain variant
-    // This way both www and non-www versions serve the same content
+    // Extract the non-www domain to use for redirect
+    const nonWwwDomain = host.replace(/^www\./, '');
+    
+    // For the production environment, redirect to the non-www domain
+    // This handles the case where requests reach our app but need to be redirected
+    console.log(`Redirecting from ${host} to ${nonWwwDomain}`);
+    return res.redirect(301, `${req.protocol}://${nonWwwDomain}${req.originalUrl}`);
   }
   
-  // Continue to next middleware for all requests
+  // Continue to next middleware for all other requests
   next();
 });
 
