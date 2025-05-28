@@ -1,0 +1,17 @@
+direction: down
+
+source_os: "Source OS" {
+  style.fill: "#e0f7fa"
+  style.stroke: "#00bcd4"
+}
+
+target_os: "Target OS" {
+  style.fill: "#f1f8e9"
+  style.stroke: "#8bc34a"
+}
+
+rivermeadow: "RiverMeadow Platform"
+discovery: "OS Discovery"
+migration: "OS Migration"
+
+source_os -> discovery -> rivermeadow -> migration -> target_os
