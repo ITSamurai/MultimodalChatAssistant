@@ -1,0 +1,41 @@
+{
+  "data": {
+    "url": "https://buy.am/",
+    "click_selector": "#active-orders-btn-delivery",
+    "query_selector": "#query",
+    "shops_selector": "a[href=\"/shops\"]",
+    "query_expected_style": "caret-color: transparent !important;",
+    "shops_expected_style": "min-width: 786px; max-width: 786px; transform: translate3d(-1588px, 0px, 0px);",
+    "supermarkets_selector": "a[href=\"/supermarkets\"]",
+    "supermarkets_expected_style": "min-width: 786px; max-width: 786px; transform: translate3d(-1604px, 0px, 0px);"
+  },
+  "steps": [
+    {
+      "url": "https://buy.am/",
+      "action": "navigate"
+    },
+    {
+      "action": "click",
+      "selector": "#active-orders-btn-delivery"
+    },
+    {
+      "action": "assertAttribute",
+      "expected": "caret-color: transparent !important;",
+      "selector": "#query",
+      "attribute": "style"
+    },
+    {
+      "action": "assertAttribute",
+      "expected": "min-width: 786px; max-width: 786px; transform: translate3d(-1604px, 0px, 0px);",
+      "selector": "a[href=\"/supermarkets\"]",
+      "attribute": "style"
+    },
+    {
+      "action": "assertAttribute",
+      "expected": "min-width: 786px; max-width: 786px; transform: translate3d(-1588px, 0px, 0px);",
+      "selector": "a[href=\"/shops\"]",
+      "attribute": "style"
+    }
+  ],
+  "test_name": "Click Դուք չունեք ընթացիկ պատվերներԳնել հիմա div"
+}
